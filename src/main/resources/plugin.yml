@@ -1,0 +1,13 @@
+name: Snake
+author: Slimerblue22
+version: '${version}'
+depend: [ProtocolLib, WorldGuard]
+softdepend: [NoteBlockAPI]
+main: com.slimer.SnakePlugin
+api-version: '1.20'
+load: POSTWORLD
+commands:
+  snake:
+    description: Controls for the snake game.
+    usage: /<command> <subcommand> [arguments]
+    aliases: [snakegame, snk]
