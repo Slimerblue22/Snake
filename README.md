@@ -26,15 +26,68 @@
 ### Optional:
 - **NoteblockAPI**: Required for game music. Without this, the game won't feature music.
 
-## Installation
+---
 
-1. Download the latest release of Snake from the GitHub repository.
-2. Place the `.jar` file into your `plugins` folder of your Spigot server.
-3. Start the server to generate the default configuration file.
-4. Optionally, adjust the settings in the generated `config.yml` file as per your requirements.
+## Snake Game Setup Guide
+
+Follow these steps to set up the Snake Game arena using the Snake Plugin.
+
+### Step 1: Configure the Config File
+
+Locate your `config.yml` file.
+Find the `world` section in the config file. By default, it will look like this:
+
+   ```yaml
+   # World that the game should be running in
+   world: world
+   ```
+
+**Important**: Do not change `world:`. Instead, change the section after it to the name of the world you wish to use. Common world names include:
+   - `world` (Overworld)
+   - `world_nether` (Nether)
+   - `world_the_end` (The End)
+
+Under the `world` section, locate the `Lobby` and `Gamezone` sections:
+
+   ```yaml
+   # Region names
+   Lobby: lobby
+   Gamezone: gamezone
+   ```
+
+You can change the names of the regions if needed. Regions must fall under these names for the plugin to work.
+
+### Step 2: Create WorldGuard Regions
+
+Use the WorldGuard plugin to create two rectangular regions:
+   - **Lobby Region**: This will be used for starting snake games.
+   - **Game Zone Region**: This is where snake games will be played.
+
+Players starting a snake game in the lobby will be teleported to the game zone, and after the game ends, they will be teleported back to the lobby.
+
+### Step 3: Set Teleport Coordinates
+
+By default, the plugin won't function until you set coordinates for both the lobby and game zone.
+Use the following commands or modify the `config.yml` to set the coordinates (cords):
+
+   - `/snake lobbycords`: Set teleport position for the lobby (within the lobby region).
+   - `/snake gamecords`: Set teleport position for the game zone (within the game region).
+
+Ensure game zone coordinates are in a flat, suitable location for the game. Incorrect locations may cause games to start and end immediately.
+
+### Step 4: Set Permissions
+
+Ensure players have the permission `snake.play` to participate in the snake game.
+For setup, you will need `snake.admin` permission.
+
+### Step 5: Start Playing
+
+Your setup is complete! Players can now start and enjoy snake games within the configured regions.
+
+---
 
 ## Configuration
-Refer to the provided `config.yml` for configuration details:
+Refer to the above section for game setup.
 
 - **nonSolidBlocks**: Blocks that should be ignored when considering what counts as a collision. (Note: Do not remove `AIR` or `PLAYER_HEAD` for proper game functionality.)
 - **song-file-path**: Define the path for the game music.
