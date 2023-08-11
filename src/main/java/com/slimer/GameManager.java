@@ -4,7 +4,9 @@ import com.comphenix.protocol.ProtocolManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.DyeColor;
+import org.bukkit.Location;
 import org.bukkit.Sound;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Sheep;
@@ -55,16 +57,33 @@ public class GameManager {
         DyeColor color = DyeColor.valueOf(colorName);
         Sheep sheep = (Sheep) player.getWorld().spawnEntity(player.getLocation(), EntityType.SHEEP);
         sheep.setColor(color);
-        sheep.addPassenger(player);
-        Snake snake = new Snake(player, sheep, this, protocolManager, playerData);
+        // Prepare the armor stand but do not spawn it yet
+        Location armorStandLocation = sheep.getLocation().clone().add(0, 1, 0);
+        final ArmorStand[] armorStand = new ArmorStand[1];
+
+        // Spawn the armor stand
+        armorStand[0] = (ArmorStand) player.getWorld().spawnEntity(armorStandLocation, EntityType.ARMOR_STAND);
+
+        // Set properties to make the armor stand invisible and not affected by gravity
+        armorStand[0].setInvisible(true);
+        armorStand[0].setGravity(false);
+        armorStand[0].setBasePlate(false);
+        armorStand[0].setMarker(true);
+
+        // Mount the player to the armor stand
+        armorStand[0].addPassenger(player);
+
+        Snake snake = new Snake(player, sheep, this, protocolManager, playerData, armorStand[0]);
         this.activeGames.put(player, snake);
         Apple apple = new Apple(this, player, plugin, player.getWorld(), player.getLocation(), snake, worldGuardManager);
         this.activeApples.put(player, apple);
         snake.setApple(apple);
         protocolManager.addPacketListener(snake.getPacketAdapter());
+
         if (plugin.getMusicManager() != null) {
             plugin.getMusicManager().startMusic(player, plugin.getConfig().getString("song-file-path"));
         }
+
         // check if the score of this game is higher than the player's high score
         int highScore = playerData.getHighScore(player);
         int score = snake.getScore();

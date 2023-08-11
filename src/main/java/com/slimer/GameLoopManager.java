@@ -2,8 +2,8 @@ package com.slimer;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Sheep;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,24 +46,24 @@ public class GameLoopManager {
             // Move the snake.
             snake.move();
 
-            // Reference to the snake's head.
-            Sheep head = snake.getBody().getFirst();
+            // Reference to the armor stand the player should be riding.
+            ArmorStand playerArmorStand = snake.getArmorStand();
 
-            // End game if player isn't riding the snake.
-            if (head.getPassengers().isEmpty()) {
+            // End game if player isn't riding the armor stand.
+            if (!playerArmorStand.getPassengers().contains(player)) {
                 playersToEndGame.add(player);
                 continue;
             }
 
             // Check if snake's head is outside the game zone:
-            Location snakeHeadLocation = head.getLocation();
+            Location snakeHeadLocation = snake.getBody().getFirst().getLocation();
             if (gameManager.getWorldGuardManager().isLocationInRegion(snakeHeadLocation, gameManager.getPlugin().getConfig().getString("Gamezone"))) {
                 playersToEndGame.add(player);
                 continue;
             }
 
             // Check conditions to end game.
-            Location newLocation = head.getLocation();
+            Location newLocation = snake.getBody().getFirst().getLocation();
             if (!gameManager.getPlugin().getNonSolidBlocks().contains(newLocation.getBlock().getType())) {
                 playersToEndGame.add(player);
             } else {

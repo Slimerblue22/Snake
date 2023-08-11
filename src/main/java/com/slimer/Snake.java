@@ -8,10 +8,7 @@ import com.comphenix.protocol.events.PacketEvent;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.Sound;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Sheep;
+import org.bukkit.entity.*;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -19,6 +16,7 @@ import java.util.List;
 // Represents a player-controlled snake in the game.
 public class Snake {
     private Apple apple; // Represents the apple the snake eats.
+    private ArmorStand armorStand; // The invisible armor stand the player will be mounted on
     private final GameManager gameManager; // Manages the game instances.
     private final LinkedList<Sheep> body; // The snake's body, represented by a list of sheep entities.
     public LinkedList<Sheep> getBody() {
@@ -38,13 +36,18 @@ public class Snake {
         return this.color;
     }
 
+    public ArmorStand getArmorStand() {
+        return armorStand;
+    }
+
     public enum Direction { NORTH, EAST, SOUTH, WEST } // Enum representing the possible directions for the snake.
 
     // Constructor initializes the snake.
-    public Snake(Player player, Sheep initialSegment, GameManager gameManager, ProtocolManager protocolManager, PlayerData playerData) {
+    public Snake(Player player, Sheep initialSegment, GameManager gameManager, ProtocolManager protocolManager, PlayerData playerData, ArmorStand armorStand) {
         initialSegment.setSilent(true);
         this.player = player;
         this.body = new LinkedList<>();
+        this.armorStand = armorStand;
         String colorName = playerData.getConfig().getString(player.getUniqueId() + ".color", "WHITE");
         this.color = DyeColor.valueOf(colorName);
         initialSegment.setColor(this.color);
@@ -84,10 +87,18 @@ public class Snake {
     public Player getPlayer() { // Returns the player controlling the snake.
         return this.player;
     }
-    public void stop() { // Stops the snake, removes all segments, and clears the apple.
+    public void stop() {
+        // Remove the armor stand first
+        if (armorStand != null) {
+            armorStand.remove();
+            armorStand = null;  // Set to null to ensure we don't try to remove it again
+        }
+
+        // Then remove all segments of the snake
         for (Sheep segment : body) {
             segment.remove();
         }
+
         apple.clearApple();
         body.clear();
         protocolManager.removePacketListener(this.packetAdapter);
@@ -124,19 +135,21 @@ public class Snake {
             return;
         }
 
+        Location[] lastSegmentLocation = { head.getLocation().clone() };
+
         if (newLocation.getBlockX() == appleLocation.getBlockX() && newLocation.getBlockY() == appleLocation.getBlockY() && newLocation.getBlockZ() == appleLocation.getBlockZ()) {
             eatApple();
         }
         newLocation.setX(newLocation.getBlockX() + 0.5);
         newLocation.setY(newLocation.getBlockY());
         newLocation.setZ(newLocation.getBlockZ() + 0.5);
-        Location[] lastSegmentLocation = { head.getLocation().clone() };
-        List<Entity> passengers = head.getPassengers();
-        if (!passengers.isEmpty()) {
-            Player playerRiding = (Player) head.getPassengers().get(0);
-            float playerYaw = playerRiding.getLocation().getYaw();
-            float playerPitch = playerRiding.getLocation().getPitch();
-            head.eject();
+
+        // Get the passengers of the armor stand.
+        List<Entity> armorStandPassengers = armorStand.getPassengers();
+        if (!armorStandPassengers.isEmpty() && armorStandPassengers.get(0) instanceof Player playerRiding) {
+
+            // Dismount the player from the armor stand.
+            armorStand.eject();
 
             // Set the head's yaw based on direction.
             float newYaw = switch (currentDirection) {
@@ -147,14 +160,15 @@ public class Snake {
             };
             newLocation.setYaw(newYaw);
 
-            // Teleport the sheep
+            // Teleport the sheep and armor stand.
             head.teleport(newLocation);
 
-            // Then attach the player
-            newLocation.setYaw(playerYaw);
-            newLocation.setPitch(playerPitch);
-            playerRiding.teleport(newLocation);
-            head.addPassenger(playerRiding);
+            Location armorStandNewLocation = newLocation.clone().add(0, 1, 0);  // Armor stand 1 level above sheep.
+            armorStand.teleport(armorStandNewLocation);
+
+            // Remount the player to the armor stand.
+            armorStand.addPassenger(playerRiding);
+
             player.playSound(newLocation, Sound.BLOCK_WOOL_STEP, 1.0F, 1.0F);
         } else {
             head.teleport(newLocation);
