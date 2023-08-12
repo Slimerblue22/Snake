@@ -10,6 +10,7 @@ import com.sk89q.worldguard.protection.regions.RegionContainer;
 import com.sk89q.worldguard.protection.regions.RegionQuery;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.Objects;
@@ -97,25 +98,44 @@ public class WorldGuardManager {
 
     // Gets minimum point of game zone region.
     public Location getGameZoneMinimum() {
+        String worldName = plugin.getConfig().getString("world");
+        World world = Bukkit.getWorld(Objects.requireNonNull(worldName));
         ProtectedRegion gameZone = getRegion(gameZoneRegionName);
-        if (gameZone != null) {
-            return BukkitAdapter.adapt(Objects.requireNonNull(plugin.getServer().getWorld("world")), gameZone.getMinimumPoint());
+        if (gameZone != null && world != null) {
+            return BukkitAdapter.adapt(world, gameZone.getMinimumPoint());
         }
         return null;
     }
 
     // Gets maximum point of game zone region.
     public Location getGameZoneMaximum() {
+        String worldName = plugin.getConfig().getString("world");
+        World world = Bukkit.getWorld(Objects.requireNonNull(worldName));
         ProtectedRegion gameZone = getRegion(gameZoneRegionName);
-        if (gameZone != null) {
-            return BukkitAdapter.adapt(Objects.requireNonNull(plugin.getServer().getWorld("world")), gameZone.getMaximumPoint());
+        if (gameZone != null && world != null) {
+            return BukkitAdapter.adapt(world, gameZone.getMaximumPoint());
         }
         return null;
     }
 
     // Fetches a region by its name.
     private ProtectedRegion getRegion(String regionName) {
-        return Objects.requireNonNull(container.get(BukkitAdapter.adapt(Objects.requireNonNull(plugin.getServer().getWorld("world"))))).getRegion(regionName);
+        String worldName = plugin.getConfig().getString("world");
+        World world = Bukkit.getWorld(Objects.requireNonNull(worldName));
+        if (world == null) {
+            Bukkit.getLogger().severe("World not found: " + worldName);
+            return null;
+        }
+        RegionManager regions = container.get(BukkitAdapter.adapt(world));
+        if (regions == null) {
+            Bukkit.getLogger().severe("RegionManager is null for " + worldName);
+            return null;
+        }
+        ProtectedRegion region = regions.getRegion(regionName);
+        if (region == null) {
+            Bukkit.getLogger().severe("Region not found: " + regionName);
+        }
+        return region;
     }
     public boolean isLocationInRegion(Location location, String regionName) {
         RegionManager regionManager = WorldGuard.getInstance().getPlatform().getRegionContainer().get(BukkitAdapter.adapt(location.getWorld()));
