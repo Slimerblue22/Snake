@@ -9,60 +9,46 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-// Manages the primary game loop for all snake games.
 public class GameLoopManager {
     private final GameManager gameManager;
-    private long moveInterval; // Variable to store the move interval.
+    private long moveInterval;  // Interval at which the game loop executes
 
-    // Constructor initializes the game loop manager and starts the game loop.
     public GameLoopManager(GameManager gameManager) {
         this.gameManager = gameManager;
-
-        // Fetch the move interval from the configuration only once.
         long configuredSpeed = gameManager.getPlugin().getConfig().getLong("snake-speed", 10L);
-        this.moveInterval = Math.max(configuredSpeed, 5L); // Ensure it's not too fast.
-        this.initializeGameLoop();
+        this.moveInterval = Math.max(configuredSpeed, 5L);
+        this.initializeGameLoop(); // Start the game loop
     }
 
-    // Setter for speed.
+    // Sets the speed of the game loop
     public void setSpeed(int speed) {
-        this.moveInterval = speed; // Update moveInterval when speed changes.
+        this.moveInterval = speed;
     }
 
-    // Initializes and starts the primary game loop.
+    // Initializes the game loop with the configured speed
     private void initializeGameLoop() {
         gameManager.getPlugin().getServer().getScheduler().runTaskTimer(gameManager.getPlugin(), this::gameLoop, 0L, moveInterval);
     }
 
+    // Main game loop logic
     private void gameLoop() {
-        // List of players whose game should end.
         List<Player> playersToEndGame = new ArrayList<>();
-
-        // Iterate through all active games.
         for (Map.Entry<Player, Snake> entry : gameManager.getActiveGames().entrySet()) {
             Snake snake = entry.getValue();
             Player player = entry.getKey();
-
-            // Move the snake.
-            snake.move();
-
-            // Reference to the armor stand the player should be riding.
+            snake.move();   // Move the snake
             ArmorStand playerArmorStand = snake.getArmorStand();
-
-            // End game if player isn't riding the armor stand.
+            // Check for conditions that should end the game
+            // Conditions include player not riding armor stand, snake outside the game zone, snake colliding with solid blocks, etc.
             if (!playerArmorStand.getPassengers().contains(player)) {
                 playersToEndGame.add(player);
                 continue;
             }
-
-            // Check if snake's head is outside the game zone:
             Location snakeHeadLocation = snake.getBody().getFirst().getLocation();
-            if (gameManager.getWorldGuardManager().isLocationInRegion(snakeHeadLocation, gameManager.getPlugin().getConfig().getString("Gamezone"))) {
+            if (gameManager.getWorldGuardManager().isLocationOutsideRegion(snakeHeadLocation, gameManager.getPlugin().getConfig().getString("Gamezone"))) {
                 playersToEndGame.add(player);
                 continue;
             }
-
-            // Check conditions to end game.
             Location newLocation = snake.getBody().getFirst().getLocation();
             if (!gameManager.getPlugin().getNonSolidBlocks().contains(newLocation.getBlock().getType())) {
                 playersToEndGame.add(player);
@@ -76,8 +62,7 @@ public class GameLoopManager {
                 }
             }
         }
-
-        // End game for all players in the list.
+        // End the game for players who met the game-ending conditions
         for (Player player : playersToEndGame) {
             gameManager.endGame(player);
         }

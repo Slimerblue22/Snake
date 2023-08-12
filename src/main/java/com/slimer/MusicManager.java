@@ -15,38 +15,34 @@ import java.util.Map;
 
 public class MusicManager {
     private final Map<Player, RadioSongPlayer> songPlayers = new HashMap<>();
-    // This method starts playing the song specified by the path for the given player.
-    // It creates a new RadioSongPlayer, sets the mode, adds the player, and starts the song.
+
+    // Starts the music for a specific player by loading and playing a song file
     public void startMusic(Player player, String pathToSongFile) {
         File songFile = new File(pathToSongFile);
-
         if (!songFile.exists()) {
             player.sendMessage(Component.text("Music file not found! Please ensure the song file exists at the specified path.", NamedTextColor.RED));
             return;
         }
-
-        Song song = NBSDecoder.parse(songFile);
-
+        Song song = NBSDecoder.parse(songFile); // Decode the song file
         if (song == null) {
             player.sendMessage(Component.text("Error loading the music file. Please ensure it's a valid NBS file.", NamedTextColor.RED));
             return;
         }
-
-        RadioSongPlayer songPlayer = new RadioSongPlayer(song);
+        RadioSongPlayer songPlayer = new RadioSongPlayer(song); // Create a radio song player
         songPlayer.setChannelMode(new MonoStereoMode());
         songPlayer.addPlayer(player);
         songPlayer.setPlaying(true);
-        songPlayer.setRepeatMode(RepeatMode.ONE);
-        songPlayers.put(player, songPlayer);
+        songPlayer.setRepeatMode(RepeatMode.ONE); // Set to repeat mode
+        songPlayers.put(player, songPlayer); // Store the player's song player
     }
-    // This method stops the music for the given player.
-    // It retrieves the RadioSongPlayer for the player, stops the song, destroys the player, and removes the player from the map.
+
+    // Stops the music for a specific player
     public void stopMusic(Player player) {
         RadioSongPlayer songPlayer = songPlayers.get(player);
         if (songPlayer != null) {
-            songPlayer.setPlaying(false);
-            songPlayer.destroy();
-            songPlayers.remove(player);
+            songPlayer.setPlaying(false); // Stop playing
+            songPlayer.destroy(); // Destroy the song player
+            songPlayers.remove(player); // Remove from active song players
         }
     }
 }

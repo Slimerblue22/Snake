@@ -15,25 +15,24 @@ import org.bukkit.entity.Player;
 
 import java.util.Objects;
 
-// Manages interactions with WorldGuard for region queries, player checks, and location updates.
 public class WorldGuardManager {
-    private final RegionQuery query; // Handles queries to the regions in WorldGuard.
-    private final String lobbyRegionName; // Name of the lobby region in WorldGuard.
-    private final String gameZoneRegionName; // Name of the game zone region in WorldGuard.
-    private final RegionContainer container; // Container for WorldGuard regions.
-    private final SnakePlugin plugin; // Main plugin instance.
+    private final RegionQuery query; // Query object for region lookup
+    private final String lobbyRegionName; // Name of the lobby region
+    private final String gameZoneRegionName; // Name of the game zone region
+    private final RegionContainer container; // Container for regions
+    private final SnakePlugin plugin; // Reference to the main plugin class
 
-    // Initializes WorldGuard regions and configurations.
     public WorldGuardManager(SnakePlugin plugin) {
         this.plugin = plugin;
-        updateLocations();
+        updateLocations(); // Initialize and update locations
         this.container = WorldGuard.getInstance().getPlatform().getRegionContainer();
-        this.query = container.createQuery();
+        this.query = container.createQuery(); // Create query object
+        // Read lobby and game zone region names from the configuration
         this.lobbyRegionName = plugin.getConfig().getString("Lobby", "lobby");
         this.gameZoneRegionName = plugin.getConfig().getString("Gamezone", "gamezone");
     }
 
-    // Checks if player is in the lobby region.
+    // Check if the player is in the lobby region
     public boolean isPlayerInLobby(Player player) {
         Location loc = player.getLocation();
         ApplicableRegionSet set = getApplicableRegions(loc);
@@ -44,41 +43,36 @@ public class WorldGuardManager {
         }
         return false;
     }
-    // Teleports player to game location, sends error if location isn't set correctly.
+
+    // Teleport player to the game location, with optional validation
     public boolean teleportToGame(Player player, boolean validateOnly) {
         Location gameLocation = plugin.getGameLocation();
         if (gameLocation.equals(new Location(player.getWorld(), 0, 0, 0))) {
             return false;
         }
-
-        // Set the YAW and PITCH of the gameLocation to match the player's current YAW and PITCH.
         if (!validateOnly) {
             gameLocation.setYaw(player.getLocation().getYaw());
             gameLocation.setPitch(player.getLocation().getPitch());
             player.teleport(gameLocation);
         }
-
         return true;
     }
 
-    // Teleports player to the lobby, sends error if location isn't set correctly.
+    // Teleport player to the lobby location, with optional validation
     public boolean teleportToLobby(Player player, boolean validateOnly) {
         Location lobbyLocation = plugin.getLobbyLocation();
         if (lobbyLocation.equals(new Location(player.getWorld(), 0, 0, 0))) {
             return false;
         }
-
-        // Set the YAW and PITCH of the lobbyLocation to match the player's current YAW and PITCH.
         if (!validateOnly) {
             lobbyLocation.setYaw(player.getLocation().getYaw());
             lobbyLocation.setPitch(player.getLocation().getPitch());
             player.teleport(lobbyLocation);
         }
-
         return true;
     }
 
-    // Updates game and lobby locations based on configurations.
+    // Update locations for the game and lobby from the configuration
     public void updateLocations() {
         if (plugin == null) {
             Bukkit.getLogger().warning("Plugin instance is null in WorldGuardManager!");
@@ -86,17 +80,15 @@ public class WorldGuardManager {
         }
         Location gameLocation = new Location(Bukkit.getWorld(Objects.requireNonNull(plugin.getConfig().getString("world"))), plugin.getConfig().getDouble("teleportLocations.game.x"), plugin.getConfig().getDouble("teleportLocations.game.y"), plugin.getConfig().getDouble("teleportLocations.game.z"));
         Location lobbyLocation = new Location(Bukkit.getWorld(Objects.requireNonNull(plugin.getConfig().getString("world"))), plugin.getConfig().getDouble("teleportLocations.lobby.x"), plugin.getConfig().getDouble("teleportLocations.lobby.y"), plugin.getConfig().getDouble("teleportLocations.lobby.z"));
-
         plugin.setGameLocation(gameLocation);
         plugin.setLobbyLocation(lobbyLocation);
     }
 
-    // Gets regions applicable to a location.
     private ApplicableRegionSet getApplicableRegions(Location location) {
         return query.getApplicableRegions(BukkitAdapter.adapt(location));
     }
 
-    // Gets minimum point of game zone region.
+    // Get the minimum point of the game zone region
     public Location getGameZoneMinimum() {
         String worldName = plugin.getConfig().getString("world");
         World world = Bukkit.getWorld(Objects.requireNonNull(worldName));
@@ -107,7 +99,7 @@ public class WorldGuardManager {
         return null;
     }
 
-    // Gets maximum point of game zone region.
+    // Get the maximum point of the game zone region
     public Location getGameZoneMaximum() {
         String worldName = plugin.getConfig().getString("world");
         World world = Bukkit.getWorld(Objects.requireNonNull(worldName));
@@ -118,10 +110,11 @@ public class WorldGuardManager {
         return null;
     }
 
-    // Fetches a region by its name.
+    // Retrieve a specific region by name
     private ProtectedRegion getRegion(String regionName) {
         String worldName = plugin.getConfig().getString("world");
         World world = Bukkit.getWorld(Objects.requireNonNull(worldName));
+        // Return null and log error if world or region is not found
         if (world == null) {
             Bukkit.getLogger().severe("World not found: " + worldName);
             return null;
@@ -137,16 +130,15 @@ public class WorldGuardManager {
         }
         return region;
     }
-    public boolean isLocationInRegion(Location location, String regionName) {
-        RegionManager regionManager = WorldGuard.getInstance().getPlatform().getRegionContainer().get(BukkitAdapter.adapt(location.getWorld()));
 
+    // Check if a location is outside a specific region
+    public boolean isLocationOutsideRegion(Location location, String regionName) {
+        RegionManager regionManager = WorldGuard.getInstance().getPlatform().getRegionContainer().get(BukkitAdapter.adapt(location.getWorld()));
         if (!Objects.requireNonNull(regionManager).hasRegion(regionName)) {
             return false;
         }
-
         ProtectedRegion region = regionManager.getRegion(regionName);
         BlockVector3 locVector = BukkitAdapter.asBlockVector(location);
-
         return !Objects.requireNonNull(region).contains(locVector);
     }
 }
