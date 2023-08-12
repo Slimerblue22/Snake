@@ -132,11 +132,17 @@ public class WorldGuardManager {
     }
 
     // Check if a location is outside a specific region
-    public boolean isLocationOutsideRegion(Location location, String regionName) {
-        RegionManager regionManager = WorldGuard.getInstance().getPlatform().getRegionContainer().get(BukkitAdapter.adapt(location.getWorld()));
-        if (!Objects.requireNonNull(regionManager).hasRegion(regionName)) {
-            return false;
+    public boolean isLocationOutsideRegion(Location location, String regionName, World gameWorld) {
+        World locationWorld = location.getWorld();
+        if (!Objects.requireNonNull(locationWorld).equals(gameWorld)) {
+            return true; // Return true if the location's world does not match the game world
         }
+
+        RegionManager regionManager = WorldGuard.getInstance().getPlatform().getRegionContainer().get(BukkitAdapter.adapt(locationWorld));
+        if (!Objects.requireNonNull(regionManager).hasRegion(regionName)) {
+            return true; // Return true if the region does not exist
+        }
+
         ProtectedRegion region = regionManager.getRegion(regionName);
         BlockVector3 locVector = BukkitAdapter.asBlockVector(location);
         return !Objects.requireNonNull(region).contains(locVector);

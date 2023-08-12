@@ -1,13 +1,16 @@
 package com.slimer;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class GameLoopManager {
     private final GameManager gameManager;
@@ -45,7 +48,8 @@ public class GameLoopManager {
                 continue;
             }
             Location snakeHeadLocation = snake.getBody().getFirst().getLocation();
-            if (gameManager.getWorldGuardManager().isLocationOutsideRegion(snakeHeadLocation, gameManager.getPlugin().getConfig().getString("Gamezone"))) {
+            World gameWorld = Bukkit.getWorld(Objects.requireNonNull(gameManager.getPlugin().getConfig().getString("world")));
+            if (gameManager.getWorldGuardManager().isLocationOutsideRegion(snakeHeadLocation, gameManager.getPlugin().getConfig().getString("Gamezone"), gameWorld)) {
                 playersToEndGame.add(player);
                 continue;
             }

@@ -3,10 +3,7 @@ package com.slimer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
-import org.bukkit.DyeColor;
-import org.bukkit.Location;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -253,7 +250,8 @@ public class SnakeCommandExecutor implements CommandExecutor, TabCompleter {
             }
             Location location = player.getLocation();
             String lobbyRegionName = plugin.getConfig().getString("Lobby");
-            if (plugin.getWorldGuardManager().isLocationOutsideRegion(location, lobbyRegionName)) {
+            World gameWorld = Bukkit.getWorld(Objects.requireNonNull(plugin.getConfig().getString("world")));
+            if (plugin.getWorldGuardManager().isLocationOutsideRegion(location, lobbyRegionName, gameWorld)) {
                 player.sendMessage(Component.text("The selected location is not inside the lobby region!", NamedTextColor.RED));
                 return;
             }
@@ -277,7 +275,8 @@ public class SnakeCommandExecutor implements CommandExecutor, TabCompleter {
             Location location = player.getLocation();
             String gameZoneRegionName = plugin.getConfig().getString("Gamezone");
 
-            if (plugin.getWorldGuardManager().isLocationOutsideRegion(location, gameZoneRegionName)) {
+            World gameWorld = Bukkit.getWorld(Objects.requireNonNull(plugin.getConfig().getString("world"))); // Adjust this to get the correct world
+            if (plugin.getWorldGuardManager().isLocationOutsideRegion(location, gameZoneRegionName, gameWorld)) {
                 player.sendMessage(Component.text("The selected location is not inside the game region!", NamedTextColor.RED));
                 return;
             }
