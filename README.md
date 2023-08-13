@@ -19,7 +19,7 @@
   
 ## Dependencies
 ### Required:
-- **Paper Spigot** or **AdventureAPI**: (Note: AdventureAPI is only needed if Paper Spigot is not used)
+- **Paper Spigot** (Or a fork of Paper)
 - **ProtocolLib**
 - **WorldGuard**
 
