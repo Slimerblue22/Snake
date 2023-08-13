@@ -110,6 +110,7 @@ Refer to the above section for game setup.
 - `/snake lobbycoords`: (Admin) Set the lobby coordinates.
 - `/snake gamecoords`: (Admin) Set the game coordinates.
 - `/snake help`: Access the help command for game instructions.
+- `/snake gui`: Open the GUI menu.
 
 **Permissions**:
 - `snake.play`: Permission to play the game. 
