@@ -1,7 +1,6 @@
 package com.slimer;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.JoinConfiguration;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.*;
 import org.bukkit.command.Command;
@@ -10,6 +9,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -30,24 +30,31 @@ public class SnakeCommandExecutor implements CommandExecutor, TabCompleter {
     // Registering the commands
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (args.length > 0) {
-            Player player = null;
-            if (sender instanceof Player) {
-                player = (Player) sender;
-            }
-            switch (args[0].toLowerCase()) { // Command logic moved into their own methods.
-                case "start" -> startGame(sender, player);
-                case "stop" -> stopGame(sender, player);
-                case "setspeed" -> setSpeed(sender, args);
-                case "lobbycords" -> setLobbyCoordinates(sender);
-                case "instructions", "help" -> sendInstructions(sender);
-                case "gamecords" -> setGameCoordinates(sender);
-                case "reload" -> reloadConfig(sender);
-                case "color" -> setColor(sender, args, player);
-                case "leaderboard" -> showLeaderboard(sender, player);
-                case "highscore" -> showHighScore(sender, player);
-                default -> showInvalidCommandMessage(sender);
-            }
+        Player player = null;
+        if (sender instanceof Player) {
+            player = (Player) sender;
+        }
+
+        // If no arguments are provided, open the GUI
+        if (args.length == 0) {
+            openGUI(sender, player);
+            return true;
+        }
+
+        // Handle other command logic based on the provided arguments
+        switch (args[0].toLowerCase()) {
+            case "start" -> startGame(sender, player);
+            case "stop" -> stopGame(sender, player);
+            case "setspeed" -> setSpeed(sender, args);
+            case "lobbycords" -> setLobbyCoordinates(sender);
+            case "instructions", "help" -> sendInstructions(sender);
+            case "gamecords" -> setGameCoordinates(sender);
+            case "reload" -> reloadConfig(sender);
+            case "color" -> setColor(sender, args, player);
+            case "leaderboard" -> showLeaderboard(sender, player);
+            case "highscore" -> showHighScore(sender, player);
+            case "gui" -> openGUI(sender, player);
+            default -> showInvalidCommandMessage(sender);
         }
         return true;
     }
@@ -55,13 +62,22 @@ public class SnakeCommandExecutor implements CommandExecutor, TabCompleter {
     // Tab completion stuff
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, String[] args) {
+        List<String> availableCommands = new ArrayList<>();
         if (args.length == 1) {
-            return Arrays.asList("color", "gamecords", "help", "highscore", "leaderboard", "lobbycords", "reload", "setspeed", "start", "stop");
+            // Commands available for all players with 'snake.play' permission
+            if (sender.hasPermission("snake.play")) {
+                availableCommands.addAll(Arrays.asList("color", "gui", "help", "highscore", "leaderboard", "start", "stop"));
+            }
+
+            // Commands available for administrators with 'snake.admin' permission
+            if (sender.hasPermission("snake.admin")) {
+                availableCommands.addAll(Arrays.asList("gamecords", "lobbycords", "setspeed", "reload"));
+            }
         }
-        return null;
+        return availableCommands;
     }
 
-    // These three bits are related to getting and displaying the color options for the snake.
+    // This bit is related to getting the color options for the snake.
     private boolean isValidColor(String colorName) {
         try {
             DyeColor.valueOf(colorName);
@@ -71,46 +87,14 @@ public class SnakeCommandExecutor implements CommandExecutor, TabCompleter {
         }
     }
 
-    private Component getValidColors() {
-        List<Component> colorComponents = new ArrayList<>();
-        for (DyeColor dyeColor : DyeColor.values()) {
-            NamedTextColor textColor = getColor(dyeColor.name());
-            if (textColor != null) {
-                colorComponents.add(Component.text(dyeColor.name(), textColor));
-            }
-        }
-        return Component.join(JoinConfiguration.separator(Component.text(", ", NamedTextColor.WHITE)), colorComponents);
-    }
-
-    private NamedTextColor getColor(String dyeColorName) {
-        try {
-            DyeColor dyeColor = DyeColor.valueOf(dyeColorName);
-            return switch (dyeColor) {
-                case WHITE -> NamedTextColor.WHITE;
-                case ORANGE -> NamedTextColor.GOLD;
-                case MAGENTA, PINK -> NamedTextColor.LIGHT_PURPLE;
-                case LIGHT_BLUE -> NamedTextColor.AQUA;
-                case YELLOW -> NamedTextColor.YELLOW;
-                case LIME -> NamedTextColor.GREEN;
-                case GRAY -> NamedTextColor.DARK_GRAY;
-                case LIGHT_GRAY -> NamedTextColor.GRAY;
-                case CYAN -> NamedTextColor.DARK_AQUA;
-                case PURPLE -> NamedTextColor.DARK_PURPLE;
-                case BLUE -> NamedTextColor.DARK_BLUE;
-                case BROWN -> NamedTextColor.DARK_RED;   // No direct brown color in TextColor, using a similar shade
-                case GREEN -> NamedTextColor.DARK_GREEN;
-                case RED -> NamedTextColor.RED;
-                case BLACK -> NamedTextColor.BLACK;
-            };
-        } catch (IllegalArgumentException e) {
-            return null;
-        }
-    }
-
     // Starting from here is the logic for the commands
     private void startGame(CommandSender sender, Player player) {
         if (player == null) {
             sender.sendMessage(Component.text("This command can only be used by players.", NamedTextColor.RED));
+            return;
+        }
+        if (gameManager.getGame(player) != null) {
+            sender.sendMessage(Component.text("You already have a snake game running.", NamedTextColor.RED));
             return;
         }
         if (!worldGuardManager.isPlayerInLobby(player)) {
@@ -128,8 +112,6 @@ public class SnakeCommandExecutor implements CommandExecutor, TabCompleter {
         worldGuardManager.teleportToGame(player, false);
         if (!sender.hasPermission("snake.play")) {
             sender.sendMessage(Component.text("You do not have permission to start the snake game.", NamedTextColor.RED));
-        } else if (gameManager.getGame(player) != null) {
-            sender.sendMessage(Component.text("You already have a snake game running.", NamedTextColor.RED));
         } else {
             sender.sendMessage(Component.text("Starting the snake game...", NamedTextColor.GREEN));
             gameManager.addGame(player);
@@ -138,16 +120,35 @@ public class SnakeCommandExecutor implements CommandExecutor, TabCompleter {
     }
 
     private void stopGame(CommandSender sender, Player player) {
-        if (player == null || !sender.hasPermission("snake.play")) {
-            sender.sendMessage(Component.text("You do not have permission to stop the snake game.", NamedTextColor.RED));
-        } else {
-            Snake snake = gameManager.getGame(player);
-            if (snake != null) {
-                gameManager.endGame(player);
-            } else {
-                sender.sendMessage(Component.text("You don't have a snake game running.", NamedTextColor.RED));
-            }
+        if (player == null) {
+            sender.sendMessage(Component.text("This command can only be used by players.", NamedTextColor.RED));
+            return;
         }
+        if (!sender.hasPermission("snake.play")) {
+            sender.sendMessage(Component.text("You do not have permission to stop the snake game.", NamedTextColor.RED));
+            return;
+        }
+        Snake snake = gameManager.getGame(player);
+        if (snake != null) {
+            gameManager.endGame(player);
+        } else {
+            sender.sendMessage(Component.text("You don't have a snake game running.", NamedTextColor.RED));
+        }
+    }
+
+    private void openGUI(CommandSender sender, Player player) {
+        if (player == null) {
+            sender.sendMessage(Component.text("This command can only be used by players.", NamedTextColor.RED));
+            return;
+        }
+        if (!sender.hasPermission("snake.play")) {
+            sender.sendMessage(Component.text("You don't have permission to run this command!", NamedTextColor.RED));
+            return;
+        }
+
+        Inventory menu = SnakeGUI.createMainMenu(player);
+        player.openInventory(menu);
+        sender.sendMessage(Component.text("Opening the snake game GUI...", NamedTextColor.GREEN));
     }
 
     private void setSpeed(CommandSender sender, String[] args) {
@@ -170,9 +171,15 @@ public class SnakeCommandExecutor implements CommandExecutor, TabCompleter {
         plugin.saveConfig();
         gameManager.getGameLoopManager().setSpeed(speed);
         sender.sendMessage(Component.text("Snake speed set to: " + speed, NamedTextColor.GREEN));
+        sender.sendMessage(Component.text("Please restart your server for speed to take effect.", NamedTextColor.GREEN));
+
     }
 
     private void sendInstructions(CommandSender sender) {
+        if (sender instanceof Player && !sender.hasPermission("snake.play")) {
+            sender.sendMessage(Component.text("You don't have permission to run this command!", NamedTextColor.RED));
+            return;
+        }
         sender.sendMessage(Component.text("------ Snake Game Instructions ------", NamedTextColor.GOLD));
         sender.sendMessage(Component.text("- The objective is to eat as many apples as possible without running into yourself or the walls.", NamedTextColor.WHITE));
         sender.sendMessage(Component.text("- Hold forward to move in the direction you are looking.", NamedTextColor.WHITE));
@@ -187,7 +194,7 @@ public class SnakeCommandExecutor implements CommandExecutor, TabCompleter {
             worldGuardManager.updateLocations();
             sender.sendMessage(Component.text("Snake plugin config reloaded.", NamedTextColor.GREEN));
         } else {
-            sender.sendMessage(Component.text("You don't have permission to reload the Snake plugin config.", NamedTextColor.RED));
+            sender.sendMessage(Component.text("You don't have permission to run this command!", NamedTextColor.RED));
         }
     }
 
@@ -196,31 +203,48 @@ public class SnakeCommandExecutor implements CommandExecutor, TabCompleter {
     }
 
     private void showHighScore(CommandSender sender, Player player) {
-        if (player != null) {
-            int highScore = playerData.getHighScore(player);
-            sender.sendMessage(Component.text("Your high score is: ", NamedTextColor.GREEN).append(Component.text(String.valueOf(highScore), NamedTextColor.GREEN)));
+        if (player == null) {
+            sender.sendMessage(Component.text("This command can only be used by players.", NamedTextColor.RED));
+            return;
         }
+        if (!player.hasPermission("snake.play")) {
+            sender.sendMessage(Component.text("You don't have permission to run this command!", NamedTextColor.RED));
+            return;
+        }
+        int highScore = playerData.getHighScore(player);
+        sender.sendMessage(Component.text("Your high score is: ", NamedTextColor.GREEN).append(Component.text(String.valueOf(highScore), NamedTextColor.GREEN)));
     }
 
     private void setColor(CommandSender sender, String[] args, Player player) {
+        if (player == null) {
+            sender.sendMessage(Component.text("This command can only be used by players.", NamedTextColor.RED));
+            return;
+        }
+        if (!player.hasPermission("snake.play")) {
+            sender.sendMessage(Component.text("You don't have permission to run this command!", NamedTextColor.RED));
+            return;
+        }
         if (args.length != 2) {
             sender.sendMessage(Component.text("You need to specify a color.", NamedTextColor.RED));
             return;
         }
         String colorName = args[1].toUpperCase();
         if (!isValidColor(colorName)) {
-            sender.sendMessage(Component.text("Invalid color. Use one of the following: ", NamedTextColor.RED).append(getValidColors()));
+            sender.sendMessage(Component.text("Invalid color selected.", NamedTextColor.RED));
             return;
         }
-        assert player != null;
         playerData.getConfig().set(player.getUniqueId() + ".color", colorName);
         playerData.saveConfig();
-        sender.sendMessage(Component.text("Color has been set to: ", NamedTextColor.GREEN).append(Component.text(colorName, getColor(colorName))));
+        sender.sendMessage(Component.text("Color has been set to: ", NamedTextColor.GREEN).append(Component.text(colorName)));
     }
 
     private void showLeaderboard(CommandSender sender, Player player) {
         if (player == null) {
             sender.sendMessage(Component.text("This command can only be used by players.", NamedTextColor.RED));
+            return;
+        }
+        if (!player.hasPermission("snake.play")) {
+            sender.sendMessage(Component.text("You don't have permission to run this command!", NamedTextColor.RED));
             return;
         }
         ConfigurationSection configSection = playerData.getConfig().getConfigurationSection("");
@@ -262,7 +286,7 @@ public class SnakeCommandExecutor implements CommandExecutor, TabCompleter {
             plugin.getWorldGuardManager().updateLocations();
             player.sendMessage(Component.text("Lobby coordinates set to your current location.", NamedTextColor.GREEN));
         } else {
-            sender.sendMessage(Component.text("This command can only be run by a player.", NamedTextColor.RED));
+            sender.sendMessage(Component.text("This command can only be used by players.", NamedTextColor.RED));
         }
     }
 
@@ -275,7 +299,7 @@ public class SnakeCommandExecutor implements CommandExecutor, TabCompleter {
             Location location = player.getLocation();
             String gameZoneRegionName = plugin.getConfig().getString("Gamezone");
 
-            World gameWorld = Bukkit.getWorld(Objects.requireNonNull(plugin.getConfig().getString("world"))); // Adjust this to get the correct world
+            World gameWorld = Bukkit.getWorld(Objects.requireNonNull(plugin.getConfig().getString("world")));
             if (plugin.getWorldGuardManager().isLocationOutsideRegion(location, gameZoneRegionName, gameWorld)) {
                 player.sendMessage(Component.text("The selected location is not inside the game region!", NamedTextColor.RED));
                 return;
@@ -287,7 +311,7 @@ public class SnakeCommandExecutor implements CommandExecutor, TabCompleter {
             plugin.getWorldGuardManager().updateLocations();
             player.sendMessage(Component.text("Game coordinates set to your current location.", NamedTextColor.GREEN));
         } else {
-            sender.sendMessage(Component.text("This command can only be run by a player.", NamedTextColor.RED));
+            sender.sendMessage(Component.text("This command can only be used by players.", NamedTextColor.RED));
         }
     }
 }

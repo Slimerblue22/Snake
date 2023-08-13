@@ -35,6 +35,8 @@ public class SnakePlugin extends JavaPlugin {
         ProtocolManager protocolManager = ProtocolLibrary.getProtocolManager(); // Get the protocol manager
         PlayerData playerData = new PlayerData(this); // Create PlayerData instance
         gameManager = new GameManager(this, protocolManager, playerData); // Initialize GameManager
+        SnakeGUI snakeGUI = new SnakeGUI(this);
+        getServer().getPluginManager().registerEvents(snakeGUI, this); // Initialize the GUI
         // Additional initialization for game loop, world guard, snake speed, command executor
         // Load non-solid blocks from the config
         // Register event listener for AppleCollection
