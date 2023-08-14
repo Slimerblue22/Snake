@@ -17,6 +17,7 @@ import java.util.Map;
 
 public class GameManager {
     private final Map<Player, Snake> activeGames; // Active games, mapped by player
+    private final Map<Player, WolfChase> activeWolves = new HashMap<>();
     private final ProtocolManager protocolManager;
     private final WorldGuardManager worldGuardManager;
     private final Map<Player, Apple> activeApples; // Active apples, mapped by player
@@ -32,7 +33,7 @@ public class GameManager {
         this.worldGuardManager = new WorldGuardManager(plugin);
         this.protocolManager = protocolManager;
         this.playerData = playerData;
-        this.gameLoopManager = new GameLoopManager(this);
+        this.gameLoopManager = new GameLoopManager(this, plugin);
     }
 
     // Retrieves an active game for a specific player
@@ -76,8 +77,19 @@ public class GameManager {
         if (score > highScore) {
             playerData.setHighScore(player, score);
         }
-    }
+        if (plugin.isWolfChaseEnabled()) { // Check if it's enabled via config
 
+            // Create a WolfChase instance
+            WolfChase wolfChase = new WolfChase(worldGuardManager);
+
+            // Determine the spawn location for the wolf, ensuring it's at least 10 blocks away from the player
+            Location wolfSpawnLocation = wolfChase.randomWolfLocation(player.getWorld(), player.getLocation());
+
+            // Spawn the wolf
+            wolfChase.spawnWolf(wolfSpawnLocation);
+            this.activeWolves.put(player, wolfChase); // Store the WolfChase instance
+        }
+    }
     // Ends a player's game, stops the snake, clears the apple, stops the music, etc.
     public void endGame(Player player) {
         Snake snake = this.activeGames.remove(player);
@@ -94,17 +106,23 @@ public class GameManager {
         if (apple != null) {
             apple.clearApple();
         }
-        int highScore = playerData.getHighScore(player);
-        assert snake != null;
-        int score = snake.getScore();
-        if (score > highScore) {
-            playerData.setHighScore(player, score);
+        if (plugin.isWolfChaseEnabled()) { // Check if it's enabled via config
+            WolfChase wolfChase = this.activeWolves.remove(player); // Retrieve and remove the WolfChase instance
+            if (wolfChase != null) {
+                wolfChase.removeWolf(); // Remove the wolf
+            }
         }
-        plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
-            assert plugin.getWorldGuardManager() != null;
-            plugin.getWorldGuardManager().teleportToLobby(player, false);
-        }, 20L);
-    }
+            int highScore = playerData.getHighScore(player);
+            assert snake != null;
+            int score = snake.getScore();
+            if (score > highScore) {
+                playerData.setHighScore(player, score);
+            }
+            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                assert plugin.getWorldGuardManager() != null;
+                plugin.getWorldGuardManager().teleportToLobby(player, false);
+            }, 20L);
+        }
 
     public WorldGuardManager getWorldGuardManager() {
         return worldGuardManager;
@@ -134,5 +152,9 @@ public class GameManager {
     // Retrieves the game loop manager
     public GameLoopManager getGameLoopManager() {
         return gameLoopManager;
+    }
+
+    public WolfChase getWolfChase(Player player) {
+        return activeWolves.get(player);
     }
 }

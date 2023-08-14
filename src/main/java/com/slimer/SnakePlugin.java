@@ -18,10 +18,13 @@ public class SnakePlugin extends JavaPlugin {
     private WorldGuardManager worldGuardManager; // WorldGuard integration manager
     private Location gameLocation; // Location for the game
     private Location lobbyLocation; // Location for the lobby
+    private boolean wolfChaseEnabled;
 
     @Override
     public void onEnable() {
         saveDefaultConfig(); // Save default config if not exists
+        // Read the wolfchase value
+        wolfChaseEnabled = getConfig().getBoolean("wolfchase");
         // Check for NoteBlockAPI and initialize music manager if exists
         // Initialize game and lobby locations from the config
         if (getServer().getPluginManager().getPlugin("NoteBlockAPI") != null) {
@@ -86,6 +89,10 @@ public class SnakePlugin extends JavaPlugin {
 
     public WorldGuardManager getWorldGuardManager() {
         return this.worldGuardManager;
+    }
+
+    public boolean isWolfChaseEnabled() {
+        return wolfChaseEnabled;
     }
 
     @Override

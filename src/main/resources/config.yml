@@ -26,3 +26,6 @@ world: world
 
 # Speed of the snake (e.g., 10 ticks)
 snake-speed: 10
+
+#Toggle wolfchase option, off by default
+wolfchase: false

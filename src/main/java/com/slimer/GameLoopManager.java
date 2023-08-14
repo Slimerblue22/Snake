@@ -6,18 +6,19 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Sheep;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class GameLoopManager {
     private final GameManager gameManager;
     private long moveInterval;  // Interval at which the game loop executes
+    private int wolfMoveCounter = 0;
+    private final SnakePlugin plugin;
 
-    public GameLoopManager(GameManager gameManager) {
+    public GameLoopManager(GameManager gameManager, SnakePlugin plugin) {
         this.gameManager = gameManager;
+        this.plugin = plugin;
         long configuredSpeed = gameManager.getPlugin().getConfig().getLong("snake-speed", 10L);
         this.moveInterval = Math.max(configuredSpeed, 5L);
         this.initializeGameLoop(); // Start the game loop
@@ -39,7 +40,34 @@ public class GameLoopManager {
         for (Map.Entry<Player, Snake> entry : gameManager.getActiveGames().entrySet()) {
             Snake snake = entry.getValue();
             Player player = entry.getKey();
-            snake.move();   // Move the snake
+            snake.move(); // Move the snake
+            if (this.plugin.isWolfChaseEnabled()) { // Check if it's enabled via config
+
+                // Wolf movement logic
+                wolfMoveCounter++;
+                WolfChase wolfChase = gameManager.getWolfChase(player);
+                if (wolfChase != null) {
+                    wolfChase.setAngry(true); // Keep the wolf angry
+                    if (wolfMoveCounter >= 3) {
+                        Location snakeHeadLocation = snake.getBody().getFirst().getLocation();
+                        LinkedList<Sheep> snakeBody = snake.getBody();
+                        wolfChase.moveTowards(snakeHeadLocation, snakeBody); // Move the wolf towards the closest part of the snake
+                        wolfMoveCounter = 0; // Reset the counter
+                    }
+                }
+
+                wolfChase = gameManager.getWolfChase(player);
+                if (wolfChase != null) {
+                    for (Sheep segment : snake.getBody()) {
+                        Location segmentLocation = segment.getLocation();
+                        // Check collision with wolf using exact coordinates
+                        if (wolfChase.isCollidingWithWolf(segmentLocation)) {
+                            playersToEndGame.add(player);
+                            break; // No need to check further segments if one collides
+                        }
+                    }
+                }
+            }
             ArmorStand playerArmorStand = snake.getArmorStand();
             // Check for conditions that should end the game
             // Conditions include player not riding armor stand, snake outside the game zone, snake colliding with solid blocks, etc.
