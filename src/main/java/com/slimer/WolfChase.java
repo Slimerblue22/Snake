@@ -5,6 +5,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Sheep;
 import org.bukkit.entity.Wolf;
 
@@ -15,8 +16,10 @@ import java.util.Random;
 public class WolfChase {
     private final WorldGuardManager worldGuardManager; // Instance variable for WorldGuardManager
     private Wolf wolf; // Instance variable for the wolf
+    private final GameManager gameManager;
 
-    public WolfChase(WorldGuardManager worldGuardManager) {
+    public WolfChase(GameManager gameManager, WorldGuardManager worldGuardManager) {
+        this.gameManager = gameManager;
         this.worldGuardManager = worldGuardManager;
     }
 
@@ -73,11 +76,12 @@ public class WolfChase {
         }
     }
 
-    public Location randomWolfLocation(World world, Location playerLocation) {
+    public Location randomWolfLocation(World world, Player player) {
+        Location playerLocation = player.getLocation();
         Location location;
         do {
             // Generate a random location within the game zone's boundaries
-            Location newLocation = getRandomLocation(world, playerLocation);
+            Location newLocation = getRandomLocation(world, player);
 
             // Check if the location is suitable for spawning the wolf
             if (isLocationSuitable(newLocation) && newLocation.distance(playerLocation) >= 10) {
@@ -124,17 +128,22 @@ public class WolfChase {
     }
 
     // Returns a random location within the game zone's boundaries.
-    public Location getRandomLocation(World world, Location playerLocation) {
-        Location min = worldGuardManager.getGameZoneMinimum();
-        Location max = worldGuardManager.getGameZoneMaximum();
-        if (min == null || max == null) {
-            Bukkit.getLogger().severe("Unable to get game zone boundaries!");
-            return null;
+    public Location getRandomLocation(World world, Player player) {
+        // Get the game zone for the player using the GameManager instance
+        String gameZoneName = gameManager.getGameZoneForPlayer(player);
+        if (gameZoneName != null) {
+            Location[] bounds = worldGuardManager.getGameZoneBounds(gameZoneName);
+            if (bounds != null) {
+                Location min = bounds[0];
+                Location max = bounds[1];
+                int x = getRandomNumberInRange(min.getBlockX(), max.getBlockX());
+                int z = getRandomNumberInRange(min.getBlockZ(), max.getBlockZ());
+                int y = player.getLocation().getBlockY();
+                return new Location(world, x + 0.5, y, z + 0.5); // Add 0.5 to x and z
+            }
         }
-        int x = getRandomNumberInRange(min.getBlockX(), max.getBlockX());
-        int z = getRandomNumberInRange(min.getBlockZ(), max.getBlockZ());
-        int y = playerLocation.getBlockY();
-        return new Location(world, x + 0.5, y, z + 0.5); // Add 0.5 to x and z
+        Bukkit.getLogger().severe("Unable to get game zone boundaries!");
+        return null;
     }
 
     public void setAngry(boolean angry) {

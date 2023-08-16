@@ -6,21 +6,6 @@ nonSolidBlocks:
 #Song path
 song-file-path: "plugins/Snake/songs/song.nbs"
 
-#Region names
-Lobby: lobby
-Gamezone: gamezone
-
-#Lobby and GameZone teleportation points
-teleportLocations:
-  game:
-    x:
-    y:
-    z:
-  lobby:
-    x:
-    y:
-    z:
-
 #World that the game should be running in
 world: world
 

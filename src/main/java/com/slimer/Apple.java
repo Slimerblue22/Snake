@@ -37,15 +37,26 @@ public class Apple {
 
     // Returns a random location within the game zone's boundaries.
     public Location getRandomLocation(World world, Location snakeLocation) {
-        Location min = worldGuardManager.getGameZoneMinimum();
-        Location max = worldGuardManager.getGameZoneMaximum();
-        if (min == null || max == null) {
-            Bukkit.getLogger().severe("Unable to get game zone boundaries!");
+        // Retrieve the game zone name directly
+        String gameZoneName = worldGuardManager.getPlayerGameZone(player);
+        if (gameZoneName == null) {
+            Bukkit.getLogger().severe("Unable to get game zone for player: " + player.getName());
             return null;
         }
+
+        Location[] bounds = worldGuardManager.getGameZoneBounds(gameZoneName);
+        if (bounds == null) {
+            Bukkit.getLogger().severe("Unable to get game zone boundaries for: " + gameZoneName);
+            return null;
+        }
+
+        Location min = bounds[0];
+        Location max = bounds[1];
+
         int x = getRandomNumberInRange(min.getBlockX(), max.getBlockX());
         int z = getRandomNumberInRange(min.getBlockZ(), max.getBlockZ());
-        int y = snakeLocation.getBlockY();
+        int y = snakeLocation.getBlockY(); // Keep this unchanged
+
         return new Location(world, x, y, z);
     }
 
@@ -74,6 +85,12 @@ public class Apple {
 
     // Method to spawn the apple in the world, ensuring it is placed in a valid location.
     private void spawnApple(World world, Location location) {
+        // Retrieve the game zone name directly
+        String gameZoneName = worldGuardManager.getPlayerGameZone(player);
+        if (gameZoneName == null) {
+            Bukkit.getLogger().severe("Unable to get game zone for player: " + player.getName());
+            return;
+        }
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             // Synchronized block to handle concurrent modifications safely.
             synchronized (lock) {

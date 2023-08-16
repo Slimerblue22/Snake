@@ -1,150 +1,279 @@
 package com.slimer;
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.WorldGuard;
-import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
-import com.sk89q.worldguard.protection.regions.RegionQuery;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class WorldGuardManager {
-    private final RegionQuery query; // Query object for region lookup
-    private final String lobbyRegionName; // Name of the lobby region
-    private final String gameZoneRegionName; // Name of the game zone region
-    private final RegionContainer container; // Container for regions
-    private final SnakePlugin plugin; // Reference to the main plugin class
+    private final RegionContainer container;
+    private final SnakePlugin plugin;
+    private final Map<String, String> zoneLinks;
+    private File regionLinksFile;
+    private FileConfiguration regionLinksConfig;
 
     public WorldGuardManager(SnakePlugin plugin) {
         this.plugin = plugin;
-        updateLocations(); // Initialize and update locations
         this.container = WorldGuard.getInstance().getPlatform().getRegionContainer();
-        this.query = container.createQuery(); // Create query object
-        // Read lobby and game zone region names from the configuration
-        this.lobbyRegionName = plugin.getConfig().getString("Lobby", "lobby");
-        this.gameZoneRegionName = plugin.getConfig().getString("Gamezone", "gamezone");
+        this.zoneLinks = new HashMap<>();
+        loadRegionLinksFile();
+        loadZoneLinks();
     }
 
-    // Check if the player is in the lobby region
-    public boolean isPlayerInLobby(Player player) {
-        Location loc = player.getLocation();
-        ApplicableRegionSet set = getApplicableRegions(loc);
-        for (ProtectedRegion region : set.getRegions()) {
-            if (region.getId().equalsIgnoreCase(lobbyRegionName)) {
-                return true;
+    public FileConfiguration getRegionLinksConfig() {
+        return regionLinksConfig;
+    }
+
+    public void loadRegionLinksFile() {
+        regionLinksFile = new File(plugin.getDataFolder(), "RegionLinks.yml");
+        if (!regionLinksFile.exists()) {
+            try {
+                regionLinksFile.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
-        return false;
+        regionLinksConfig = YamlConfiguration.loadConfiguration(regionLinksFile);
     }
 
-    // Teleport player to the game location, with optional validation
-    public boolean teleportToGame(Player player, boolean validateOnly) {
-        Location gameLocation = plugin.getGameLocation();
-        if (gameLocation.equals(new Location(player.getWorld(), 0, 0, 0))) {
-            return false;
+    public void loadZoneLinks() {
+        if (regionLinksConfig.contains("Linked")) {
+            for (String linkKey : Objects.requireNonNull(regionLinksConfig.getConfigurationSection("Linked")).getKeys(false)) {
+                String lobbyZone = regionLinksConfig.getString("Linked." + linkKey + ".LobbyRegion");
+                String gameZone = regionLinksConfig.getString("Linked." + linkKey + ".GameRegion");
+                if (lobbyZone != null && gameZone != null) {
+                    zoneLinks.put(lobbyZone, gameZone);
+                }
+            }
         }
-        if (!validateOnly) {
-            gameLocation.setYaw(player.getLocation().getYaw());
-            gameLocation.setPitch(player.getLocation().getPitch());
-            player.teleport(gameLocation);
-        }
-        return true;
     }
 
-    // Teleport player to the lobby location, with optional validation
-    public boolean teleportToLobby(Player player, boolean validateOnly) {
-        Location lobbyLocation = plugin.getLobbyLocation();
-        if (lobbyLocation.equals(new Location(player.getWorld(), 0, 0, 0))) {
-            return false;
-        }
-        if (!validateOnly) {
-            lobbyLocation.setYaw(player.getLocation().getYaw());
-            lobbyLocation.setPitch(player.getLocation().getPitch());
-            player.teleport(lobbyLocation);
-        }
-        return true;
+    public enum LinkResult {
+        SUCCESS, ALREADY_LINKED, ZONES_NOT_FOUND
     }
 
-    // Update locations for the game and lobby from the configuration
-    public void updateLocations() {
-        if (plugin == null) {
-            Bukkit.getLogger().warning("Plugin instance is null in WorldGuardManager!");
-            return;
+    public LinkResult addZoneLink(String lobbyZone, String gameZone) {
+        // Check if zones are already linked
+        if (zoneLinks.containsKey(lobbyZone) || zoneLinks.containsValue(gameZone)) {
+            return LinkResult.ALREADY_LINKED;
         }
-        Location gameLocation = new Location(Bukkit.getWorld(Objects.requireNonNull(plugin.getConfig().getString("world"))), plugin.getConfig().getDouble("teleportLocations.game.x"), plugin.getConfig().getDouble("teleportLocations.game.y"), plugin.getConfig().getDouble("teleportLocations.game.z"));
-        Location lobbyLocation = new Location(Bukkit.getWorld(Objects.requireNonNull(plugin.getConfig().getString("world"))), plugin.getConfig().getDouble("teleportLocations.lobby.x"), plugin.getConfig().getDouble("teleportLocations.lobby.y"), plugin.getConfig().getDouble("teleportLocations.lobby.z"));
-        plugin.setGameLocation(gameLocation);
-        plugin.setLobbyLocation(lobbyLocation);
-    }
 
-    private ApplicableRegionSet getApplicableRegions(Location location) {
-        return query.getApplicableRegions(BukkitAdapter.adapt(location));
-    }
-
-    // Get the minimum point of the game zone region
-    public Location getGameZoneMinimum() {
+        // Verify that the game and lobby zones exist
         String worldName = plugin.getConfig().getString("world");
         World world = Bukkit.getWorld(Objects.requireNonNull(worldName));
-        ProtectedRegion gameZone = getRegion(gameZoneRegionName);
-        if (gameZone != null && world != null) {
-            return BukkitAdapter.adapt(world, gameZone.getMinimumPoint());
+        RegionManager regions = container.get(BukkitAdapter.adapt(Objects.requireNonNull(world)));
+        if (regions == null || regions.getRegion(gameZone) == null || regions.getRegion(lobbyZone) == null) {
+            Bukkit.getLogger().warning("One or both zones not found: " + gameZone + ", " + lobbyZone);
+            return LinkResult.ZONES_NOT_FOUND;
         }
-        return null;
+
+        // Determine the next link number
+        ConfigurationSection linkedSection = regionLinksConfig.getConfigurationSection("Linked");
+        int nextLinkNumber = (linkedSection != null ? linkedSection.getKeys(false).size() : 0) + 1;
+        String linkName = "Link" + nextLinkNumber;
+
+        // Link the zones
+        zoneLinks.put(lobbyZone, gameZone);
+        regionLinksConfig.set("Linked." + linkName + ".LobbyRegion", lobbyZone);
+        regionLinksConfig.set("Linked." + linkName + ".GameRegion", gameZone);
+        saveRegionLinksFile();
+
+        return LinkResult.SUCCESS;
     }
 
-    // Get the maximum point of the game zone region
-    public Location getGameZoneMaximum() {
-        String worldName = plugin.getConfig().getString("world");
-        World world = Bukkit.getWorld(Objects.requireNonNull(worldName));
-        ProtectedRegion gameZone = getRegion(gameZoneRegionName);
-        if (gameZone != null && world != null) {
-            return BukkitAdapter.adapt(world, gameZone.getMaximumPoint());
+    public void saveRegionLinksFile() {
+        try {
+            regionLinksConfig.save(regionLinksFile);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        return null;
     }
 
-    // Retrieve a specific region by name
-    private ProtectedRegion getRegion(String regionName) {
+    public String getPlayerLobbyZone(Player player) {
         String worldName = plugin.getConfig().getString("world");
         World world = Bukkit.getWorld(Objects.requireNonNull(worldName));
-        // Return null and log error if world or region is not found
+        RegionManager regions = container.get(BukkitAdapter.adapt(Objects.requireNonNull(world)));
+
+        // Iterate through lobby zones
+        List<String> lobbyZones = regionLinksConfig.getStringList("lobbyzones");
+        for (String lobbyZoneName : lobbyZones) {
+            if (Objects.requireNonNull(Objects.requireNonNull(regions).getRegion(lobbyZoneName)).contains(player.getLocation().getBlockX(), player.getLocation().getBlockY(), player.getLocation().getBlockZ())) {
+                return lobbyZoneName;
+            }
+        }
+
+        return null; // Player is not in any lobby zone
+    }
+
+    public String getPlayerGameZone(Player player) {
+        String worldName = plugin.getConfig().getString("world");
+        World world = Bukkit.getWorld(Objects.requireNonNull(worldName));
+        RegionManager regions = container.get(BukkitAdapter.adapt(Objects.requireNonNull(world)));
+
+        // Iterate through game zones
+        List<String> gameZones = regionLinksConfig.getStringList("gamezones");
+        for (String gameZoneName : gameZones) {
+            if (Objects.requireNonNull(Objects.requireNonNull(regions).getRegion(gameZoneName)).contains(player.getLocation().getBlockX(), player.getLocation().getBlockY(), player.getLocation().getBlockZ())) {
+                return gameZoneName;
+            }
+        }
+
+        return null; // Player is not in any game zone
+    }
+
+    public Location[] getGameZoneBounds(String gameZoneName) {
+        String worldName = plugin.getConfig().getString("world");
+        World world = Bukkit.getWorld(Objects.requireNonNull(worldName));
         if (world == null) {
             Bukkit.getLogger().severe("World not found: " + worldName);
             return null;
         }
         RegionManager regions = container.get(BukkitAdapter.adapt(world));
         if (regions == null) {
-            Bukkit.getLogger().severe("RegionManager is null for " + worldName);
+            Bukkit.getLogger().severe("RegionManager not found for world: " + worldName);
             return null;
         }
-        ProtectedRegion region = regions.getRegion(regionName);
+        ProtectedRegion region = regions.getRegion(gameZoneName);
         if (region == null) {
-            Bukkit.getLogger().severe("Region not found: " + regionName);
+            Bukkit.getLogger().severe("Region not found: " + gameZoneName);
+            return null;
         }
-        return region;
+
+        Location min = new Location(world, region.getMinimumPoint().getX(), region.getMinimumPoint().getY(), region.getMinimumPoint().getZ());
+        Location max = new Location(world, region.getMaximumPoint().getX(), region.getMaximumPoint().getY(), region.getMaximumPoint().getZ());
+        return new Location[] {min, max};
     }
 
-    // Check if a location is outside a specific region
-    public boolean isLocationOutsideRegion(Location location, String regionName, World gameWorld) {
-        World locationWorld = location.getWorld();
-        if (!Objects.requireNonNull(locationWorld).equals(gameWorld)) {
-            return true; // Return true if the location's world does not match the game world
+    public String getLinkKeyByLobbyZone(String lobbyZoneName) {
+        ConfigurationSection linkedSection = regionLinksConfig.getConfigurationSection("Linked");
+        if (linkedSection != null) {
+            for (String linkKey : linkedSection.getKeys(false)) {
+                String lobbyRegion = regionLinksConfig.getString("Linked." + linkKey + ".LobbyRegion");
+                if (lobbyZoneName.equals(lobbyRegion)) {
+                    return linkKey;
+                }
+            }
+        }
+        return null; // Return null if no matching link key is found
+    }
+
+    public String getLinkKeyByGameZone(String gameZoneName) {
+        ConfigurationSection linkedSection = regionLinksConfig.getConfigurationSection("Linked");
+        if (linkedSection != null) {
+            for (String linkKey : linkedSection.getKeys(false)) {
+                String gameRegion = regionLinksConfig.getString("Linked." + linkKey + ".GameRegion");
+                if (gameZoneName.equals(gameRegion)) {
+                    return linkKey;
+                }
+            }
+        }
+        return null; // Return null if no matching link key is found
+    }
+
+    public boolean isLocationWithinBounds(Location location, Location min, Location max) {
+        return location.getX() >= min.getX() && location.getX() <= max.getX()
+                && location.getY() >= min.getY() && location.getY() <= max.getY()
+                && location.getZ() >= min.getZ() && location.getZ() <= max.getZ();
+    }
+
+    public boolean teleportToGameZone(Player player, String lobbyZoneName) {
+        String linkKey = getLinkKeyByLobbyZone(lobbyZoneName);
+        if (linkKey == null) {
+            Bukkit.getLogger().info("Link key not found for lobby zone: " + lobbyZoneName);
+            return true;
         }
 
-        RegionManager regionManager = WorldGuard.getInstance().getPlatform().getRegionContainer().get(BukkitAdapter.adapt(locationWorld));
-        if (!Objects.requireNonNull(regionManager).hasRegion(regionName)) {
-            return true; // Return true if the region does not exist
+        String coordinates = regionLinksConfig.getString("Linked." + linkKey + ".gameTP");
+        if (coordinates == null) {
+            Bukkit.getLogger().info("Teleportation coordinates not found for game zone linked with lobby zone: " + lobbyZoneName);
+            return true;
         }
 
-        ProtectedRegion region = regionManager.getRegion(regionName);
-        BlockVector3 locVector = BukkitAdapter.asBlockVector(location);
-        return !Objects.requireNonNull(region).contains(locVector);
+        String[] parts = coordinates.split(",");
+        Location tpLocation = new Location(player.getWorld(), Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
+        player.teleport(tpLocation);
+        return true;
+    }
+
+    public void teleportToLobby(Player player, String gameZoneName) {
+        String linkKey = getLinkKeyByGameZone(gameZoneName); // Call the new method
+        if (linkKey == null) {
+            Bukkit.getLogger().info("Link key not found for game zone: " + gameZoneName);
+            return;
+        }
+
+        String coordinates = regionLinksConfig.getString("Linked." + linkKey + ".lobbyTP");
+        if (coordinates == null) {
+            Bukkit.getLogger().info("Teleportation coordinates not found for lobby zone linked with game zone: " + gameZoneName);
+            return;
+        }
+
+        String[] parts = coordinates.split(",");
+        Location tpLocation = new Location(player.getWorld(), Integer.parseInt(parts[0]), Integer.parseInt(parts[1]), Integer.parseInt(parts[2]));
+
+        player.teleport(tpLocation);
+    }
+
+    public boolean registerGameZone(String gameZoneName) {
+        // Fetch the world name from the configuration
+        String worldName = plugin.getConfig().getString("world");
+        World world = Bukkit.getWorld(Objects.requireNonNull(worldName));
+        if (world == null) {
+            Bukkit.getLogger().severe("World not found: " + worldName);
+            return false;
+        }
+
+        RegionManager regions = container.get(BukkitAdapter.adapt(world));
+        if (regions == null || regions.getRegion(gameZoneName) == null) {
+            Bukkit.getLogger().severe("Region not found: " + gameZoneName);
+            return false;
+        }
+
+        // Store the game zone name in the configuration
+        List<String> gameZones = regionLinksConfig.getStringList("gamezones");
+        gameZones.add(gameZoneName);
+        regionLinksConfig.set("gamezones", gameZones);
+        saveRegionLinksFile();
+
+        return true;
+    }
+
+    public boolean registerLobbyZone(String lobbyZoneName) {
+        // Fetch the world name from the configuration
+        String worldName = plugin.getConfig().getString("world");
+        World world = Bukkit.getWorld(Objects.requireNonNull(worldName));
+        if (world == null) {
+            Bukkit.getLogger().severe("World not found: " + worldName);
+            return false;
+        }
+
+        RegionManager regions = container.get(BukkitAdapter.adapt(world));
+        if (regions == null || regions.getRegion(lobbyZoneName) == null) {
+            Bukkit.getLogger().severe("Region not found: " + lobbyZoneName);
+            return false;
+        }
+
+        // Store the lobby zone name in the configuration
+        List<String> lobbyZones = regionLinksConfig.getStringList("lobbyzones");
+        lobbyZones.add(lobbyZoneName);
+        regionLinksConfig.set("lobbyzones", lobbyZones);
+        saveRegionLinksFile();
+
+        return true;
     }
 }

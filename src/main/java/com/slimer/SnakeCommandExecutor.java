@@ -46,11 +46,14 @@ public class SnakeCommandExecutor implements CommandExecutor, TabCompleter {
             case "start" -> startGame(sender, player);
             case "stop" -> stopGame(sender, player);
             case "setspeed" -> setSpeed(sender, args);
-            case "lobbycords" -> setLobbyCoordinates(sender);
             case "instructions", "help" -> sendInstructions(sender);
-            case "gamecords" -> setGameCoordinates(sender);
             case "reload" -> reloadConfig(sender);
             case "color" -> setColor(sender, args, player);
+            case "gamezone" -> registerGameZone(sender, args);
+            case "lobbyzone" -> registerLobbyZone(sender, args);
+            case "linkzones" -> linkZones(sender, args);
+            case "lobbytp" -> setLobbyTeleport(sender, args);
+            case "gametp" -> setGameTeleport(sender, args);
             case "leaderboard" -> showLeaderboard(sender, player);
             case "highscore" -> showHighScore(sender, player);
             case "gui" -> openGUI(sender, player);
@@ -71,7 +74,7 @@ public class SnakeCommandExecutor implements CommandExecutor, TabCompleter {
 
             // Commands available for administrators with 'snake.admin' permission
             if (sender.hasPermission("snake.admin")) {
-                availableCommands.addAll(Arrays.asList("gamecords", "lobbycords", "setspeed", "reload"));
+                availableCommands.addAll(Arrays.asList("gamezone", "lobbyzone", "setspeed", "linkzones", "reload", "lobbytp", "gametp"));
             }
         }
         return availableCommands;
@@ -97,19 +100,18 @@ public class SnakeCommandExecutor implements CommandExecutor, TabCompleter {
             sender.sendMessage(Component.text("You already have a snake game running.", NamedTextColor.RED));
             return;
         }
-        if (!worldGuardManager.isPlayerInLobby(player)) {
-            sender.sendMessage(Component.text("You can only start the game in the lobby!", NamedTextColor.RED));
+        String lobbyZone = worldGuardManager.getPlayerLobbyZone(player);
+        if (lobbyZone == null) {
+            sender.sendMessage(Component.text("You must be in a lobby to start the game.", NamedTextColor.RED));
             return;
         }
-        if (!worldGuardManager.teleportToGame(player, true)) {
-            sender.sendMessage(Component.text("The game coordinates are not specified correctly in the config. The game will not start.", NamedTextColor.RED));
+
+        // Attempt to teleport to the game zone
+        if (!worldGuardManager.teleportToGameZone(player, lobbyZone)) {
+            sender.sendMessage(Component.text("Failed to teleport to the game zone.", NamedTextColor.RED));
             return;
         }
-        if (!worldGuardManager.teleportToLobby(player, true)) {
-            sender.sendMessage(Component.text("The lobby coordinates are not specified correctly in the config. The game will not start.", NamedTextColor.RED));
-            return;
-        }
-        worldGuardManager.teleportToGame(player, false);
+
         if (!sender.hasPermission("snake.play")) {
             sender.sendMessage(Component.text("You do not have permission to start the snake game.", NamedTextColor.RED));
         } else {
@@ -191,7 +193,6 @@ public class SnakeCommandExecutor implements CommandExecutor, TabCompleter {
     private void reloadConfig(CommandSender sender) {
         if (sender.hasPermission("snake.admin")) {
             plugin.reloadConfig();
-            worldGuardManager.updateLocations();
             sender.sendMessage(Component.text("Snake plugin config reloaded.", NamedTextColor.GREEN));
         } else {
             sender.sendMessage(Component.text("You don't have permission to run this command!", NamedTextColor.RED));
@@ -266,52 +267,159 @@ public class SnakeCommandExecutor implements CommandExecutor, TabCompleter {
         }
     }
 
-    private void setLobbyCoordinates(CommandSender sender) {
-        if (sender instanceof Player player) {
-            if (!player.hasPermission("snake.admin")) {
-                player.sendMessage(Component.text("You don't have permission to run this command!", NamedTextColor.RED));
-                return;
+    private void setLobbyTeleport(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage("This command can only be run by a player.");
+            return;
+        }
+        if (!sender.hasPermission("snake.admin")) {
+            sender.sendMessage(Component.text("You don't have permission to run this command!", NamedTextColor.RED));
+            return;
+        }
+        if (args.length != 2) {
+            sender.sendMessage("Usage: /snake LobbyTP {lobby region name}");
+            return;
+        }
+        String lobbyRegionName = args[1];
+
+        // Find the link number based on the lobby region name
+        ConfigurationSection linkedSection = worldGuardManager.getRegionLinksConfig().getConfigurationSection("Linked");
+        if (linkedSection == null) {
+            sender.sendMessage("No links found.");
+            return;
+        }
+        String linkKey = null;
+        for (String key : linkedSection.getKeys(false)) {
+            if (Objects.equals(linkedSection.getString(key + ".LobbyRegion"), lobbyRegionName)) {
+                linkKey = key;
+                break;
             }
-            Location location = player.getLocation();
-            String lobbyRegionName = plugin.getConfig().getString("Lobby");
-            World gameWorld = Bukkit.getWorld(Objects.requireNonNull(plugin.getConfig().getString("world")));
-            if (plugin.getWorldGuardManager().isLocationOutsideRegion(location, lobbyRegionName, gameWorld)) {
-                player.sendMessage(Component.text("The selected location is not inside the lobby region!", NamedTextColor.RED));
-                return;
+        }
+        if (linkKey == null) {
+            sender.sendMessage("Lobby region not found: " + lobbyRegionName);
+            return;
+        }
+
+        // Retrieve the player's coordinates and round to the nearest full number
+        Location playerLocation = player.getLocation();
+        int x = (int) Math.round(playerLocation.getX());
+        int y = (int) Math.round(playerLocation.getY());
+        int z = (int) Math.round(playerLocation.getZ());
+
+        // Save the coordinates to the RegionLinks.yml file for the lobby region
+        worldGuardManager.getRegionLinksConfig().set("Linked." + linkKey + ".lobbyTP", x + "," + y + "," + z);
+        worldGuardManager.saveRegionLinksFile();
+
+        sender.sendMessage("Teleportation coordinates for lobby region " + lobbyRegionName + " have been set.");
+    }
+
+    private void setGameTeleport(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage("This command can only be run by a player.");
+            return;
+        }
+        if (!sender.hasPermission("snake.admin")) {
+            sender.sendMessage(Component.text("You don't have permission to run this command!", NamedTextColor.RED));
+            return;
+        }
+
+        if (args.length != 2) {
+            sender.sendMessage("Usage: /snake GameTP {game region name}");
+            return;
+        }
+        String gameRegionName = args[1];
+
+        // Find the link number based on the game region name
+        ConfigurationSection linkedSection = worldGuardManager.getRegionLinksConfig().getConfigurationSection("Linked");
+        if (linkedSection == null) {
+            sender.sendMessage("No links found.");
+            return;
+        }
+        String linkKey = null;
+        for (String key : linkedSection.getKeys(false)) {
+            if (Objects.equals(linkedSection.getString(key + ".GameRegion"), gameRegionName)) {
+                linkKey = key;
+                break;
             }
-            plugin.getConfig().set("teleportLocations.lobby.x", location.getX());
-            plugin.getConfig().set("teleportLocations.lobby.y", location.getY());
-            plugin.getConfig().set("teleportLocations.lobby.z", location.getZ());
-            plugin.saveConfig();
-            plugin.getWorldGuardManager().updateLocations();
-            player.sendMessage(Component.text("Lobby coordinates set to your current location.", NamedTextColor.GREEN));
+        }
+        if (linkKey == null) {
+            sender.sendMessage("Game region not found: " + gameRegionName);
+            return;
+        }
+
+        // Retrieve the player's coordinates and round to the nearest full number
+        Location playerLocation = player.getLocation();
+        int x = (int) Math.round(playerLocation.getX());
+        int y = (int) Math.round(playerLocation.getY());
+        int z = (int) Math.round(playerLocation.getZ());
+
+        // Save the coordinates to the RegionLinks.yml file for the game region
+        worldGuardManager.getRegionLinksConfig().set("Linked." + linkKey + ".gameTP", x + "," + y + "," + z);
+        worldGuardManager.saveRegionLinksFile();
+
+        sender.sendMessage("Teleportation coordinates for game region " + gameRegionName + " have been set.");
+    }
+
+    private void registerLobbyZone(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("snake.admin")) {
+            sender.sendMessage(Component.text("You don't have permission to run this command!", NamedTextColor.RED));
+            return;
+        }
+        if (args.length < 2) {
+            sender.sendMessage(Component.text("Please specify the name of the WorldGuard region to register as a lobby zone.", NamedTextColor.RED));
+            return;
+        }
+        String regionName = args[1];
+
+        // Call into WorldGuardManager to register the region
+        if (plugin.getWorldGuardManager().registerLobbyZone(regionName)) {
+            sender.sendMessage(Component.text("Successfully registered region " + regionName + " as a lobby zone.", NamedTextColor.GREEN));
         } else {
-            sender.sendMessage(Component.text("This command can only be used by players.", NamedTextColor.RED));
+            sender.sendMessage(Component.text("Failed to register region " + regionName + " as a lobby zone.", NamedTextColor.RED));
         }
     }
 
-    private void setGameCoordinates(CommandSender sender) {
-        if (sender instanceof Player player) {
-            if (!player.hasPermission("snake.admin")) {
-                player.sendMessage(Component.text("You don't have permission to run this command!", NamedTextColor.RED));
-                return;
-            }
-            Location location = player.getLocation();
-            String gameZoneRegionName = plugin.getConfig().getString("Gamezone");
+    private void linkZones(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("snake.admin")) {
+            sender.sendMessage(Component.text("You don't have permission to run this command!", NamedTextColor.RED));
+            return;
+        }
+        if (args.length < 3) {
+            sender.sendMessage(Component.text("Please specify the names of the lobby and game zones to link.", NamedTextColor.RED));
+            return;
+        }
+        String lobbyZoneName = args[1];
+        String gameZoneName = args[2];
 
-            World gameWorld = Bukkit.getWorld(Objects.requireNonNull(plugin.getConfig().getString("world")));
-            if (plugin.getWorldGuardManager().isLocationOutsideRegion(location, gameZoneRegionName, gameWorld)) {
-                player.sendMessage(Component.text("The selected location is not inside the game region!", NamedTextColor.RED));
-                return;
-            }
-            plugin.getConfig().set("teleportLocations.game.x", location.getX());
-            plugin.getConfig().set("teleportLocations.game.y", location.getY());
-            plugin.getConfig().set("teleportLocations.game.z", location.getZ());
-            plugin.saveConfig();
-            plugin.getWorldGuardManager().updateLocations();
-            player.sendMessage(Component.text("Game coordinates set to your current location.", NamedTextColor.GREEN));
+        // Call into WorldGuardManager to link the zones
+        WorldGuardManager.LinkResult result = plugin.getWorldGuardManager().addZoneLink(lobbyZoneName, gameZoneName);
+        switch (result) {
+            case SUCCESS ->
+                    sender.sendMessage(Component.text("Successfully linked lobby zone " + lobbyZoneName + " with game zone " + gameZoneName + ".", NamedTextColor.GREEN));
+            case ALREADY_LINKED ->
+                    sender.sendMessage(Component.text("These zones are already linked!", NamedTextColor.RED));
+            case ZONES_NOT_FOUND ->
+                    sender.sendMessage(Component.text("One or both zones not found!", NamedTextColor.RED));
+        }
+    }
+
+    private void registerGameZone(CommandSender sender, String[] args) {
+        if (!sender.hasPermission("snake.admin")) {
+            sender.sendMessage(Component.text("You don't have permission to run this command!", NamedTextColor.RED));
+            return;
+        }
+
+        if (args.length < 2) {
+            sender.sendMessage(Component.text("Please specify the name of the WorldGuard region to register as a game zone.", NamedTextColor.RED));
+            return;
+        }
+        String regionName = args[1];
+
+        // Call into WorldGuardManager to register the region
+        if (plugin.getWorldGuardManager().registerGameZone(regionName)) {
+            sender.sendMessage(Component.text("Successfully registered region " + regionName + " as a game zone.", NamedTextColor.GREEN));
         } else {
-            sender.sendMessage(Component.text("This command can only be used by players.", NamedTextColor.RED));
+            sender.sendMessage(Component.text("Failed to register region " + regionName + " as a game zone.", NamedTextColor.RED));
         }
     }
 }

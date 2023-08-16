@@ -186,8 +186,8 @@ public class SnakeGUI implements Listener {
                     event.setCancelled(true);
                     return; // Return without closing the admin menu
                 }
-                case LIME_BANNER -> player.performCommand("snake lobbycords");
-                case RED_BANNER -> player.performCommand("snake gamecords");
+                case LIME_BANNER -> player.performCommand("snake lobbytp");
+                case RED_BANNER -> player.performCommand("snake gametp");
                 case EMERALD -> player.performCommand("snake reload");
             }
             player.closeInventory(); // Close the main menu for all other items
