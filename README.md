@@ -1,4 +1,4 @@
-
+### Important Update: I'm in the midst of a full recode for the plugin, aiming to enhance its structure and streamline future development. Updates are temporarily on hold during this process.
 ---
 
 # Snake - Minecraft Spigot Plugin
