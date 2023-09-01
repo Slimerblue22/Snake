@@ -9,11 +9,9 @@ softdepend: [NoteBlockAPI]
 commands:
   snakeadmin:
     description: Admin command for the Snake game plugin
-    usage: /<command>
     aliases: [sa]
   snakegame:
     description: Command for controlling the Snake game
-    usage: /<command> <start|stop|gui>
     aliases: [sg]
 permissions:
   snake.admin:
