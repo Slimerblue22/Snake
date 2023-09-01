@@ -200,10 +200,27 @@ public class GameManager {
 
     /**
      * Stops all ongoing games and clears all game-related data.
+     * Used during server shutdown as cleanup.
      */
     public void stopAllGames() {
-        // Clear snakes and teleport players back to lobby
+        // Destroy all snakes, teleport players back to lobby, and remove players' snake entries
+        for (Map.Entry<Player, SnakeCreation> entry : playerSnakes.entrySet()) {
+            Player player = entry.getKey();
+            SnakeCreation snake = entry.getValue();
+
+            if (snake != null) {
+                snake.destroy();
+            }
+
+            // Teleport the player back to the lobby immediately
+            Location lobbyLocation = playerLobbyLocations.get(player);
+            if (lobbyLocation != null) {
+                player.teleport(lobbyLocation);
+            }
+        }
         playerSnakes.clear();
+
+        // Clear teleport locations back to lobby
         playerLobbyLocations.clear();
 
         // Cancel all scheduled movement tasks
