@@ -1,13 +1,24 @@
 name: Snake
-author: Slimerblue22
 version: '${version}'
-depend: [ProtocolLib, WorldGuard]
-softdepend: [NoteBlockAPI]
-main: com.slimer.SnakePlugin
+main: com.slimer.Main.Main
+authors: [Slimerblue22]
 api-version: '1.20'
 load: POSTWORLD
+depend: [ProtocolLib, WorldGuard]
+softdepend: [NoteBlockAPI]
 commands:
-  snake:
-    description: Controls for the snake game.
-    usage: /<command> <subcommand> [arguments]
-    aliases: [snakegame, snk]
+  snakeadmin:
+    description: Admin command for the Snake game plugin
+    usage: /<command>
+    aliases: [sa]
+  snakegame:
+    description: Command for controlling the Snake game
+    usage: /<command> <start|stop|gui>
+    aliases: [sg]
+permissions:
+  snake.admin:
+    description: Permission for the Snake game admin commands
+    default: op
+  snake.play:
+    description: Permission for playing the Snake game
+    default: op
