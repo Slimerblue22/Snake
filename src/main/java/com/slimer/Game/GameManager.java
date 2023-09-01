@@ -1,11 +1,16 @@
 package com.slimer.Game;
 
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.slimer.Main.Main;
+import com.slimer.Region.Region;
+import com.slimer.Region.RegionLink;
+import com.slimer.Region.RegionService;
 import com.slimer.Util.MusicManager;
 import com.slimer.Util.PlayerData;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
+import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -13,10 +18,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Manages the game state, player interactions, and the game logic for the Snake game.
@@ -30,7 +32,7 @@ public class GameManager {
     private final Map<Player, Location> playerLobbyLocations;
     private final Map<Player, Integer> playerScores = new HashMap<>();
     private final Map<Player, Apple> playerApples = new HashMap<>();
-    private final Map<Player, BukkitRunnable> collisionDetectionTasks = new HashMap<>();
+    private final Map<Player, BukkitRunnable> GameEndConditionsHandler = new HashMap<>();
     private final Plugin plugin;
     private final Map<Player, BukkitRunnable> movementTasks = new HashMap<>();
     private final Map<Player, BukkitRunnable> appleCollectionTasks = new HashMap<>();
@@ -38,6 +40,8 @@ public class GameManager {
     private SnakeMovement snakeMovement;
     private final MusicManager musicManager;
     private final boolean isMusicEnabled;
+    private final Set<UUID> disconnectedPlayerUUIDs = new HashSet<>();
+
 
     /**
      * Constructs a new GameManager.
@@ -99,16 +103,16 @@ public class GameManager {
         movementTask.runTaskTimer(plugin, 0L, 0L);
         movementTasks.put(player, movementTask);
 
-        // Initialize collision detection
-        CollisionHandler collisionHandler = new CollisionHandler(this, player);
-        BukkitRunnable collisionTask = new BukkitRunnable() {
+        // Initialize GameEndConditionsHandler
+        GameEndConditionsHandler gameEndConditionsHandler = new GameEndConditionsHandler(this, player, plugin);
+        BukkitRunnable GameEndEvents = new BukkitRunnable() {
             @Override
             public void run() {
-                collisionHandler.runCollisionChecks();
+                gameEndConditionsHandler.runGameEndEventsChecks();
             }
         };
-        collisionTask.runTaskTimer(plugin, 0L, 0L);
-        collisionDetectionTasks.put(player, collisionTask);
+        GameEndEvents.runTaskTimer(plugin, 0L, 0L);
+        GameEndConditionsHandler.put(player, GameEndEvents);
 
         // Initialize the apple for the player
         Apple apple = new Apple();
@@ -171,12 +175,12 @@ public class GameManager {
         }
         movementTasks.remove(player);
 
-        // Cancel and remove collision detection task
-        BukkitRunnable collisionTask = collisionDetectionTasks.get(player);
-        if (collisionTask != null) {
-            collisionTask.cancel();
+        // Cancel and remove GameEndConditionsHandler information
+        BukkitRunnable GameEndEvents = GameEndConditionsHandler.get(player);
+        if (GameEndEvents != null) {
+            GameEndEvents.cancel();
         }
-        collisionDetectionTasks.remove(player);
+        GameEndConditionsHandler.remove(player);
 
         // Clear apple data
         Apple apple = playerApples.get(player);
@@ -268,6 +272,50 @@ public class GameManager {
             return snake.getSegments();
         }
         return null;
+    }
+
+    /**
+     * Handles the actions to be taken when a player disconnects from the server.
+     * This is only called when a user leaves during a game.
+     *
+     * @param player The player who has disconnected.
+     */
+    public void handlePlayerDisconnect(Player player) {
+        // Store the player's UUID
+        disconnectedPlayerUUIDs.add(player.getUniqueId());
+    }
+
+    /**
+     * Handles the actions to be taken when a player reconnects to the server.
+     * Specifically, it teleports the reconnected player back to the lobby if they had previously disconnected.
+     *
+     * @param player The player who has reconnected.
+     */
+    public void handlePlayerReconnect(Player player) {
+        UUID uuid = player.getUniqueId();
+        if (disconnectedPlayerUUIDs.contains(uuid)) {
+            // Fetch the game region the player is currently in
+            World world = player.getWorld();
+            Location loc = player.getLocation();
+            RegionService regionService = RegionService.getInstance();
+
+            for (Map.Entry<String, Region> entry : regionService.getAllRegions().entrySet()) {
+                String regionName = entry.getKey();
+                ProtectedRegion gameRegion = regionService.getWorldGuardRegion(regionName, world);
+
+                if (gameRegion != null && regionService.isLocationInRegion(loc, gameRegion)) {
+                    RegionLink link = regionService.getRegionLink(gameRegion.getId(), Region.RegionType.GAME);
+                    if (link != null) {
+                        Location lobbyTeleportLocation = link.getLobbyTeleportLocation();
+                        if (lobbyTeleportLocation != null) {
+                            player.teleport(lobbyTeleportLocation);
+                            disconnectedPlayerUUIDs.remove(uuid);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**

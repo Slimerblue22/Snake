@@ -4,36 +4,46 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 
 import java.util.List;
 
 /**
- * Manages collision detection logic for the snake game.
- * This class is also responsible for detecting if the player has dismounted the snake.
+ * Handles conditions that may result in the end of the snake game for a player.
+ * This includes wall collisions, snake self-collisions, and player dismounting the snake's head.
+ * The class also manages events related to the game-ending conditions.
  */
-public class CollisionHandler {
+public class GameEndConditionsHandler implements Listener {
     private final GameManager gameManager;
     private final Player player;
     private Location lastKnownLocation;
 
     /**
-     * Constructs a new CollisionHandler.
+     * Constructs a new GameEndConditionsHandler.
      *
      * @param gameManager The GameManager instance to manage game logic.
      * @param player      The player for whom collision checks are to be performed.
      */
-    public CollisionHandler(GameManager gameManager, Player player) {
+    public GameEndConditionsHandler(GameManager gameManager, Player player, Plugin plugin) {
         this.gameManager = gameManager;
         this.player = player;
+
+        // Register the event for player disconnections
+        Bukkit.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
     /**
      * Runs collision checks for the snake.
      * If a collision is detected, the game for the player is stopped.
      */
-    public void runCollisionChecks() {
+    public void runGameEndEventsChecks() {
         if (checkWallCollision() || checkSolidBlockBelow() || checkSelfCollision() || checkPlayerDismounted()) {
             gameManager.stopGame(player);  // End the game for the player
         }
@@ -61,7 +71,7 @@ public class CollisionHandler {
         Location roundedLocation = new Location(currentLocation.getWorld(), x, y, z);
 
         if (lastKnownLocation != null && lastKnownLocation.equals(roundedLocation)) {
-            Bukkit.getLogger().info("[CollisionHandler.java] Wall collision detected!");  // Debug line
+            Bukkit.getLogger().info("[GameEndConditionsHandler.java] Wall collision detected!");  // Debug line
             return true; // Collision detected
         } else {
             lastKnownLocation = roundedLocation; // No collision detected
@@ -85,7 +95,7 @@ public class CollisionHandler {
         Block blockBelow = currentLocation.getWorld().getBlockAt(currentLocation.add(0, -1, 0));
 
         if (!blockBelow.getType().isSolid()) {
-            Bukkit.getLogger().info("[CollisionHandler.java] Non-solid block below detected!");  // Debug line
+            Bukkit.getLogger().info("[GameEndConditionsHandler.java] Non-solid block below detected!");  // Debug line
             return true; // True if the block below is not solid
         }
 
@@ -121,7 +131,7 @@ public class CollisionHandler {
         for (Entity segment : segments) {
             Vector segmentLocation = segment.getLocation().toVector();
             if (headLocation.distance(segmentLocation) < 0.1) {  // Tolerance of 0.1 blocks
-                Bukkit.getLogger().info("[CollisionHandler.java] Self-collision detected!");  // Debug line
+                Bukkit.getLogger().info("[GameEndConditionsHandler.java] Self-collision detected!");  // Debug line
                 return true;  // Self-collision detected
             }
         }
@@ -146,10 +156,58 @@ public class CollisionHandler {
         // Check if the list of passengers is empty or not containing the player
         List<Entity> passengers = sheepEntity.getPassengers();
         if (passengers.isEmpty() || !passengers.contains(player)) {
-            Bukkit.getLogger().info("[CollisionHandler.java] Player dismounted!");  // Debug line
+            Bukkit.getLogger().info("[GameEndConditionsHandler.java] Player dismounted!");  // Debug line
             return true;  // Player has dismounted
         }
 
         return false;  // Player is still mounted
+    }
+
+    /**
+     * Event handler for player quit events.
+     * Stops the game if the quitting player is the same as the one managed by this GameEndConditionsHandler instance.
+     *
+     * @param event The PlayerQuitEvent object containing event data.
+     */
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        Bukkit.getLogger().info("[GameEndConditionsHandler.java] A player has disconnected mid game!");  // Debug line
+        Player quittingPlayer = event.getPlayer();
+        Entity riddenEntity = quittingPlayer.getVehicle();
+
+        // Check if the quitting player is the same as the one managed by this GameEndConditionsHandler instance
+        if (quittingPlayer.equals(player)) {
+            if (riddenEntity != null && isSnakeEntity(riddenEntity)) {
+                gameManager.stopGame(quittingPlayer);  // Perform cleanup
+                gameManager.handlePlayerDisconnect(quittingPlayer); // Handle player disconnection
+            }
+        }
+    }
+
+    /**
+     * Event handler for when a player joins the server.
+     * Calls the handlePlayerReconnect method to manage reconnected players.
+     *
+     * @param event The PlayerJoinEvent object containing event data.
+     */
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Bukkit.getLogger().info("[GameEndConditionsHandler.java] A previously disconnected player has been sent back to lobby!");  // Debug line
+        Player joiningPlayer = event.getPlayer();
+
+        // Handle reconnection logic
+        gameManager.handlePlayerReconnect(joiningPlayer);
+    }
+
+    /**
+     * Determines if a given entity is a snake entity (in this case, a sheep).
+     * Used by the player disconnection check to remove the snake the player was riding.
+     *
+     * @param entity The Entity object to check.
+     * @return True if the entity is a sheep, false otherwise.
+     */
+    private boolean isSnakeEntity(Entity entity) {
+        // Check if the entity is a sheep
+        return entity.getType() == EntityType.SHEEP;
     }
 }
