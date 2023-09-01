@@ -41,6 +41,29 @@ public class AStar {
     }
 
     /**
+     * Checks if a given location has any neighboring blocks that are solid.
+     * The method considers eight neighboring locations around the specified location:
+     * four cardinal directions (North, South, East, West) and four diagonal directions.
+     *
+     * @param location The Bukkit Location object representing the central point for the check.
+     * @return true if any of the neighboring blocks are solid, false otherwise.
+     */
+    public boolean hasSolidNeighbors(Location location) {
+        int[][] directions = {
+                {1, 0}, {-1, 0}, {0, 1}, {0, -1},  // Cardinal directions
+                {1, 1}, {-1, -1}, {1, -1}, {-1, 1} // Diagonal directions
+        };
+
+        for (int[] direction : directions) {
+            Location neighbor = location.clone().add(direction[0], 0, direction[1]);
+            if (neighbor.getBlock().getType().isSolid()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
      * Checks if a path exists between two locations.
      *
      * @param start The starting location.

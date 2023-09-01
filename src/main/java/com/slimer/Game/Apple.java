@@ -93,7 +93,7 @@ public class Apple {
      * @return true if location is valid, false otherwise.
      */
     private boolean isLocationValid(Location location, Location snakeLocation, AStar aStar) {
-        if (aStar.isSameBlock(location, snakeLocation)) {
+        if (aStar.hasSolidNeighbors(location) || aStar.isSameBlock(location, snakeLocation)) {
             return false;
         }
         return aStar.pathExists(snakeLocation, location);
