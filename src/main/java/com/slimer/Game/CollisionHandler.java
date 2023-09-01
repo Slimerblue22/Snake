@@ -11,7 +11,7 @@ import java.util.List;
 
 /**
  * Manages collision detection logic for the snake game.
- * This class is responsible for detecting collisions with walls and checking the solidity of the block below the snake.
+ * This class is also responsible for detecting if the player has dismounted the snake.
  */
 public class CollisionHandler {
     private final GameManager gameManager;
@@ -34,7 +34,7 @@ public class CollisionHandler {
      * If a collision is detected, the game for the player is stopped.
      */
     public void runCollisionChecks() {
-        if (checkWallCollision() || checkSolidBlockBelow() || checkSelfCollision()) {
+        if (checkWallCollision() || checkSolidBlockBelow() || checkSelfCollision() || checkPlayerDismounted()) {
             gameManager.stopGame(player);  // End the game for the player
         }
     }
@@ -50,7 +50,7 @@ public class CollisionHandler {
             return false;
         }
 
-        Entity sheepEntity = snake.getSheepEntity();
+        Entity sheepEntity = snake.getSheepEntity();  // This is the head of the snake
         Location currentLocation = sheepEntity.getLocation();
 
         // Round off the coordinates to a few decimal places
@@ -80,7 +80,7 @@ public class CollisionHandler {
             return false;
         }
 
-        Entity sheepEntity = snake.getSheepEntity();
+        Entity sheepEntity = snake.getSheepEntity();  // This is the head of the snake
         Location currentLocation = sheepEntity.getLocation();
         Block blockBelow = currentLocation.getWorld().getBlockAt(currentLocation.add(0, -1, 0));
 
@@ -128,5 +128,28 @@ public class CollisionHandler {
 
 
         return false;  // No self-collision detected
+    }
+
+    /**
+     * Checks if the player has dismounted the snake's head.
+     *
+     * @return True if the player has dismounted, false otherwise.
+     */
+    private boolean checkPlayerDismounted() {
+        SnakeCreation snake = gameManager.getSnakeForPlayer(player);
+        if (snake == null) {
+            return false;
+        }
+
+        Entity sheepEntity = snake.getSheepEntity();  // This is the head of the snake
+
+        // Check if the list of passengers is empty or not containing the player
+        List<Entity> passengers = sheepEntity.getPassengers();
+        if (passengers.isEmpty() || !passengers.contains(player)) {
+            Bukkit.getLogger().info("[CollisionHandler.java] Player dismounted!");  // Debug line
+            return true;  // Player has dismounted
+        }
+
+        return false;  // Player is still mounted
     }
 }
