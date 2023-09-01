@@ -1,5 +1,6 @@
 package com.slimer.Util;
 
+import org.bukkit.DyeColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -93,6 +94,29 @@ public class PlayerData {
             playerDataConfig.set(path + ".score", score);
             saveConfig(); // Save the config after setting the score
         }
+    }
+
+    /**
+     * Fetches the sheep color of the given player.
+     *
+     * @param player The player whose sheep color is to be fetched.
+     * @return The DyeColor value representing the sheep color.
+     */
+    public DyeColor getSheepColor(Player player) {
+        String colorString = getPlayerSection(player).getString("sheepColor", "WHITE");
+        return DyeColor.valueOf(colorString);
+    }
+
+    /**
+     * Sets the sheep color for a given player.
+     *
+     * @param player The player whose sheep color is to be set.
+     * @param color  The new DyeColor value for the sheep color.
+     */
+    public void setSheepColor(Player player, DyeColor color) {
+        String path = player.getUniqueId().toString();
+        playerDataConfig.set(path + ".sheepColor", color.name());
+        saveConfig(); // Save the config after setting the color
     }
 
     /**

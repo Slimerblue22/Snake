@@ -1,11 +1,15 @@
 package com.slimer.Game;
 
+import com.slimer.Util.PlayerData;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.Sheep;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.DyeColor;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
@@ -24,12 +28,15 @@ public class SnakeCreation {
      *
      * @param location The spawn location for the lead sheep entity.
      */
-    public SnakeCreation(Location location) {
+    public SnakeCreation(Location location, Player player, JavaPlugin plugin) {
         this.sheep = (Sheep) location.getWorld().spawnEntity(location, EntityType.SHEEP, CreatureSpawnEvent.SpawnReason.CUSTOM);
         this.sheep.setSilent(true);
         this.sheep.setAware(false);
         this.sheep.setCollidable(false);
         this.segments = new ArrayList<>();
+        // Set sheep color
+        DyeColor color = PlayerData.getInstance(plugin).getSheepColor(player);
+        this.sheep.setColor(color == null ? DyeColor.WHITE : color);
     }
 
     /**
@@ -37,7 +44,7 @@ public class SnakeCreation {
      *
      * @param lastWaypoint The location for the new segment.
      */
-    public void addSegment(Vector lastWaypoint) {
+    public void addSegment(Vector lastWaypoint, Player player, JavaPlugin plugin) {
         World world = sheep.getWorld();
         Location newSegmentLocation = new Location(world, lastWaypoint.getX(), lastWaypoint.getY(), lastWaypoint.getZ());
         Entity segment = world.spawnEntity(newSegmentLocation, EntityType.SHEEP, CreatureSpawnEvent.SpawnReason.CUSTOM);
@@ -48,6 +55,8 @@ public class SnakeCreation {
             segment.setSilent(true);
             ((Sheep) segment).setAware(false);
             ((Sheep) segment).setCollidable(false);
+            DyeColor color = PlayerData.getInstance(plugin).getSheepColor(player);
+            ((Sheep) segment).setColor(color == null ? DyeColor.WHITE : color);
         }
     }
 

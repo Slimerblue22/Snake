@@ -74,7 +74,7 @@ public class GameManager {
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 1.0f);
 
         // Initialize the snake for the player
-        SnakeCreation snake = new SnakeCreation(gameLocation);
+        SnakeCreation snake = new SnakeCreation(gameLocation, player, (JavaPlugin) plugin);
         Entity sheepEntity = snake.getSheepEntity();
         if (sheepEntity != null) {
             sheepEntity.addPassenger(player);
@@ -120,10 +120,11 @@ public class GameManager {
         playerApples.put(player, apple);
 
         // Initialize apple collection monitoring
+        final JavaPlugin finalPlugin = (JavaPlugin) plugin;  // Make a final copy of the plugin instance
         BukkitRunnable appleCollectionTask = new BukkitRunnable() {
             @Override
             public void run() {
-                checkAndCollectApple(snake.getSheepEntity(), player);
+                checkAndCollectApple(snake.getSheepEntity(), player, finalPlugin);  // Pass the plugin instance here
             }
         };
         appleCollectionTask.runTaskTimer(plugin, 0L, 0L);
@@ -333,7 +334,7 @@ public class GameManager {
      * @param sheepEntity The entity representing the snake's head.
      * @param player      The player controlling the snake.
      */
-    public void checkAndCollectApple(Entity sheepEntity, Player player) {
+    public void checkAndCollectApple(Entity sheepEntity, Player player, JavaPlugin plugin) {
         Apple apple = playerApples.get(player);
         Location appleLocation = apple.getLocation();
         Location sheepLocation = sheepEntity.getLocation();
@@ -342,12 +343,13 @@ public class GameManager {
                 appleLocation.getBlockZ() == sheepLocation.getBlockZ()) {
             handleAppleLogic(apple, sheepEntity, player);
             updatePlayerScore(player);
-            addSnakeSegment(player);
+            addSnakeSegment(player, plugin);  // Pass in plugin instance here
 
             // Play level up sound
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);
         }
     }
+
 
     /**
      * Handles the logic for when a snake collides with an apple.
@@ -375,15 +377,16 @@ public class GameManager {
      *
      * @param player The player controlling the snake.
      */
-    public void addSnakeSegment(Player player) {
+    public void addSnakeSegment(Player player, JavaPlugin plugin) {
         SnakeCreation snake = getSnakeForPlayer(player);
         if (snake != null) {
             Vector lastPosition = snakeMovement.getLastPositionOfLastSegmentOrHead(player);
             if (lastPosition != null) {
-                snake.addSegment(lastPosition);
+                snake.addSegment(lastPosition, player, plugin);  // Pass in plugin instance here
             }
         }
     }
+
 
     /**
      * Sets the SnakeMovement handler for the GameManager.

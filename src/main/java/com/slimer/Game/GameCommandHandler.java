@@ -5,9 +5,11 @@ import com.slimer.Region.Region;
 import com.slimer.Region.RegionLink;
 import com.slimer.Region.RegionService;
 import com.slimer.GUI.GameCommandGUI;
+import com.slimer.Util.PlayerData;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
+import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -15,6 +17,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -25,14 +28,16 @@ import java.util.List;
  */
 public class GameCommandHandler implements CommandExecutor, TabCompleter {
     private final GameManager gameManager;
+    private final JavaPlugin plugin;
 
     /**
      * Constructs a new GameCommandHandler.
      *
      * @param gameManager The GameManager instance for managing game states.
      */
-    public GameCommandHandler(GameManager gameManager) {
+    public GameCommandHandler(GameManager gameManager, JavaPlugin plugin) {
         this.gameManager = gameManager;
+        this.plugin = plugin;
     }
 
     /**
@@ -64,8 +69,9 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             case "stop" -> handleStopGameCommand(player);
             case "gui" -> handleGUICommand(player);
             case "help" -> handleHelpCommand(player);
+            case "color" -> args.length > 1 && handleSetColorCommand(player, args[1], plugin);
             default -> {
-                player.sendMessage(Component.text("Unknown subcommand. Use /snakegame <start|stop|gui|help>.", NamedTextColor.RED));
+                player.sendMessage(Component.text("Unknown subcommand. Use /snakegame <start|stop|gui|help|color>.", NamedTextColor.RED));
                 yield false;
             }
         };
@@ -75,11 +81,11 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      * Handles the tab completion for the Snake game's commands.
      * This method provides auto-complete suggestions for the game commands.
      *
-     * @param sender   The sender of the command, can be a player or the console.
-     * @param command  The command that was executed.
-     * @param alias    The alias that the sender used to trigger the command.
-     * @param args     The arguments that were provided with the command.
-     * @return         A list of possible completions for a command argument.
+     * @param sender  The sender of the command, can be a player or the console.
+     * @param command The command that was executed.
+     * @param alias   The alias that the sender used to trigger the command.
+     * @param args    The arguments that were provided with the command.
+     * @return A list of possible completions for a command argument.
      */
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, String[] args) {
@@ -96,6 +102,15 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             }
             if ("help".startsWith(args[0].toLowerCase())) {
                 completions.add("help");
+            }
+            if ("color".startsWith(args[0].toLowerCase())) {
+                completions.add("color");
+            }
+        } else if (args.length == 2 && "color".equalsIgnoreCase(args[0])) {
+            for (DyeColor dyeColor : DyeColor.values()) {
+                if (dyeColor.name().toLowerCase().startsWith(args[1].toLowerCase())) {
+                    completions.add(dyeColor.name().toLowerCase());
+                }
             }
         }
         return completions;
@@ -162,7 +177,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      * This method is responsible for triggering the GUI that allows players to interact with the Snake game.
      *
      * @param player The player who issued the "gui" command.
-     * @return       Always returns true to indicate successful execution.
+     * @return Always returns true to indicate successful execution.
      */
     private boolean handleGUICommand(Player player) {
         player.openInventory(GameCommandGUI.createMainMenu());
@@ -170,8 +185,12 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
     }
 
     /**
-     * PLACEHOLDER
+     * Sends a list of instructions for the snake game to the player.
+     *
+     * @param player The Player to whom the instructions will be sent.
+     * @return True, indicating that the command was handled successfully.
      */
+
     private boolean handleHelpCommand(Player player) {
         player.sendMessage(Component.text("------ Snake Game Instructions ------", NamedTextColor.GOLD));
         player.sendMessage(Component.text("- The objective is to eat as many apples as possible without running into yourself or the walls.", NamedTextColor.WHITE));
@@ -180,5 +199,34 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
         player.sendMessage(Component.text("- The game ends if you run into yourself or the game boundaries.", NamedTextColor.WHITE));
         player.sendMessage(Component.text("- Your score increases with each apple you eat.", NamedTextColor.WHITE));
         return true;
+    }
+
+    /**
+     * Handles the command for setting the snake color for a player.
+     * Validates the color input and updates the player's snake color if valid.
+     *
+     * @param player The Player whose snake color is to be set.
+     * @param colorName The name of the color to be set.
+     * @param plugin The JavaPlugin instance for accessing plugin-specific features.
+     * @return True if the color was set successfully, false otherwise.
+     */
+
+    private boolean handleSetColorCommand(Player player, String colorName, JavaPlugin plugin) {
+        // Make sure the player is not in a game
+        if (gameManager.getSnakeForPlayer(player) != null) {
+            player.sendMessage(Component.text("You must not be in a game to change your sheep's color.", NamedTextColor.RED));
+            return false;
+        }
+
+        // Validate and set the color
+        try {
+            DyeColor dyeColor = DyeColor.valueOf(colorName.toUpperCase());
+            PlayerData.getInstance(plugin).setSheepColor(player, dyeColor);
+            player.sendMessage(Component.text("Successfully changed sheep color to " + colorName, NamedTextColor.GREEN));
+            return true;
+        } catch (IllegalArgumentException e) {
+            player.sendMessage(Component.text("Invalid color name. Use /snakegame color <color_name>", NamedTextColor.RED));
+            return false;
+        }
     }
 }

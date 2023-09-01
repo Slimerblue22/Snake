@@ -82,7 +82,7 @@ public final class Main extends JavaPlugin {
         gameManager.setSnakeMovement(snakeMovement);
 
         // Initialize game command handler
-        GameCommandHandler gameCommandHandler = new GameCommandHandler(gameManager);
+        GameCommandHandler gameCommandHandler = new GameCommandHandler(gameManager, this);
         Objects.requireNonNull(getCommand("snakegame")).setExecutor(gameCommandHandler);
     }
 
