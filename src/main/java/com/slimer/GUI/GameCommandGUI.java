@@ -28,6 +28,7 @@ public class GameCommandGUI implements Listener {
 
         menu.setItem(0, createMenuItem(Material.GREEN_WOOL, "Start"));
         menu.setItem(1, createMenuItem(Material.RED_WOOL, "Stop"));
+        menu.setItem(2, createMenuItem(Material.BOOK, "Help"));
 
         return menu;
     }
@@ -67,6 +68,7 @@ public class GameCommandGUI implements Listener {
             switch (clickedItem.getType()) {
                 case GREEN_WOOL -> player.performCommand("snakegame start");
                 case RED_WOOL -> player.performCommand("snakegame stop");
+                case BOOK -> player.performCommand("snakegame help");
             }
             player.closeInventory();  // Close the main menu
             event.setCancelled(true);  // Cancel the event to prevent taking items

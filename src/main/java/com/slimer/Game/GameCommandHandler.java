@@ -55,7 +55,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             return false;
         }
         if (args.length == 0) {
-            player.sendMessage(Component.text("Usage: /snakegame <start|stop>", NamedTextColor.RED));
+            player.sendMessage(Component.text("Usage: /snakegame <start|stop|gui|help>", NamedTextColor.RED));
             return false;
         }
         String subCommand = args[0].toLowerCase();
@@ -63,8 +63,9 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             case "start" -> handleStartGameCommand(player);
             case "stop" -> handleStopGameCommand(player);
             case "gui" -> handleGUICommand(player);
+            case "help" -> handleHelpCommand(player);
             default -> {
-                player.sendMessage(Component.text("Unknown subcommand. Use /snakegame <start|stop|gui>.", NamedTextColor.RED));
+                player.sendMessage(Component.text("Unknown subcommand. Use /snakegame <start|stop|gui|help>.", NamedTextColor.RED));
                 yield false;
             }
         };
@@ -72,7 +73,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
 
     /**
      * Handles the tab completion for the Snake game's commands.
-     * This method provides auto-complete suggestions for the commands "start", "stop", and "gui".
+     * This method provides auto-complete suggestions for the game commands.
      *
      * @param sender   The sender of the command, can be a player or the console.
      * @param command  The command that was executed.
@@ -92,6 +93,9 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             }
             if ("gui".startsWith(args[0].toLowerCase())) {
                 completions.add("gui");
+            }
+            if ("help".startsWith(args[0].toLowerCase())) {
+                completions.add("help");
             }
         }
         return completions;
@@ -162,6 +166,19 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      */
     private boolean handleGUICommand(Player player) {
         player.openInventory(GameCommandGUI.createMainMenu());
+        return true;
+    }
+
+    /**
+     * PLACEHOLDER
+     */
+    private boolean handleHelpCommand(Player player) {
+        player.sendMessage(Component.text("------ Snake Game Instructions ------", NamedTextColor.GOLD));
+        player.sendMessage(Component.text("- The objective is to eat as many apples as possible without running into yourself or the walls.", NamedTextColor.WHITE));
+        player.sendMessage(Component.text("- Hold forward to move in the direction you are looking.", NamedTextColor.WHITE));
+        player.sendMessage(Component.text("- Eating an apple will make your snake longer.", NamedTextColor.WHITE));
+        player.sendMessage(Component.text("- The game ends if you run into yourself or the game boundaries.", NamedTextColor.WHITE));
+        player.sendMessage(Component.text("- Your score increases with each apple you eat.", NamedTextColor.WHITE));
         return true;
     }
 }
