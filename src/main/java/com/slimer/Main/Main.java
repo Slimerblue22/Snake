@@ -50,9 +50,6 @@ public final class Main extends JavaPlugin {
 
         // Register the GameCommandGUI as a listener
         Bukkit.getPluginManager().registerEvents(new GameCommandGUI(), this);
-
-        // Initialize the MusicManager
-        new MusicManager(this);
     }
 
     /**

@@ -16,6 +16,7 @@ import org.bukkit.util.Vector;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Manages the game state, player interactions, and the game logic for the Snake game.
@@ -49,7 +50,11 @@ public class GameManager {
         this.playerSnakes = playerSnakes;
         this.playerLobbyLocations = playerLobbyLocations;
         this.plugin = plugin;
-        this.musicManager = new MusicManager((Main) plugin);
+        if (isMusicEnabled) {
+            this.musicManager = new MusicManager((Main) plugin);
+        } else {
+            this.musicManager = null;
+        }
         this.isMusicEnabled = isMusicEnabled;
     }
 
@@ -122,7 +127,7 @@ public class GameManager {
 
         // Start music for the player if enabled
         if (isMusicEnabled) {
-            musicManager.startMusic(player, "song.nbs");
+            Objects.requireNonNull(musicManager).startMusic(player, "song.nbs");
         }
     }
 
@@ -189,7 +194,7 @@ public class GameManager {
         }
         // Stop music for the player if enabled
         if (isMusicEnabled) {
-            musicManager.stopMusic(player);
+            Objects.requireNonNull(musicManager).stopMusic(player);
         }
     }
 
