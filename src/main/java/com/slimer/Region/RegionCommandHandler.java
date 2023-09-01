@@ -15,6 +15,7 @@ import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,7 +28,7 @@ import java.util.*;
  * <p>
  * It acts as a CommandExecutor, implementing the interface's method to handle the command logic.
  */
-public class RegionCommandHandler implements CommandExecutor {
+public class RegionCommandHandler implements CommandExecutor, TabCompleter {
     private final RegionService regionService;
 
     /**
@@ -68,7 +69,7 @@ public class RegionCommandHandler implements CommandExecutor {
             return false;
         }
         if (args.length == 0) {
-            player.sendMessage(Component.text("Usage: /snakeadmin <subcommand> [arguments]", NamedTextColor.RED));
+            player.sendMessage(Component.text("Usage: /snakeadmin <register|unregister|link|unlink|addteleport|list>", NamedTextColor.RED));
             return false;
         }
         String subCommand = args[0].toLowerCase();
@@ -84,6 +85,42 @@ public class RegionCommandHandler implements CommandExecutor {
                 yield false;
             }
         };
+    }
+
+    /**
+     * Handles the tab completion for the Snake admin commands.
+     * This method provides auto-complete suggestions for the admin commands.
+     *
+     * @param sender   The sender of the command, can be a player or the console.
+     * @param command  The command that was executed.
+     * @param alias    The alias that the sender used to trigger the command.
+     * @param args     The arguments that were provided with the command.
+     * @return         A list of possible completions for a command argument.
+     */
+    @Override
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, String[] args) {
+        List<String> completions = new ArrayList<>();
+        if (args.length == 1) {
+            if ("register".startsWith(args[0].toLowerCase())) {
+                completions.add("register");
+            }
+            if ("unregister".startsWith(args[0].toLowerCase())) {
+                completions.add("unregister");
+            }
+            if ("link".startsWith(args[0].toLowerCase())) {
+                completions.add("link");
+            }
+            if ("unlink".startsWith(args[0].toLowerCase())) {
+                completions.add("unlink");
+            }
+            if ("addteleport".startsWith(args[0].toLowerCase())) {
+                completions.add("addteleport");
+            }
+            if ("list".startsWith(args[0].toLowerCase())) {
+                completions.add("list");
+            }
+        }
+        return completions;
     }
 
     /**
