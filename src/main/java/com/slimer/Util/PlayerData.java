@@ -8,8 +8,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Singleton class responsible for managing player-specific data, such as high scores.
@@ -94,6 +99,29 @@ public class PlayerData {
             playerDataConfig.set(path + ".score", score);
             saveConfig(); // Save the config after setting the score
         }
+    }
+
+    /**
+     * Retrieves the top 10 high scores from the player data configuration.
+     * The leaderboard is sorted in descending order based on the scores.
+     *
+     * @return A list of Map.Entry objects containing player names and their corresponding scores.
+     */
+    public List<Map.Entry<String, Integer>> getLeaderboard() {
+        Map<String, Integer> scores = new HashMap<>();
+
+        for (String uuid : playerDataConfig.getKeys(false)) {
+            String name = playerDataConfig.getString(uuid + ".name");
+            int score = playerDataConfig.getInt(uuid + ".score");
+            if (name != null) {
+                scores.put(name, score);
+            }
+        }
+
+        return scores.entrySet().stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .limit(10)
+                .collect(Collectors.toList());
     }
 
     /**

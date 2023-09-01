@@ -10,6 +10,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 
 /**
  * Class responsible for managing the graphical user interface (GUI) for the Snake game.
@@ -17,19 +18,25 @@ import org.bukkit.inventory.meta.ItemMeta;
  */
 public class GameCommandGUI implements Listener {
 
+    public GameCommandGUI() {
+    }
+
+
     /**
      * Creates and returns the main menu inventory for the Snake game.
-     * The main menu contains options to start and stop the game.
+     * The main menu contains commands the player can use, but in GUI form.
      *
      * @return The created Inventory object representing the main menu.
      */
-    public static Inventory createMainMenu() {
+    public static Inventory createMainMenu(Player player) {
         Inventory menu = Bukkit.createInventory(null, 9, Component.text("Snake Main Menu"));
 
         menu.setItem(0, createMenuItem(Material.GREEN_WOOL, "Start"));
         menu.setItem(1, createMenuItem(Material.RED_WOOL, "Stop"));
         menu.setItem(2, createMenuItem(Material.BOOK, "Help"));
         menu.setItem(3, createMenuItem(Material.PAINTING, "Set Color"));
+        menu.setItem(4, createMenuItem(Material.GOLDEN_APPLE, "Leaderboard"));
+        menu.setItem(5, createPlayerHeadMenuItem(player));
 
         return menu;
     }
@@ -37,14 +44,29 @@ public class GameCommandGUI implements Listener {
     /**
      * Creates a menu item with the given material and display name.
      *
-     * @param material     The material type for the item.
-     * @param displayName  The display name for the item.
-     * @return             An ItemStack representing the menu item.
+     * @param material    The material type for the item.
+     * @param displayName The display name for the item.
+     * @return An ItemStack representing the menu item.
      */
     private static ItemStack createMenuItem(Material material, String displayName) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         meta.displayName(Component.text(displayName));
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    /**
+     * Creates an ItemStack representing a player's head with a display name set to "High Score".
+     *
+     * @param player The Player whose head should be used for the ItemStack.
+     * @return An ItemStack representing the player's head with the display name set.
+     */
+    private static ItemStack createPlayerHeadMenuItem(Player player) {
+        ItemStack item = new ItemStack(Material.PLAYER_HEAD);
+        SkullMeta meta = (SkullMeta) item.getItemMeta();
+        meta.setOwningPlayer(player);
+        meta.displayName(Component.text("High Score"));
         item.setItemMeta(meta);
         return item;
     }
@@ -74,7 +96,7 @@ public class GameCommandGUI implements Listener {
      * Event handler for inventory clicks.
      * This method handles player interactions within the Snake game's main menu.
      *
-     * @param event  The InventoryClickEvent object containing event details.
+     * @param event The InventoryClickEvent object containing event details.
      */
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
@@ -91,6 +113,8 @@ public class GameCommandGUI implements Listener {
                 case GREEN_WOOL -> player.performCommand("snakegame start");
                 case RED_WOOL -> player.performCommand("snakegame stop");
                 case BOOK -> player.performCommand("snakegame help");
+                case PLAYER_HEAD -> player.performCommand("snakegame highscore");
+                case GOLDEN_APPLE -> player.performCommand("snakegame leaderboard");
                 case PAINTING -> {
                     player.openInventory(createColorMenu()); // Open the color submenu
                     event.setCancelled(true);

@@ -1,10 +1,10 @@
 package com.slimer.Game;
 
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import com.slimer.GUI.GameCommandGUI;
 import com.slimer.Region.Region;
 import com.slimer.Region.RegionLink;
 import com.slimer.Region.RegionService;
-import com.slimer.GUI.GameCommandGUI;
 import com.slimer.Util.PlayerData;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -22,6 +22,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Handles game-related commands.
@@ -60,7 +61,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             return false;
         }
         if (args.length == 0) {
-            player.sendMessage(Component.text("Usage: /snakegame <start|stop|gui|help>", NamedTextColor.RED));
+            player.sendMessage(Component.text("Usage: /snakegame <start|stop|gui|help|highscore|leaderboard>", NamedTextColor.RED));
             return false;
         }
         String subCommand = args[0].toLowerCase();
@@ -70,8 +71,10 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             case "gui" -> handleGUICommand(player);
             case "help" -> handleHelpCommand(player);
             case "color" -> args.length > 1 && handleSetColorCommand(player, args[1], plugin);
+            case "highscore" -> handleHighScoreCommand(player);
+            case "leaderboard" -> handleLeaderboardCommand(player);
             default -> {
-                player.sendMessage(Component.text("Unknown subcommand. Use /snakegame <start|stop|gui|help|color>.", NamedTextColor.RED));
+                player.sendMessage(Component.text("Unknown subcommand. Use /snakegame <start|stop|gui|help|color|highscore|leaderboard>.", NamedTextColor.RED));
                 yield false;
             }
         };
@@ -106,6 +109,12 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             if ("color".startsWith(args[0].toLowerCase())) {
                 completions.add("color");
             }
+            if ("highscore".startsWith(args[0].toLowerCase())) {
+                completions.add("highscore");
+            }
+            if ("leaderboard".startsWith(args[0].toLowerCase())) {
+                completions.add("leaderboard");
+            } // This bit below adds tab support for the different color options.
         } else if (args.length == 2 && "color".equalsIgnoreCase(args[0])) {
             for (DyeColor dyeColor : DyeColor.values()) {
                 if (dyeColor.name().toLowerCase().startsWith(args[1].toLowerCase())) {
@@ -180,7 +189,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      * @return Always returns true to indicate successful execution.
      */
     private boolean handleGUICommand(Player player) {
-        player.openInventory(GameCommandGUI.createMainMenu());
+        player.openInventory(GameCommandGUI.createMainMenu(player));
         return true;
     }
 
@@ -190,7 +199,6 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      * @param player The Player to whom the instructions will be sent.
      * @return True, indicating that the command was handled successfully.
      */
-
     private boolean handleHelpCommand(Player player) {
         player.sendMessage(Component.text("------ Snake Game Instructions ------", NamedTextColor.GOLD));
         player.sendMessage(Component.text("- The objective is to eat as many apples as possible without running into yourself or the walls.", NamedTextColor.WHITE));
@@ -205,12 +213,11 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      * Handles the command for setting the snake color for a player.
      * Validates the color input and updates the player's snake color if valid.
      *
-     * @param player The Player whose snake color is to be set.
+     * @param player    The Player whose snake color is to be set.
      * @param colorName The name of the color to be set.
-     * @param plugin The JavaPlugin instance for accessing plugin-specific features.
+     * @param plugin    The JavaPlugin instance for accessing plugin-specific features.
      * @return True if the color was set successfully, false otherwise.
      */
-
     private boolean handleSetColorCommand(Player player, String colorName, JavaPlugin plugin) {
         // Make sure the player is not in a game
         if (gameManager.getSnakeForPlayer(player) != null) {
@@ -228,5 +235,42 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             player.sendMessage(Component.text("Invalid color name. Use /snakegame color <color_name>", NamedTextColor.RED));
             return false;
         }
+    }
+
+    /**
+     * Sends the player's high score to them as a chat message.
+     *
+     * @param player The Player whose high score is to be fetched and displayed.
+     * @return True, indicating that the command was handled successfully.
+     */
+    private boolean handleHighScoreCommand(Player player) {
+        // Fetch high score for the player.
+        int highScore = PlayerData.getInstance(plugin).getHighScore(player);
+
+        // Send the high score to the player
+        player.sendMessage(Component.text("Your high score is: " + highScore, NamedTextColor.GOLD));
+
+        return true;
+    }
+
+    /**
+     * Sends the leaderboard data to the player as a series of chat messages.
+     * The leaderboard shows the top 10 player names and their scores.
+     *
+     * @param player The Player to whom the leaderboard will be sent.
+     * @return True, indicating that the command was handled successfully.
+     */
+    private boolean handleLeaderboardCommand(Player player) {
+        // Fetch leaderboard data
+        List<Map.Entry<String, Integer>> leaderboard = PlayerData.getInstance(plugin).getLeaderboard();
+
+        // Send the leaderboard to the player
+        player.sendMessage(Component.text("---- Leaderboard ----", NamedTextColor.GOLD));
+        for (int i = 0; i < leaderboard.size(); i++) {
+            Map.Entry<String, Integer> entry = leaderboard.get(i);
+            player.sendMessage(Component.text((i + 1) + ". " + entry.getKey() + ": " + entry.getValue(), NamedTextColor.WHITE));
+        }
+
+        return true;
     }
 }
