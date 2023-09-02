@@ -176,9 +176,14 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      * @return true indicating the game has been stopped.
      */
     private boolean handleStopGameCommand(Player player) {
-        gameManager.stopGame(player);
-        player.sendMessage(Component.text("Stopping the snake game...", NamedTextColor.RED));
-        return true;
+        if (gameManager.getSnakeForPlayer(player) != null) {  // Check if player is in a game
+            gameManager.stopGame(player);
+            player.sendMessage(Component.text("Stopping the snake game...", NamedTextColor.RED));
+            return true;
+        } else {
+            player.sendMessage(Component.text("You are not currently in a game.", NamedTextColor.RED));
+            return false;
+        }
     }
 
     /**
