@@ -71,7 +71,7 @@ public class GameEndConditionsHandler implements Listener {
         Location roundedLocation = new Location(currentLocation.getWorld(), x, y, z);
 
         if (lastKnownLocation != null && lastKnownLocation.equals(roundedLocation)) {
-            Bukkit.getLogger().info("[GameEndConditionsHandler.java] Wall collision detected!");  // Debug line
+            Bukkit.getLogger().info("{Snake 2.0.0 Beta-1} [GameEndConditionsHandler.java] Wall collision detected!");  // Debug line
             return true; // Collision detected
         } else {
             lastKnownLocation = roundedLocation; // No collision detected
@@ -95,7 +95,7 @@ public class GameEndConditionsHandler implements Listener {
         Block blockBelow = currentLocation.getWorld().getBlockAt(currentLocation.add(0, -1, 0));
 
         if (!blockBelow.getType().isSolid()) {
-            Bukkit.getLogger().info("[GameEndConditionsHandler.java] Non-solid block below detected!");  // Debug line
+            Bukkit.getLogger().info("{Snake 2.0.0 Beta-1} [GameEndConditionsHandler.java] Non-solid block below detected!");  // Debug line
             return true; // True if the block below is not solid
         }
 
@@ -131,7 +131,7 @@ public class GameEndConditionsHandler implements Listener {
         for (Entity segment : segments) {
             Vector segmentLocation = segment.getLocation().toVector();
             if (headLocation.distance(segmentLocation) < 0.1) {  // Tolerance of 0.1 blocks
-                Bukkit.getLogger().info("[GameEndConditionsHandler.java] Self-collision detected!");  // Debug line
+                Bukkit.getLogger().info("{Snake 2.0.0 Beta-1} [GameEndConditionsHandler.java] Self-collision detected!");  // Debug line
                 return true;  // Self-collision detected
             }
         }
@@ -156,7 +156,7 @@ public class GameEndConditionsHandler implements Listener {
         // Check if the list of passengers is empty or not containing the player
         List<Entity> passengers = sheepEntity.getPassengers();
         if (passengers.isEmpty() || !passengers.contains(player)) {
-            Bukkit.getLogger().info("[GameEndConditionsHandler.java] Player dismounted!");  // Debug line
+            Bukkit.getLogger().info("{Snake 2.0.0 Beta-1} [GameEndConditionsHandler.java] Player dismounted!");  // Debug line
             return true;  // Player has dismounted
         }
 
@@ -171,7 +171,7 @@ public class GameEndConditionsHandler implements Listener {
      */
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        Bukkit.getLogger().info("[GameEndConditionsHandler.java] A player has disconnected mid game!");  // Debug line
+        Bukkit.getLogger().info("{Snake 2.0.0 Beta-1} [GameEndConditionsHandler.java] A player has disconnected mid game!");  // Debug line
         Player quittingPlayer = event.getPlayer();
         Entity riddenEntity = quittingPlayer.getVehicle();
 
@@ -192,7 +192,7 @@ public class GameEndConditionsHandler implements Listener {
      */
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        Bukkit.getLogger().info("[GameEndConditionsHandler.java] A previously disconnected player has been sent back to lobby!");  // Debug line
+        Bukkit.getLogger().info("{Snake 2.0.0 Beta-1} [GameEndConditionsHandler.java] A previously disconnected player has been sent back to lobby!");  // Debug line
         Player joiningPlayer = event.getPlayer();
 
         // Handle reconnection logic

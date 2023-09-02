@@ -35,7 +35,7 @@ public class MusicManager {
      * Starts playing music for the specified player.
      * If the song file is not found or cannot be played, logs an error message.
      *
-     * @param player The player for whom to start the music.
+     * @param player         The player for whom to start the music.
      * @param pathToSongFile The relative path to the song file within the plugin's data folder.
      */
     public void startMusic(Player player, String pathToSongFile) {
@@ -46,19 +46,19 @@ public class MusicManager {
 
         if (!songFolder.exists()) {
             if (!songFolder.mkdirs()) {
-                Bukkit.getLogger().severe("Failed to create songs folder. It may already exist.");
+                Bukkit.getLogger().severe("{Snake 2.0.0 Beta-1} [MusicManager.java] Failed to create songs folder. It may already exist.");
             }
         }
 
         if (!songFile.exists()) {
-            Bukkit.getLogger().info("No song file found at " + hardcodedPath + ". Music will not be played.");
+            Bukkit.getLogger().info("{Snake 2.0.0 Beta-1} [MusicManager.java] No song file found at " + hardcodedPath + ". Music will not be played.");
             return;
         }
 
         try {
             Song song = NBSDecoder.parse(songFile);
             if (song == null) {
-                Bukkit.getLogger().severe("Error loading the music file. Please ensure it's a valid NBS file.");
+                Bukkit.getLogger().severe("{Snake 2.0.0 Beta-1} [MusicManager.java] Error loading the music file. Please ensure it's a valid NBS file.");
                 return;
             }
 
@@ -70,7 +70,7 @@ public class MusicManager {
             songPlayers.put(player, songPlayer);
 
         } catch (Exception e) {
-            Bukkit.getLogger().severe("Could not load song from file " + hardcodedPath + ": " + e.getMessage());
+            Bukkit.getLogger().severe("{Snake 2.0.0 Beta-1} [MusicManager.java] Could not load song from file " + hardcodedPath + ": " + e.getMessage());
         }
     }
 

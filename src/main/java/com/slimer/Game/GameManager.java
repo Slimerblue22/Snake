@@ -36,11 +36,11 @@ public class GameManager {
     private final Plugin plugin;
     private final Map<Player, BukkitRunnable> movementTasks = new HashMap<>();
     private final Map<Player, BukkitRunnable> appleCollectionTasks = new HashMap<>();
-    private PlayerInputHandler playerInputHandler;
-    private SnakeMovement snakeMovement;
     private final MusicManager musicManager;
     private final boolean isMusicEnabled;
     private final Set<UUID> disconnectedPlayerUUIDs = new HashSet<>();
+    private PlayerInputHandler playerInputHandler;
+    private SnakeMovement snakeMovement;
 
 
     /**
@@ -343,7 +343,7 @@ public class GameManager {
                 appleLocation.getBlockZ() == sheepLocation.getBlockZ()) {
             handleAppleLogic(apple, sheepEntity, player);
             updatePlayerScore(player);
-            addSnakeSegment(player, plugin);  // Pass in plugin instance here
+            addSnakeSegment(player, plugin);
 
             // Play level up sound
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);
@@ -382,11 +382,10 @@ public class GameManager {
         if (snake != null) {
             Vector lastPosition = snakeMovement.getLastPositionOfLastSegmentOrHead(player);
             if (lastPosition != null) {
-                snake.addSegment(lastPosition, player, plugin);  // Pass in plugin instance here
+                snake.addSegment(lastPosition, player, plugin);
             }
         }
     }
-
 
     /**
      * Sets the SnakeMovement handler for the GameManager.

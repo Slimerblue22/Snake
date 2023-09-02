@@ -1,10 +1,10 @@
 package com.slimer.Main;
 
+import com.slimer.GUI.GameCommandGUI;
 import com.slimer.Game.*;
 import com.slimer.Region.RegionCommandHandler;
 import com.slimer.Region.RegionFileHandler;
 import com.slimer.Region.RegionService;
-import com.slimer.GUI.GameCommandGUI;
 import com.slimer.Util.MusicManager;
 import com.slimer.Util.PlayerData;
 import org.bukkit.Bukkit;
@@ -60,8 +60,6 @@ public final class Main extends JavaPlugin {
     public void onDisable() {
         // Stop all active games
         gameManager.stopAllGames();
-
-        // Other plugin shutdown logic can be added here
     }
 
     /**

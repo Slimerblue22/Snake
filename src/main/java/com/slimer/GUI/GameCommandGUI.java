@@ -36,7 +36,7 @@ public class GameCommandGUI implements Listener {
         menu.setItem(2, createMenuItem(Material.BOOK, "Help"));
         menu.setItem(3, createMenuItem(Material.PAINTING, "Set Color"));
         menu.setItem(4, createMenuItem(Material.GOLDEN_APPLE, "Leaderboard"));
-        menu.setItem(5, createPlayerHeadMenuItem(player));
+        menu.setItem(5, createPlayerHeadMenuItem(player)); // High score
 
         return menu;
     }

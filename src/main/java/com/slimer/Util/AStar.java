@@ -36,7 +36,7 @@ public class AStar {
             }
         }
 
-        //DISABLED Bukkit.getLogger().info("[AStar.java] Found " + neighbors.size() + " valid neighbors for location (" + location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ() + ")");
+        Bukkit.getLogger().info("{Snake 2.0.0 Beta-1} [AStar.java] Found " + neighbors.size() + " valid neighbors for location (" + location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ() + ")");
         return neighbors;
     }
 
@@ -73,7 +73,7 @@ public class AStar {
     public boolean pathExists(Location start, Location goal) {
         List<Location> path = findPath(start, goal);
         boolean exists = path != null && !path.isEmpty();
-        Bukkit.getLogger().info("[AStar.java] Path exists between start (" + start.getBlockX() + ", " + start.getBlockY() + ", " + start.getBlockZ() + ") and goal (" + goal.getBlockX() + ", " + goal.getBlockY() + ", " + goal.getBlockZ() + "): " + exists);
+        Bukkit.getLogger().info("{Snake 2.0.0 Beta-1} [AStar.java] Path exists between start (" + start.getBlockX() + ", " + start.getBlockY() + ", " + start.getBlockZ() + ") and goal (" + goal.getBlockX() + ", " + goal.getBlockY() + ", " + goal.getBlockZ() + "): " + exists);
         return exists;
     }
 
@@ -85,7 +85,7 @@ public class AStar {
      * @return A list representing the path, or null if no path is found.
      */
     public List<Location> findPath(Location start, Location goal) {
-        Bukkit.getLogger().info("[AStar.java] Finding path between start (" + start.getBlockX() + ", " + start.getBlockY() + ", " + start.getBlockZ() + ") and goal (" + goal.getBlockX() + ", " + goal.getBlockY() + ", " + goal.getBlockZ() + ")");
+        Bukkit.getLogger().info("{Snake 2.0.0 Beta-1} [AStar.java] Finding path between start (" + start.getBlockX() + ", " + start.getBlockY() + ", " + start.getBlockZ() + ") and goal (" + goal.getBlockX() + ", " + goal.getBlockY() + ", " + goal.getBlockZ() + ")");
 
         Set<Location> openSet = new HashSet<>();
         openSet.add(start);
@@ -99,7 +99,7 @@ public class AStar {
             Location current = getLowestFScoreNode(openSet, fScore);
             if (isSameBlock(current, goal)) {
                 List<Location> path = reconstructPath(cameFrom, current);
-                Bukkit.getLogger().info("[AStar.java] Path found with length: " + path.size());
+                Bukkit.getLogger().info("{Snake 2.0.0 Beta-1} [AStar.java] Path found with length: " + path.size());
                 return path;
             }
 
@@ -117,7 +117,7 @@ public class AStar {
             }
         }
 
-        Bukkit.getLogger().info("[AStar.java] No path found");
+        Bukkit.getLogger().info("{Snake 2.0.0 Beta-1} [AStar.java] No path found");
         return null; // Return the path or null if not found
     }
 

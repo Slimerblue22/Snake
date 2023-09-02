@@ -58,9 +58,9 @@ public class Apple {
     /**
      * Finds a suitable location for spawning an apple within the game zone.
      *
-     * @param world The world in which the game is occurring.
-     * @param snakeYLevel The Y-level of the snake.
-     * @param region The region representing the game zone.
+     * @param world         The world in which the game is occurring.
+     * @param snakeYLevel   The Y-level of the snake.
+     * @param region        The region representing the game zone.
      * @param snakeLocation The location of the snake.
      * @return A suitable Location for apple spawn, or null if not found.
      */
@@ -87,9 +87,9 @@ public class Apple {
     /**
      * Checks if a given location is valid for apple spawn.
      *
-     * @param location The location to check.
+     * @param location      The location to check.
      * @param snakeLocation The current location of the snake.
-     * @param aStar An instance of AStar for pathfinding.
+     * @param aStar         An instance of AStar for pathfinding.
      * @return true if location is valid, false otherwise.
      */
     private boolean isLocationValid(Location location, Location snakeLocation, AStar aStar) {
@@ -103,8 +103,8 @@ public class Apple {
      * Spawns an apple with a custom name.
      *
      * @param snakeLocation The current location of the snake.
-     * @param snakeYLevel The Y-level of the snake.
-     * @param playerName The name of the player.
+     * @param snakeYLevel   The Y-level of the snake.
+     * @param playerName    The name of the player.
      */
     public void spawnWithName(Location snakeLocation, int snakeYLevel, String playerName) {
         RegionService regionService = RegionService.getInstance();
@@ -118,7 +118,7 @@ public class Apple {
                 if (world != null && worldGuardRegion != null && regionService.isLocationInRegion(snakeLocation, worldGuardRegion)) {
                     Location location = findSuitableLocation(world, snakeYLevel, region, snakeLocation);
                     if (location == null) {
-                        Bukkit.getLogger().severe("[Apple.java] Could not find a valid location for apple spawn.");
+                        Bukkit.getLogger().severe("{Snake 2.0.0 Beta-1} [Apple.java] Could not find a valid location for apple spawn.");
                         return;
                     }
                     // Center the ArmorStand on the block
@@ -161,8 +161,8 @@ public class Apple {
     /**
      * Gets a random location within a specified game zone.
      *
-     * @param world The world in which the game zone is located.
-     * @param yLevel The Y-level for the location.
+     * @param world        The world in which the game zone is located.
+     * @param yLevel       The Y-level for the location.
      * @param gameZoneName The name of the game zone.
      * @return A random Location within the game zone, or null if region not found.
      */
@@ -183,7 +183,7 @@ public class Apple {
             return new Location(world, x, yLevel, z);
         }
 
-        Bukkit.getLogger().severe("[Apple.java] Region not found for game zone name: " + gameZoneName);
+        Bukkit.getLogger().severe("{Snake 2.0.0 Beta-1} [Apple.java] Region not found for game zone name: " + gameZoneName);
         return null;
     }
 }

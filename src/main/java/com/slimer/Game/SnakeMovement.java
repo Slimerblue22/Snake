@@ -19,16 +19,18 @@ public class SnakeMovement {
     private final Map<Player, Deque<Vector>> playerWaypoints = new HashMap<>();
     private final Map<Entity, Vector> lastPositions = new HashMap<>();
     private PlayerInputHandler playerInputHandler;
+
     /**
      * Constructs a new SnakeMovement object.
      *
-     * @param gameManager The GameManager instance responsible for overall game management.
+     * @param gameManager        The GameManager instance responsible for overall game management.
      * @param playerInputHandler The PlayerInputHandler instance responsible for handling player inputs.
      */
     public SnakeMovement(GameManager gameManager, PlayerInputHandler playerInputHandler) {
         this.gameManager = gameManager;
         this.playerInputHandler = playerInputHandler;
     }
+
     /**
      * Gets the last position of either the last segment or the head entity of a given player's snake.
      *
@@ -40,6 +42,7 @@ public class SnakeMovement {
         Entity lastSegment = (segments != null && !segments.isEmpty()) ? segments.get(segments.size() - 1) : null;
         return (lastSegment != null) ? lastPositions.get(lastSegment) : lastPositions.get(gameManager.getSnakeForPlayer(player).getSheepEntity());
     }
+
     /**
      * Sets the PlayerInputHandler for handling player inputs.
      *
@@ -48,6 +51,7 @@ public class SnakeMovement {
     public void setPlayerInputHandler(PlayerInputHandler playerInputHandler) {
         this.playerInputHandler = playerInputHandler;
     }
+
     /**
      * Clears the target position and waypoints for a given player's snake.
      *
@@ -60,10 +64,11 @@ public class SnakeMovement {
             waypoints.clear();
         }
     }
+
     /**
      * Initializes the target position for a player's snake based on its initial position.
      *
-     * @param player The player whose snake's target position is to be initialized.
+     * @param player          The player whose snake's target position is to be initialized.
      * @param initialPosition The initial position of the snake.
      */
     public void initializeTargetPositionForPlayer(Player player, Vector initialPosition) {
@@ -81,7 +86,7 @@ public class SnakeMovement {
      * Moves the snake based on the given player and direction.
      * This method updates the head and segments' positions.
      *
-     * @param player The player controlling the snake.
+     * @param player    The player controlling the snake.
      * @param direction The direction in which the snake should move.
      */
     public void moveSnake(Player player, Vector direction) {
@@ -134,8 +139,8 @@ public class SnakeMovement {
     /**
      * Initializes or updates the target position for a player's snake.
      *
-     * @param player The player whose snake's target position is to be initialized or updated.
-     * @param currentPosition The current position of the snake's head.
+     * @param player           The player whose snake's target position is to be initialized or updated.
+     * @param currentPosition  The current position of the snake's head.
      * @param currentDirection The current direction of the snake.
      */
     private void initializeOrUpdateTargetPosition(Player player, Vector currentPosition, Vector currentDirection) {
@@ -165,13 +170,14 @@ public class SnakeMovement {
             }
         }
     }
+
     /**
      * Moves the head entity of the snake to a new position.
      *
-     * @param entity The head entity of the snake.
-     * @param currentPosition The current position of the head entity.
+     * @param entity           The head entity of the snake.
+     * @param currentPosition  The current position of the head entity.
      * @param currentDirection The current direction in which the head should move.
-     * @param player The player controlling the snake.
+     * @param player           The player controlling the snake.
      */
     private void moveHead(Entity entity, Vector currentPosition, Vector currentDirection, Player player) {
         // Get the target position for the snake

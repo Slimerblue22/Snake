@@ -38,10 +38,10 @@ public class PlayerData {
         if (!playerDataFile.exists()) {
             try {
                 if (!playerDataFile.createNewFile()) {
-                    logger.log(Level.WARNING, "Failed to create PlayerData.yml file. It may already exist.");
+                    logger.log(Level.WARNING, "{Snake 2.0.0 Beta-1} [PlayerData.java] Failed to create PlayerData.yml file. It may already exist.");
                 }
             } catch (IOException e) {
-                logger.log(Level.SEVERE, "An error occurred while creating PlayerData.yml", e);
+                logger.log(Level.SEVERE, "{Snake 2.0.0 Beta-1} [PlayerData.java] An error occurred while creating PlayerData.yml", e);
             }
         }
 
@@ -154,7 +154,7 @@ public class PlayerData {
         try {
             playerDataConfig.save(playerDataFile);
         } catch (IOException e) {
-            logger.log(Level.SEVERE, "An error occurred while saving PlayerData.yml", e);
+            logger.log(Level.SEVERE, "{Snake 2.0.0 Beta-1} [PlayerData.java] An error occurred while saving PlayerData.yml", e);
         }
     }
 }

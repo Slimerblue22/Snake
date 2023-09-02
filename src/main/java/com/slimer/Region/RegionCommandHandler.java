@@ -91,11 +91,11 @@ public class RegionCommandHandler implements CommandExecutor, TabCompleter {
      * Handles the tab completion for the Snake admin commands.
      * This method provides auto-complete suggestions for the admin commands.
      *
-     * @param sender   The sender of the command, can be a player or the console.
-     * @param command  The command that was executed.
-     * @param alias    The alias that the sender used to trigger the command.
-     * @param args     The arguments that were provided with the command.
-     * @return         A list of possible completions for a command argument.
+     * @param sender  The sender of the command, can be a player or the console.
+     * @param command The command that was executed.
+     * @param alias   The alias that the sender used to trigger the command.
+     * @param args    The arguments that were provided with the command.
+     * @return A list of possible completions for a command argument.
      */
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, String[] args) {

@@ -249,7 +249,6 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
 
         // Send the high score to the player
         player.sendMessage(Component.text("Your high score is: " + highScore, NamedTextColor.GOLD));
-
         return true;
     }
 
@@ -270,7 +269,6 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             Map.Entry<String, Integer> entry = leaderboard.get(i);
             player.sendMessage(Component.text((i + 1) + ". " + entry.getKey() + ": " + entry.getValue(), NamedTextColor.WHITE));
         }
-
         return true;
     }
 }
