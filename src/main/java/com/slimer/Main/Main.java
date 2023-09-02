@@ -7,6 +7,7 @@ import com.slimer.Region.RegionFileHandler;
 import com.slimer.Region.RegionService;
 import com.slimer.Util.MusicManager;
 import com.slimer.Util.PlayerData;
+//(Disabled until full release) import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -50,6 +51,10 @@ public final class Main extends JavaPlugin {
 
         // Register the GameCommandGUI as a listener
         Bukkit.getPluginManager().registerEvents(new GameCommandGUI(), this);
+
+        // Initialize BStats (Disabled until full release)
+        //int pluginId = ID_HERE;
+        //new Metrics(this, pluginId);
     }
 
     /**
