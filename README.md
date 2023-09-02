@@ -23,6 +23,8 @@
 
 Welcome to the Beta-1 release of Snake 2.0.0! This is a complete rewrite, introducing significant changes in gameplay, new features, and much more. This is a beta version and should not be used in production environments. Debug logs will be printed to the console during this phase for testing purposes. Some features in this beta version are either incomplete or do not yet exist. Further updates will aim to complete these features.
 
+New movement system shown here
+https://www.youtube.com/watch?v=c6Ihh8p-vGk
 ---
 
 ## Dependencies
