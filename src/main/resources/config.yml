@@ -1,0 +1,8 @@
+#Music toggle
+#Useful for if you have NoteblockAPI for another plugin but don't want to have music for the snake game.
+#Does nothing if NoteblockAPI is not installed.
+enable-music: true
+
+#Song path
+#Does nothing if NoteblockAPI is not installed.
+song-file-path: "songs/song.nbs"

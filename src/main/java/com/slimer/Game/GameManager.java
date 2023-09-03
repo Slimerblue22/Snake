@@ -132,7 +132,7 @@ public class GameManager {
 
         // Start music for the player if enabled
         if (isMusicEnabled) {
-            Objects.requireNonNull(musicManager).startMusic(player, "song.nbs");
+            Objects.requireNonNull(musicManager).startMusic(player);
         }
     }
 

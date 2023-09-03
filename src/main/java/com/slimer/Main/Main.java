@@ -8,9 +8,9 @@ import com.slimer.Region.RegionService;
 import com.slimer.Util.DebugManager;
 import com.slimer.Util.MusicManager;
 import com.slimer.Util.PlayerData;
-//(Disabled until full release) import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -27,6 +27,7 @@ import java.util.Objects;
 public final class Main extends JavaPlugin {
     private GameManager gameManager; // Reference to the game manager
     private boolean isMusicEnabled = false; // Flag to indicate if music is enabled
+    private String songFilePath;
 
     /**
      * Called when the plugin is enabled.
@@ -36,10 +37,20 @@ public final class Main extends JavaPlugin {
      */
     @Override
     public void onEnable() {
-        // Check for NoteblockAPI
-        if (Bukkit.getPluginManager().isPluginEnabled("NoteBlockAPI")) {
+        // Load configuration
+        this.saveDefaultConfig();
+        FileConfiguration config = this.getConfig();
+        songFilePath = config.getString("song-file-path", "songs/song.nbs");
+
+        // Read the 'enable-music' setting from config
+        boolean enableMusic = config.getBoolean("enable-music", true); // Default to true if not set
+
+        // Check for NoteblockAPI and the 'enable-music' setting
+        if (Bukkit.getPluginManager().isPluginEnabled("NoteBlockAPI") && enableMusic) {
             isMusicEnabled = true;
-            new MusicManager(this); // Initialize only if NoteblockAPI is present
+            new MusicManager(this); // Initialize only if NoteblockAPI is present and music is enabled
+        } else {
+            isMusicEnabled = false;
         }
         // Initialize game components
         initializeGameComponents();
@@ -109,5 +120,15 @@ public final class Main extends JavaPlugin {
         // Initialize region command handler
         RegionCommandHandler regionCommandHandler = new RegionCommandHandler(regionService);
         Objects.requireNonNull(getCommand("snakeadmin")).setExecutor(regionCommandHandler);
+    }
+
+    /**
+     * Retrieves the file path of the song associated with this instance.
+     * This information is used in {@code MusicManager} to retrieve the music file.
+     *
+     * @return A string representing the file path of the song.
+     */
+    public String getSongFilePath() {
+        return songFilePath;
     }
 }

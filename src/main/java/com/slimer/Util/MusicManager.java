@@ -36,29 +36,34 @@ public class MusicManager {
      * If the song file is not found or cannot be played, logs an error message.
      *
      * @param player         The player for whom to start the music.
-     * @param pathToSongFile The relative path to the song file within the plugin's data folder.
      */
-    public void startMusic(Player player, String pathToSongFile) {
-        // Note: hardcodedPath is just for testing; in production, this will likely be a custom path defined in the config.
-        String hardcodedPath = Paths.get(mainPlugin.getDataFolder().getAbsolutePath(), "songs", pathToSongFile).toString();
-        File songFile = new File(hardcodedPath);
-        File songFolder = new File(Paths.get(mainPlugin.getDataFolder().getAbsolutePath(), "songs").toString());
+    public void startMusic(Player player) {
+        // Get the song file path from the configuration
+        String pathToSongFile = mainPlugin.getSongFilePath();
 
+        // Generate the full path to the song file
+        String fullPath = Paths.get(mainPlugin.getDataFolder().getAbsolutePath(), pathToSongFile).toString();
+        File songFile = new File(fullPath);
+
+        // Create song folder if it doesn't exist
+        File songFolder = songFile.getParentFile();
         if (!songFolder.exists()) {
             if (!songFolder.mkdirs()) {
-                Bukkit.getLogger().severe("{Snake 2.0.0 Beta-1} [MusicManager.java] Failed to create songs folder. It may already exist.");
+                Bukkit.getLogger().severe("{Snake 2.0.0 Beta-2} [MusicManager.java] Failed to create songs folder. It may already exist.");
             }
         }
 
+        // Check if song file exists
         if (!songFile.exists()) {
-            Bukkit.getLogger().info("{Snake 2.0.0 Beta-1} [MusicManager.java] No song file found at " + hardcodedPath + ". Music will not be played.");
+            Bukkit.getLogger().warning("{Snake 2.0.0 Beta-2} [MusicManager.java] No song file found at " + fullPath + ". Music will not be played.");
             return;
         }
 
+        // Try to start the music
         try {
             Song song = NBSDecoder.parse(songFile);
             if (song == null) {
-                Bukkit.getLogger().severe("{Snake 2.0.0 Beta-1} [MusicManager.java] Error loading the music file. Please ensure it's a valid NBS file.");
+                Bukkit.getLogger().severe("{Snake 2.0.0 Beta-2} [MusicManager.java] Error loading the music file. Please ensure it's a valid NBS file.");
                 return;
             }
 
@@ -70,7 +75,7 @@ public class MusicManager {
             songPlayers.put(player, songPlayer);
 
         } catch (Exception e) {
-            Bukkit.getLogger().severe("{Snake 2.0.0 Beta-1} [MusicManager.java] Could not load song from file " + hardcodedPath + ": " + e.getMessage());
+            Bukkit.getLogger().severe("{Snake 2.0.0 Beta-2} [MusicManager.java] Could not load song from file " + fullPath + ": " + e.getMessage());
         }
     }
 
