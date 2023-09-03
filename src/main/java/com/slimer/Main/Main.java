@@ -50,7 +50,7 @@ public final class Main extends JavaPlugin {
         PlayerData.getInstance(this);
 
         // Register the GameCommandGUI as a listener
-        Bukkit.getPluginManager().registerEvents(new GameCommandGUI(), this);
+        Bukkit.getPluginManager().registerEvents(new GameCommandGUI(this), this);
 
         // Initialize BStats (Disabled until full release)
         //int pluginId = ID_HERE;

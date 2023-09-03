@@ -17,6 +17,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -68,7 +69,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
         return switch (subCommand) {
             case "start" -> handleStartGameCommand(player);
             case "stop" -> handleStopGameCommand(player);
-            case "gui" -> handleGUICommand(player);
+            case "gui" -> handleGUICommand(player, plugin);
             case "help" -> handleHelpCommand(player);
             case "color" -> args.length > 1 && handleSetColorCommand(player, args[1], plugin);
             case "highscore" -> handleHighScoreCommand(player);
@@ -193,8 +194,9 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      * @param player The player who issued the "gui" command.
      * @return Always returns true to indicate successful execution.
      */
-    private boolean handleGUICommand(Player player) {
-        player.openInventory(GameCommandGUI.createMainMenu(player));
+    private boolean handleGUICommand(Player player, Plugin plugin) {
+        GameCommandGUI gameCommandGUI = new GameCommandGUI(plugin);
+        player.openInventory(gameCommandGUI.getMenu());
         return true;
     }
 
