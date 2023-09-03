@@ -4,6 +4,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.slimer.Region.Region;
 import com.slimer.Region.RegionService;
 import com.slimer.Util.AStar;
+import com.slimer.Util.DebugManager;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -118,7 +119,9 @@ public class Apple {
                 if (world != null && worldGuardRegion != null && regionService.isLocationInRegion(snakeLocation, worldGuardRegion)) {
                     Location location = findSuitableLocation(world, snakeYLevel, region, snakeLocation);
                     if (location == null) {
-                        Bukkit.getLogger().severe("{Snake 2.0.0 Beta-1} [Apple.java] Could not find a valid location for apple spawn.");
+                        if (DebugManager.isDebugEnabled) {
+                            Bukkit.getLogger().severe("{Snake 2.0.0 Beta-2} [Apple.java] Could not find a valid location for apple spawn.");
+                        }
                         return;
                     }
                     // Center the ArmorStand on the block
@@ -182,8 +185,9 @@ public class Apple {
 
             return new Location(world, x, yLevel, z);
         }
-
-        Bukkit.getLogger().severe("{Snake 2.0.0 Beta-1} [Apple.java] Region not found for game zone name: " + gameZoneName);
+        if (DebugManager.isDebugEnabled) {
+            Bukkit.getLogger().severe("{Snake 2.0.0 Beta-2} [Apple.java] Region not found for game zone name: " + gameZoneName);
+        }
         return null;
     }
 }
