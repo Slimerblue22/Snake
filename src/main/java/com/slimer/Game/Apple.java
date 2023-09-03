@@ -5,12 +5,12 @@ import com.slimer.Region.Region;
 import com.slimer.Region.RegionService;
 import com.slimer.Util.AStar;
 import com.slimer.Util.DebugManager;
+import com.slimer.Util.PlayerData;
 import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.*;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 
@@ -108,6 +108,7 @@ public class Apple {
      * @param playerName    The name of the player.
      */
     public void spawnWithName(Location snakeLocation, int snakeYLevel, String playerName) {
+        Player player = Bukkit.getPlayer(playerName); // Retrieve the Player object based on playerName
         RegionService regionService = RegionService.getInstance();
 
         // Iterate through all game regions
@@ -131,8 +132,10 @@ public class Apple {
 
                     this.armorStand = spawnArmorStand(location);
 
-                    // Set custom name for the ArmorStand
-                    Component customName = Component.text(playerName + "'s apple");
+                    DyeColor sheepColor = PlayerData.getInstance().getSheepColor(player); // Get the sheep color
+                    NamedTextColor color = convertDyeColorToTextColor(sheepColor); // Convert DyeColor to NamedTextColor
+
+                    Component customName = Component.text(playerName + "'s apple").color(color);
                     armorStand.customName(customName);
                     armorStand.setCustomNameVisible(true);
 
@@ -149,6 +152,32 @@ public class Apple {
      */
     public Location getLocation() {
         return (armorStand != null) ? armorStand.getLocation() : null;
+    }
+
+    /**
+     * Converts a Bukkit DyeColor to a NamedTextColor.
+     *
+     * @param dyeColor The Bukkit DyeColor.
+     * @return The corresponding NamedTextColor.
+     */
+    private NamedTextColor convertDyeColorToTextColor(DyeColor dyeColor) {
+        return switch (dyeColor) {
+            case ORANGE -> NamedTextColor.GOLD;
+            case MAGENTA, PINK -> NamedTextColor.LIGHT_PURPLE;
+            case LIGHT_BLUE -> NamedTextColor.AQUA;
+            case YELLOW -> NamedTextColor.YELLOW;
+            case LIME -> NamedTextColor.GREEN;
+            case GRAY -> NamedTextColor.DARK_GRAY;
+            case LIGHT_GRAY -> NamedTextColor.GRAY;
+            case CYAN -> NamedTextColor.DARK_AQUA;
+            case PURPLE -> NamedTextColor.DARK_PURPLE;
+            case BLUE -> NamedTextColor.BLUE;
+            case BROWN -> NamedTextColor.DARK_RED; // No direct brown color in TextColor, using a similar shade
+            case GREEN -> NamedTextColor.DARK_GREEN;
+            case RED -> NamedTextColor.RED;
+            case BLACK -> NamedTextColor.BLACK;
+            default -> NamedTextColor.WHITE; // Default to white if something goes wrong
+        };
     }
 
     /**
