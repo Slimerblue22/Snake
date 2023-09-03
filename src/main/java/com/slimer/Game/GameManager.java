@@ -5,6 +5,7 @@ import com.slimer.Main.Main;
 import com.slimer.Region.Region;
 import com.slimer.Region.RegionLink;
 import com.slimer.Region.RegionService;
+import com.slimer.Util.DebugManager;
 import com.slimer.Util.MusicManager;
 import com.slimer.Util.PlayerData;
 import org.bukkit.Bukkit;
@@ -295,6 +296,9 @@ public class GameManager {
     public void handlePlayerReconnect(Player player) {
         UUID uuid = player.getUniqueId();
         if (disconnectedPlayerUUIDs.contains(uuid)) {
+            if (DebugManager.isDebugEnabled) {
+                Bukkit.getLogger().info("{Snake 2.0.0 Beta-2} [GameManager.java] A previously disconnected player has been sent back to lobby!");
+            }
             // Fetch the game region the player is currently in
             World world = player.getWorld();
             Location loc = player.getLocation();

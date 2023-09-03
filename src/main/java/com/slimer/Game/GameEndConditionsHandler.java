@@ -180,15 +180,15 @@ public class GameEndConditionsHandler implements Listener {
      */
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        if (DebugManager.isDebugEnabled) {
-            Bukkit.getLogger().info("{Snake 2.0.0 Beta-2} [GameEndConditionsHandler.java] A player has disconnected mid game!");
-        }
         Player quittingPlayer = event.getPlayer();
         Entity riddenEntity = quittingPlayer.getVehicle();
 
         // Check if the quitting player is the same as the one managed by this GameEndConditionsHandler instance
         if (quittingPlayer.equals(player)) {
             if (riddenEntity != null && isSnakeEntity(riddenEntity)) {
+                if (DebugManager.isDebugEnabled) {
+                    Bukkit.getLogger().info("{Snake 2.0.0 Beta-2} [GameEndConditionsHandler.java] A player has disconnected mid game!");
+                }
                 gameManager.stopGame(quittingPlayer);  // Perform cleanup
                 gameManager.handlePlayerDisconnect(quittingPlayer); // Handle player disconnection
             }
@@ -203,9 +203,6 @@ public class GameEndConditionsHandler implements Listener {
      */
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        if (DebugManager.isDebugEnabled) {
-            Bukkit.getLogger().info("{Snake 2.0.0 Beta-2} [GameEndConditionsHandler.java] A previously disconnected player has been sent back to lobby!");
-        }
         Player joiningPlayer = event.getPlayer();
 
         // Handle reconnection logic
