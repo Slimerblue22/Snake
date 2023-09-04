@@ -23,6 +23,7 @@ import java.util.Map;
  * A class to handle the graphical user interface (GUI) for the Snake game commands.
  */
 public class GameCommandGUI implements Listener {
+    private static GameCommandGUI currentInstance;  // Single instance of GameCommandGUI to prevent multiple event listener registrations
     private final Inventory menu;
     // Rainbow colors for the border
     private final Material[] colors = {
@@ -45,14 +46,26 @@ public class GameCommandGUI implements Listener {
     private int rotationState = 0;
 
     /**
-     * Constructs a new GameCommandGUI object.
+     * Constructs a new GameCommandGUI object, setting this as the current instance.
+     * Ensures that only one GUI event listener instance is active at a time.
      *
      * @param plugin The Plugin instance for the Snake game.
+     * @param player The player for whom the GUI is being created.
      */
-    public GameCommandGUI(Plugin plugin) {
+    public GameCommandGUI(Plugin plugin, Player player) {
         this.plugin = plugin;
-        menu = createMenu();
+        menu = createMenu(player);
         startAnimation(menu, 3);
+        currentInstance = this;  // Set this object as the current active instance
+    }
+
+    /**
+     * Gets the current active instance of the GameCommandGUI.
+     *
+     * @return The current instance of GameCommandGUI.
+     */
+    public static GameCommandGUI getCurrentInstance() {
+        return currentInstance;
     }
 
     /**
@@ -60,7 +73,7 @@ public class GameCommandGUI implements Listener {
      *
      * @return An Inventory object representing the main menu.
      */
-    private Inventory createMenu() {
+    private Inventory createMenu(Player player) {
         Inventory menu = Bukkit.createInventory(null, 9 * 3, Component.text("Snake Main Menu"));
 
         menu.setItem(10, createMenuItem(Material.GREEN_WOOL, "Start"));
@@ -68,10 +81,17 @@ public class GameCommandGUI implements Listener {
         menu.setItem(12, createMenuItem(Material.BOOK, "Help"));
         menu.setItem(13, createMenuItem(Material.PAINTING, "Set Color"));
         menu.setItem(14, createMenuItem(Material.DIAMOND, "Leaderboard"));
-        // Should probably make this just display the score in menu at some point.
-        // Can't really pass the player because I'd have to also pass it to the event listener which can't accept it.
-        // So, I'll figure that out later.
-        menu.setItem(15, createMenuItem(Material.EMERALD, "High Score"));
+
+        // Create player head with high score for the specific player
+        ItemStack playerHead = createPlayerHead(player.getName());
+        SkullMeta meta = (SkullMeta) playerHead.getItemMeta();
+
+        // Fetch the high score for the player using the PlayerData class
+        int highScore = PlayerData.getInstance().getHighScore(player);
+        meta.displayName(Component.text("High Score: " + highScore));
+        playerHead.setItemMeta(meta);
+
+        menu.setItem(15, playerHead);
 
         return menu;
     }

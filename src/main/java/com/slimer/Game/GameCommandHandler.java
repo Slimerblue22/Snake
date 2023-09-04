@@ -17,6 +17,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -188,14 +189,27 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
     }
 
     /**
-     * Handles the "gui" command by opening the main menu of the Snake game.
-     * This method is responsible for triggering the GUI that allows players to interact with the Snake game.
+     * Handles the "gui" command by displaying the main menu GUI for the Snake game to the player.
+     * If there's an existing GUI instance (and associated event listener), it's unregistered to ensure
+     * only the latest instance is active. This method then creates a new instance of the GUI,
+     * registers the associated event listener, and opens the GUI for the player.
      *
-     * @param player The player who issued the "gui" command.
-     * @return Always returns true to indicate successful execution.
+     * @param player The player executing the "gui" command.
+     * @param plugin The current plugin instance.
+     * @return Always returns true, indicating the command's successful execution.
      */
     private boolean handleGUICommand(Player player, Plugin plugin) {
-        GameCommandGUI gameCommandGUI = new GameCommandGUI(plugin);
+        // Unregister the old listener if it exists to avoid multiple GUI instances
+        GameCommandGUI oldInstance = GameCommandGUI.getCurrentInstance();
+        if (oldInstance != null) {
+            InventoryClickEvent.getHandlerList().unregister(oldInstance);
+        }
+
+        // Create a new GUI instance and register its event listener
+        GameCommandGUI gameCommandGUI = new GameCommandGUI(plugin, player);
+        Bukkit.getPluginManager().registerEvents(gameCommandGUI, plugin);
+
+        // Open the GUI for the player
         player.openInventory(gameCommandGUI.getMenu());
         return true;
     }

@@ -1,6 +1,5 @@
 package com.slimer.Main;
 
-import com.slimer.GUI.GameCommandGUI;
 import com.slimer.Game.*;
 import com.slimer.Region.RegionCommandHandler;
 import com.slimer.Region.RegionFileHandler;
@@ -60,9 +59,6 @@ public final class Main extends JavaPlugin {
 
         // Initialize PlayerData singleton
         PlayerData.getInstance(this);
-
-        // Register the GameCommandGUI as a listener
-        Bukkit.getPluginManager().registerEvents(new GameCommandGUI(this), this);
 
         // Initialize BStats (Disabled until full release)
         //int pluginId = ID_HERE;
