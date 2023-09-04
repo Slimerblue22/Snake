@@ -28,14 +28,29 @@ public class RegionLink {
         this.gameTeleportLocation = gameTeleportLocation;
     }
 
+    /**
+     * Retrieves the name of the lobby region.
+     *
+     * @return The name of the lobby region.
+     */
     public String getLobbyRegionName() {
         return lobbyRegionName;
     }
 
+    /**
+     * Retrieves the name of the game region.
+     *
+     * @return The name of the game region.
+     */
     public String getGameRegionName() {
         return gameRegionName;
     }
 
+    /**
+     * Retrieves the teleport location for the lobby region.
+     *
+     * @return The teleport location for the lobby region.
+     */
     public Location getLobbyTeleportLocation() {
         return lobbyTeleportLocation;
     }
@@ -49,6 +64,11 @@ public class RegionLink {
         this.lobbyTeleportLocation = lobbyTeleportLocation;
     }
 
+    /**
+     * Retrieves the teleport location for the game region.
+     *
+     * @return The teleport location for the game region.
+     */
     public Location getGameTeleportLocation() {
         return gameTeleportLocation;
     }
