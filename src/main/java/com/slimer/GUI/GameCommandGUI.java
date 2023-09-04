@@ -267,7 +267,6 @@ public class GameCommandGUI implements Listener {
                 case GREEN_WOOL -> player.performCommand("snakegame start");
                 case RED_WOOL -> player.performCommand("snakegame stop");
                 case BOOK -> player.performCommand("snakegame help");
-                case EMERALD -> player.performCommand("snakegame highscore");
                 case PAINTING -> {
                     player.openInventory(createColorMenu()); // Open the color submenu
                     event.setCancelled(true);

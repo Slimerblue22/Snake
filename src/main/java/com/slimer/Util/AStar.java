@@ -36,7 +36,7 @@ public class AStar {
             }
         }
         if (DebugManager.isDebugEnabled) {
-            Bukkit.getLogger().info("{Snake 2.0.0 Beta-2} [AStar.java] Found " + neighbors.size() + " valid neighbors for location (" + location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ() + ")");
+            Bukkit.getLogger().info("{Snake 2.0.0 DEBUG} [AStar.java] Found " + neighbors.size() + " valid neighbors for location (" + location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ() + ")");
         }
         return neighbors;
     }
@@ -75,7 +75,7 @@ public class AStar {
         List<Location> path = findPath(start, goal);
         boolean exists = path != null && !path.isEmpty();
         if (DebugManager.isDebugEnabled) {
-            Bukkit.getLogger().info("{Snake 2.0.0 Beta-2} [AStar.java] Path exists between start (" + start.getBlockX() + ", " + start.getBlockY() + ", " + start.getBlockZ() + ") and goal (" + goal.getBlockX() + ", " + goal.getBlockY() + ", " + goal.getBlockZ() + "): " + exists);
+            Bukkit.getLogger().info("{Snake 2.0.0 DEBUG} [AStar.java] Path exists between start (" + start.getBlockX() + ", " + start.getBlockY() + ", " + start.getBlockZ() + ") and goal (" + goal.getBlockX() + ", " + goal.getBlockY() + ", " + goal.getBlockZ() + "): " + exists);
         }
         return exists;
     }
@@ -89,7 +89,7 @@ public class AStar {
      */
     public List<Location> findPath(Location start, Location goal) {
         if (DebugManager.isDebugEnabled) {
-            Bukkit.getLogger().info("{Snake 2.0.0 Beta-2} [AStar.java] Finding path between start (" + start.getBlockX() + ", " + start.getBlockY() + ", " + start.getBlockZ() + ") and goal (" + goal.getBlockX() + ", " + goal.getBlockY() + ", " + goal.getBlockZ() + ")");
+            Bukkit.getLogger().info("{Snake 2.0.0 DEBUG} [AStar.java] Finding path between start (" + start.getBlockX() + ", " + start.getBlockY() + ", " + start.getBlockZ() + ") and goal (" + goal.getBlockX() + ", " + goal.getBlockY() + ", " + goal.getBlockZ() + ")");
         }
         Set<Location> openSet = new HashSet<>();
         openSet.add(start);
@@ -104,7 +104,7 @@ public class AStar {
             if (isSameBlock(current, goal)) {
                 List<Location> path = reconstructPath(cameFrom, current);
                 if (DebugManager.isDebugEnabled) {
-                    Bukkit.getLogger().info("{Snake 2.0.0 Beta-2} [AStar.java] Path found with length: " + path.size());
+                    Bukkit.getLogger().info("{Snake 2.0.0 DEBUG} [AStar.java] Path found with length: " + path.size());
                 }
                 return path;
             }
@@ -123,7 +123,7 @@ public class AStar {
             }
         }
         if (DebugManager.isDebugEnabled) {
-            Bukkit.getLogger().info("{Snake 2.0.0 Beta-2} [AStar.java] No path found");
+            Bukkit.getLogger().info("{Snake 2.0.0 DEBUG} [AStar.java] No path found");
         }
         return null; // Return the path or null if not found
     }

@@ -121,7 +121,7 @@ public class Apple {
                     Location location = findSuitableLocation(world, snakeYLevel, region, snakeLocation);
                     if (location == null) {
                         if (DebugManager.isDebugEnabled) {
-                            Bukkit.getLogger().severe("{Snake 2.0.0 Beta-2} [Apple.java] Could not find a valid location for apple spawn.");
+                            Bukkit.getLogger().severe("{Snake 2.0.0 DEBUG} [Apple.java] Could not find a valid location for apple spawn.");
                         }
                         return;
                     }
@@ -215,7 +215,7 @@ public class Apple {
             return new Location(world, x, yLevel, z);
         }
         if (DebugManager.isDebugEnabled) {
-            Bukkit.getLogger().severe("{Snake 2.0.0 Beta-2} [Apple.java] Region not found for game zone name: " + gameZoneName);
+            Bukkit.getLogger().severe("{Snake 2.0.0 DEBUG} [Apple.java] Region not found for game zone name: " + gameZoneName);
         }
         return null;
     }

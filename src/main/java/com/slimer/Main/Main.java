@@ -7,6 +7,7 @@ import com.slimer.Region.RegionService;
 import com.slimer.Util.DebugManager;
 import com.slimer.Util.MusicManager;
 import com.slimer.Util.PlayerData;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -60,9 +61,9 @@ public final class Main extends JavaPlugin {
         // Initialize PlayerData singleton
         PlayerData.getInstance(this);
 
-        // Initialize BStats (Disabled until full release)
-        //int pluginId = ID_HERE;
-        //new Metrics(this, pluginId);
+        // Initialize BStats
+        int pluginId = 19729;
+        new Metrics(this, pluginId);
 
         // Adds a command to toggle debugs on or off, disabled by default.
         Objects.requireNonNull(this.getCommand("snaketoggledebug")).setExecutor(new DebugManager.ToggleDebugCommand());
