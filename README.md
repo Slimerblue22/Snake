@@ -1,60 +1,75 @@
-# Snake 2.0.0 Beta-1
+# Snake 2.0.0 - Minecraft Spigot Plugin
 
 ## Table of Contents
 
 - [Introduction](#introduction)
 - [Dependencies](#dependencies)
-   - [Required Dependencies](#required-dependencies)
-   - [Soft Dependencies](#soft-dependencies)
 - [Key Changes from V1 to V2](#key-changes-from-v1-to-v2)
+- [Music Configuration](#music-configuration)
 - [Region Management](#region-management)
-   - [Preliminary Steps](#preliminary-steps)
-   - [Registering Regions](#registering-regions)
-   - [Linking Regions](#linking-regions)
-   - [Setting Teleport Coordinates](#setting-teleport-coordinates)
-   - [Viewing Region Information](#viewing-region-information)
-   - [Unlinking and Unregistering Regions](#unlinking-and-unregistering-regions)
 - [Permissions](#permissions)
 - [User Commands](#user-commands)
+- [Data Collection via bStats](#data-collection-via-bstats)
+- [License](#license)
 
 ---
 
 ## Introduction
 
-Welcome to the Beta-1 release of Snake 2.0.0! This is a complete rewrite, introducing significant changes in gameplay, new features, and much more. This is a beta version and should not be used in production environments. Debug logs will be printed to the console during this phase for testing purposes. Some features in this beta version are either incomplete or do not yet exist. Further updates will aim to complete these features.
+Welcome to Snake 2.0.0, a Minecraft Spigot plugin that uniquely recreates the classic Snake game using sheep.
 
-New movement system shown here
-https://www.youtube.com/watch?v=c6Ihh8p-vGk
+New in Snake 2.0.0:
+- A complete rewrite, introducing major gameplay enhancements and new features.
+- Watch the new movement system in action: [here](https://www.youtube.com/watch?v=c6Ihh8p-vGk)
+
+NOTICE: Some features from V1 are not present in V2. These may be reintroduced in future versions. Made for Minecraft 1.20.X.
+
 ---
 
 ## Dependencies
 
 ### Required Dependencies
+
 - WorldGuard
 - ProtocolLib
-- Paper Spigot or one of its forks
+- Paper Spigot (Paper Spigot is essential due to Adventure API integration. Other server software with Adventure API should also work but hasn't been tested.)
 
 ### Soft Dependencies
-- NoteBlockAPI
+
+- NoteBlockAPI (For more details on setting up music, see the [Music Configuration](#music-configuration) section)
 
 ---
 
 ## Key Changes from V1 to V2
 
-- **Snake Movement**: Movement has changed from teleporting to a velocity-based system, providing a smoother user experience.
-- **Config Files**: V1 config files are not compatible with V2. Delete them and let the plugin regenerate new ones. Note that `config.yml` does not currently exist.
+- **Snake Movement**: Transitioned from teleporting to a velocity-based system for a smoother user experience.
+- **Configuration**: V1 config files are incompatible with V2. Delete the old configs, allowing the plugin to generate new ones.
+- **Data Management**: Three primary data files: `PlayerData.yml`, `Regions.yml`, and `config.yml` cater to player specifics, region info, and music paths respectively.
+- **GUI support**: The game now includes a GUI instead of only text-based commands. Text-based commands can still be used.
 
-- **Data Files**: Two main data files exist:
-   - `PlayerData.yml`: Stores player-specific data like snake color preference, high score, username, and UUID.
-   - `Regions.yml`: Information about multiple game regions.
+---
+
+## Music Configuration
+
+Snake 2.0.0 includes support for game music using the NoteBlockAPI. Music settings are configurable within the `config.yml` file. The plugin expects music tracks to be in the .nbs (Note Block Studio) format.
+
+**Important Note**:
+- The Snake 2.0.0 plugin does not include any music files by default. Users need to supply their own .nbs files to add music to the game. Once you've added your .nbs files, adjust the file paths in the `config.yml` to point to your music files.
 
 ---
 
 ## Region Management
 
+
 ### Preliminary Steps
 
 Before using the region-related commands in this plugin, ensure that the regions are first created using WorldGuard. The commands listed below are for registering these pre-existing WorldGuard regions with the Snake 2.0.0 plugin. The plugin itself does not create, modify, or remove WorldGuard regions.
+
+**Important Note**:
+- This plugin does not incorporate protections, modifications, or restrictions to the game assets, arena, or other properties located within the WorldGuard region. Users are responsible for setting up these restrictions themselves directly through WorldGuard. It is recommended to disable PvP, block changes, and damage to players or entities within the designated gameplay regions for an optimal experience.
+- The Snake game is designed for flat, level ground. It does not support height variations, so ensure your designated play area is uniformly level for the best gameplay experience.
+
+---
 
 ### Registering Regions
 
@@ -139,30 +154,36 @@ To unregister:
 
 ## Permissions
 
-- `snake.admin`: Required for using all the administrative commands listed above.
-- `snake.play`: Required for normal users to play the game.
+- `snake.admin`: Grants access to all administrative commands.
+- `snake.play`: Allows players to engage in the game.
 
 ---
 
 ## User Commands
 
-For players with the `snake.play` permission, the following commands are available:
+Players with `snake.play` permission can utilize:
 
-### Starting and Stopping the Game
+- **Game Controls**:
+  - `/snakegame start`: Initiates the game in a linked lobby region.
+  - `/snakegame stop`: Concludes the game, transporting the player back to the lobby.
+  - `/snakegame gui`: Unveils the game's GUI for setting adjustments and statistics.
+  - `/snakegame help`: A guide on gameplay, controls, and objectives.
 
-- `/snakegame start`: Starts the game. Make sure you are in a lobby region linked to a game region.
-- `/snakegame stop`: Stops the game. You will be returned to the lobby region.
+- **Personalization & Stats**:
+  - `/snakegame color`: Choose and save your snake's color.
+  - `/snakegame highscore`: Reveals your highest score.
+  - `/snakegame leaderboard`: Compares your score with other players on the leaderboard.
 
-### Game Interface and Help
+## Data Collection via bStats
 
-- `/snakegame gui`: Opens the game's graphical user interface where you can manage various settings and view statistics.
-- `/snakegame help`: Explains how to play the game, including controls and objectives.
+This plugin uses bStats to collect anonymous data about its usage. This data assists in understanding how the plugin is being used and aids in its future development. By default, data collection is enabled, but it can be disabled by modifying the bStats global configuration.
 
-### Personalization and Statistics
+However, it's appreciated if users keep this feature enabled as it provides valuable insights and helps improve the plugin.
 
-- `/snakegame color`: Opens a menu to select your snake's color. Your choice will be saved for future games.
-- `/snakegame highscore`: Displays your personal highscore.
+To view the collected statistics, visit: [Bstats](https://bstats.org/plugin/bukkit/Snake%20V2/19729)
 
-### Leaderboard
+---
 
-- `/snakegame leaderboard`: View the leaderboard to see how you rank against other players.
+## License
+
+This project is licensed under the MIT License. For more details and the full license text, please visit: [MIT License](https://github.com/Slimerblue22/Snake/blob/2.0/LICENSE)
