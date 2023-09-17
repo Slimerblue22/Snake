@@ -62,8 +62,8 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             player.sendMessage(Component.text("You don't have permission to run this command.", NamedTextColor.RED));
             return false;
         }
-        if (args.length == 0) {
-            player.sendMessage(Component.text("Usage: /snakegame <start|stop|gui|help|highscore|leaderboard>", NamedTextColor.RED));
+        if (args.length == 0) { // If the user only types `/snakegame` or `/sg` just open the GUI for them.
+            handleGUICommand(player, plugin);
             return false;
         }
         String subCommand = args[0].toLowerCase();
