@@ -87,7 +87,7 @@ public final class Main extends JavaPlugin {
     private void initializeGameComponents() {
         Map<Player, SnakeCreation> playerSnakes = new HashMap<>();
         Map<Player, Location> playerLobbyLocations = new HashMap<>();
-        new Apple();
+        new Apple(this);
 
         // Initialize GameManager and other game-related classes
         gameManager = new GameManager(playerSnakes, playerLobbyLocations, this, isMusicEnabled);

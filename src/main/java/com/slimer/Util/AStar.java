@@ -92,6 +92,7 @@ public class AStar {
             Bukkit.getLogger().info("{Snake 2.0.0 DEBUG} [AStar.java] Finding path between start (" + start.getBlockX() + ", " + start.getBlockY() + ", " + start.getBlockZ() + ") and goal (" + goal.getBlockX() + ", " + goal.getBlockY() + ", " + goal.getBlockZ() + ")");
         }
         Set<Location> openSet = new HashSet<>();
+        Set<Location> closedSet = new HashSet<>();
         openSet.add(start);
         Map<Location, Location> cameFrom = new HashMap<>();
         Map<Location, Double> gScore = new HashMap<>();
@@ -99,7 +100,11 @@ public class AStar {
         Map<Location, Double> fScore = new HashMap<>();
         fScore.put(start, heuristic(start, goal));
 
+        int iterationCount = 0;
         while (!openSet.isEmpty()) {
+            if (iterationCount++ > 1000) {
+                break;
+            }
             Location current = getLowestFScoreNode(openSet, fScore);
             if (isSameBlock(current, goal)) {
                 List<Location> path = reconstructPath(cameFrom, current);
@@ -110,9 +115,13 @@ public class AStar {
             }
 
             openSet.remove(current);
+            closedSet.add(current);
             List<Location> neighbors = getNeighbors(current);
 
             for (Location neighbor : neighbors) {
+                if (closedSet.contains(neighbor)) {
+                    continue;
+                }
                 double tentativeGScore = gScore.getOrDefault(current, Double.MAX_VALUE) + 1;
                 if (tentativeGScore < gScore.getOrDefault(neighbor, Double.MAX_VALUE)) {
                     cameFrom.put(neighbor, current);

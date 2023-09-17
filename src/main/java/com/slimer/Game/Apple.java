@@ -13,9 +13,11 @@ import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Random;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Represents an apple entity in the Snake game.
@@ -25,11 +27,13 @@ import java.util.UUID;
  */
 public class Apple {
     private ArmorStand armorStand;
+    private final JavaPlugin plugin;
 
     /**
      * Default constructor for Apple.
      */
-    public Apple() {
+    public Apple(JavaPlugin plugin) {
+        this.plugin = plugin;
     }
 
     /**
@@ -118,28 +122,35 @@ public class Apple {
                 ProtectedRegion worldGuardRegion = regionService.getWorldGuardRegion(region.getName(), world);
 
                 if (world != null && worldGuardRegion != null && regionService.isLocationInRegion(snakeLocation, worldGuardRegion)) {
-                    Location location = findSuitableLocation(world, snakeYLevel, region, snakeLocation);
-                    if (location == null) {
-                        if (DebugManager.isDebugEnabled) {
-                            Bukkit.getLogger().severe("{Snake 2.0.0 DEBUG} [Apple.java] Could not find a valid location for apple spawn.");
-                        }
-                        return;
-                    }
-                    // Center the ArmorStand on the block
-                    location.setX(location.getBlockX() + 0.5);
-                    location.setZ(location.getBlockZ() + 0.5);
-                    location = location.clone().subtract(0, 1.4, 0);
+                    CompletableFuture<Location> future = CompletableFuture.supplyAsync(() -> {
+                        // This runs findSuitableLocation on a separate thread
+                        return findSuitableLocation(world, snakeYLevel, region, snakeLocation);
+                    });
 
-                    this.armorStand = spawnArmorStand(location);
+                    future.thenAccept(loc -> {
+                        // This runs on the main thread once the calculation is complete
+                        Bukkit.getScheduler().runTask(plugin, () -> {
+                            if (loc == null) {
+                                if (DebugManager.isDebugEnabled) {
+                                    Bukkit.getLogger().severe("{Snake 2.0.0 DEBUG} [Apple.java] Could not find a valid location for apple spawn.");
+                                }
+                                return;
+                            }
+                            // Center the ArmorStand on the block
+                            loc.setX(loc.getBlockX() + 0.5);
+                            loc.setZ(loc.getBlockZ() + 0.5);
+                            Location adjustedLocation = loc.clone().subtract(0, 1.4, 0);
 
-                    DyeColor sheepColor = PlayerData.getInstance().getSheepColor(player); // Get the sheep color
-                    NamedTextColor color = convertDyeColorToTextColor(sheepColor); // Convert DyeColor to NamedTextColor
+                            this.armorStand = spawnArmorStand(adjustedLocation);
 
-                    Component customName = Component.text(playerName + "'s apple").color(color);
-                    armorStand.customName(customName);
-                    armorStand.setCustomNameVisible(true);
+                            DyeColor sheepColor = PlayerData.getInstance().getSheepColor(player); // Get the sheep color
+                            NamedTextColor color = convertDyeColorToTextColor(sheepColor); // Convert DyeColor to NamedTextColor
 
-                    return;
+                            Component customName = Component.text(playerName + "'s apple").color(color);
+                            armorStand.customName(customName);
+                            armorStand.setCustomNameVisible(true);
+                        });
+                    });
                 }
             }
         }
