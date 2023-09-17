@@ -116,7 +116,7 @@ public class GameManager {
         GameEndConditionsHandler.put(player, GameEndEvents);
 
         // Initialize the apple for the player
-        Apple apple = new Apple((JavaPlugin) plugin);
+        Apple apple = new Apple((JavaPlugin) plugin, this);
         apple.spawnWithName(gameLocation, gameLocation.getBlockY(), player.getName());
         playerApples.put(player, apple);
 

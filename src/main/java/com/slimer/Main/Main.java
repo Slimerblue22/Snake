@@ -87,10 +87,13 @@ public final class Main extends JavaPlugin {
     private void initializeGameComponents() {
         Map<Player, SnakeCreation> playerSnakes = new HashMap<>();
         Map<Player, Location> playerLobbyLocations = new HashMap<>();
-        new Apple(this);
 
-        // Initialize GameManager and other game-related classes
+        // Initialize GameManager first
         gameManager = new GameManager(playerSnakes, playerLobbyLocations, this, isMusicEnabled);
+
+        // Now, pass the GameManager instance to Apple's constructor
+        new Apple(this, gameManager);
+
         SnakeMovement snakeMovement = new SnakeMovement(gameManager, null);
         PlayerInputHandler playerInputHandler = new PlayerInputHandler(this);
         snakeMovement.setPlayerInputHandler(playerInputHandler);

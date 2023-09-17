@@ -28,12 +28,17 @@ import java.util.concurrent.CompletableFuture;
 public class Apple {
     private ArmorStand armorStand;
     private final JavaPlugin plugin;
+    private final GameManager gameManager;
 
     /**
-     * Default constructor for Apple.
+     * Constructs an Apple object.
+     *
+     * @param plugin      The JavaPlugin instance associated with the game.
+     * @param gameManager The GameManager managing the game.
      */
-    public Apple(JavaPlugin plugin) {
+    public Apple(JavaPlugin plugin, GameManager gameManager) {
         this.plugin = plugin;
+        this.gameManager = gameManager;
     }
 
     /**
@@ -135,6 +140,11 @@ public class Apple {
                                     Bukkit.getLogger().severe("{Snake 2.0.0 DEBUG} [Apple.java] Could not find a valid location for apple spawn.");
                                 }
                                 return;
+                            }
+                            // Check if the game is still running for the player
+                            Player playerObj = Bukkit.getPlayer(playerName);
+                            if (playerObj != null && gameManager.getSnakeForPlayer(playerObj) == null) {
+                                return; // Do not spawn the apple if the game has ended
                             }
                             // Center the ArmorStand on the block
                             loc.setX(loc.getBlockX() + 0.5);
