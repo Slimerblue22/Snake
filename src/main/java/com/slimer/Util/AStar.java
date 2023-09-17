@@ -29,9 +29,8 @@ public class AStar {
 
         for (int[] direction : directions) {
             Location neighbor = location.clone().add(direction[0], 0, direction[1]);
-            Location belowNeighbor = neighbor.clone().subtract(0, 1, 0);
 
-            if (!neighbor.getBlock().getType().isSolid() && belowNeighbor.getBlock().getType().isSolid()) {
+            if (!neighbor.getBlock().getType().isSolid() && isSolid3x3Below(neighbor)) {
                 neighbors.add(neighbor);
             }
         }
@@ -39,6 +38,28 @@ public class AStar {
             Bukkit.getLogger().info("{Snake 2.0.0 DEBUG} [AStar.java] Found " + neighbors.size() + " valid neighbors for location (" + location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ() + ")");
         }
         return neighbors;
+    }
+
+    /**
+     * Checks if the 3x3 area below the given location consists of solid blocks.
+     *
+     * @param center The central location above which the 3x3 grid is checked.
+     * @return True if the 3x3 area below the center consists of solid blocks, false otherwise.
+     */
+    private boolean isSolid3x3Below(Location center) {
+        int[][] offset = {
+                {-1, -1}, {0, -1}, {1, -1},
+                {-1, 0},  {0, 0},  {1, 0},
+                {-1, 1},  {0, 1},  {1, 1}
+        };
+
+        for (int[] os : offset) {
+            Location loc = center.clone().add(os[0], -1, os[1]); // Check 1 block below the center
+            if (!loc.getBlock().getType().isSolid()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
