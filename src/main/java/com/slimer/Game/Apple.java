@@ -137,7 +137,7 @@ public class Apple {
                         Bukkit.getScheduler().runTask(plugin, () -> {
                             if (loc == null) {
                                 if (DebugManager.isDebugEnabled) {
-                                    Bukkit.getLogger().severe("{Snake 2.0.0 DEBUG} [Apple.java] Could not find a valid location for apple spawn.");
+                                    Bukkit.getLogger().info(DebugManager.getDebugMessage("[Apple.java] Could not find a valid location for apple spawn."));
                                 }
                                 return;
                             }
@@ -236,7 +236,7 @@ public class Apple {
             return new Location(world, x, yLevel, z);
         }
         if (DebugManager.isDebugEnabled) {
-            Bukkit.getLogger().severe("{Snake 2.0.0 DEBUG} [Apple.java] Region not found for game zone name: " + gameZoneName);
+            Bukkit.getLogger().info(DebugManager.getDebugMessage("[Apple.java] Region not found for game zone name: " + gameZoneName));
         }
         return null;
     }

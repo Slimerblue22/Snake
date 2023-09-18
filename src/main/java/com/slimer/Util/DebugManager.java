@@ -25,6 +25,17 @@ public class DebugManager {
     }
 
     /**
+     * Generates a formatted debug message prefixed with the plugin's version.
+     *
+     * @param message The specific debug message to be logged.
+     * @return A formatted string with the plugin's version and the provided message.
+     */
+    public static String getDebugMessage(String message) {
+        String version = "2.0.0";
+        return "{Snake " + version + " DEBUG} " + message;
+    }
+
+    /**
      * A nested class that implements CommandExecutor to toggle debug mode via commands.
      */
     public static class ToggleDebugCommand implements CommandExecutor {

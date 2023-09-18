@@ -297,7 +297,7 @@ public class GameManager {
         UUID uuid = player.getUniqueId();
         if (disconnectedPlayerUUIDs.contains(uuid)) {
             if (DebugManager.isDebugEnabled) {
-                Bukkit.getLogger().info("{Snake 2.0.0 DEBUG} [GameManager.java] A previously disconnected player has been sent back to lobby!");
+                Bukkit.getLogger().info(DebugManager.getDebugMessage("[GameManager.java] A previously disconnected player has been sent back to lobby!"));
             }
             // Fetch the game region the player is currently in
             World world = player.getWorld();
