@@ -26,9 +26,9 @@ import java.util.concurrent.CompletableFuture;
  * which serves as the primary control point for coordinating game-related activities.
  */
 public class Apple {
-    private ArmorStand armorStand;
     private final JavaPlugin plugin;
     private final GameManager gameManager;
+    private ArmorStand armorStand;
 
     /**
      * Constructs an Apple object.

@@ -35,7 +35,7 @@ public class MusicManager {
      * Starts playing music for the specified player.
      * If the song file is not found or cannot be played, logs an error message.
      *
-     * @param player         The player for whom to start the music.
+     * @param player The player for whom to start the music.
      */
     public void startMusic(Player player) {
         // Get the song file path from the configuration

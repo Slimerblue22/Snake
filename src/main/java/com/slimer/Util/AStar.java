@@ -49,8 +49,8 @@ public class AStar {
     private boolean isSolid3x3Below(Location center) {
         int[][] offset = {
                 {-1, -1}, {0, -1}, {1, -1},
-                {-1, 0},  {0, 0},  {1, 0},
-                {-1, 1},  {0, 1},  {1, 1}
+                {-1, 0}, {0, 0}, {1, 0},
+                {-1, 1}, {0, 1}, {1, 1}
         };
 
         for (int[] os : offset) {
