@@ -173,6 +173,7 @@ Players with `snake.play` permission can utilize:
   - `/snakegame color`: Choose and save your snake's color.
   - `/snakegame highscore`: Reveals your highest score.
   - `/snakegame leaderboard`: Compares your score with other players on the leaderboard.
+  - `/snakegame music`: Toggles your music on or off.
 
 ## Data Collection via bStats
 
