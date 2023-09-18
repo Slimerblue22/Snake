@@ -155,14 +155,14 @@ public class GameManager {
         playerData.setHighScore(player, score);
         playerScores.remove(player);
 
-        // Play sound effect for game stop
-        player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
-
-        // Teleport the player back to the lobby after a delay
+        // Teleport the player back to the lobby
         Location lobbyLocation = playerLobbyLocations.get(player);
         if (lobbyLocation != null) {
-            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> player.teleport(lobbyLocation), 20L); // 20 ticks = 1 second
+            player.teleport(lobbyLocation);
         }
+
+        // Play sound effect for game stop
+        player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
 
         // Clear other game-related data
         playerSnakes.remove(player);
