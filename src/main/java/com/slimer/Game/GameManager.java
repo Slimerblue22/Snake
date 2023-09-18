@@ -309,7 +309,7 @@ public class GameManager {
                 ProtectedRegion gameRegion = regionService.getWorldGuardRegion(regionName, world);
 
                 if (gameRegion != null && regionService.isLocationInRegion(loc, gameRegion)) {
-                    RegionLink link = regionService.getRegionLink(gameRegion.getId(), Region.RegionType.GAME);
+                    RegionLink link = regionService.getRegionLink(regionName, Region.RegionType.GAME);
                     if (link != null) {
                         Location lobbyTeleportLocation = link.getLobbyTeleportLocation();
                         if (lobbyTeleportLocation != null) {
