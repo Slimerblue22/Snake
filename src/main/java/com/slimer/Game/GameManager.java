@@ -8,6 +8,9 @@ import com.slimer.Region.RegionService;
 import com.slimer.Util.DebugManager;
 import com.slimer.Util.MusicManager;
 import com.slimer.Util.PlayerData;
+import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
@@ -42,6 +45,7 @@ public class GameManager {
     private final Set<UUID> disconnectedPlayerUUIDs = new HashSet<>();
     private PlayerInputHandler playerInputHandler;
     private SnakeMovement snakeMovement;
+    private final Map<Player, BossBar> playerScoreBars = new HashMap<>();
 
 
     /**
@@ -89,6 +93,12 @@ public class GameManager {
         playerSnakes.put(player, snake);
         playerLobbyLocations.put(player, lobbyLocation);
         playerScores.put(player, 0);
+
+        // Initialization of boss bar
+        BossBar bossBar = BossBar.bossBar(Component.text("Score: 0"), 1.0f, BossBar.Color.BLUE, BossBar.Overlay.PROGRESS);
+        player.showBossBar(bossBar);
+        playerScoreBars.put(player, bossBar);
+        updateBossBarForPlayer(player);
 
         // Initialize input and movement handling
         playerInputHandler.startMonitoring(player);
@@ -154,6 +164,18 @@ public class GameManager {
         PlayerData playerData = PlayerData.getInstance((JavaPlugin) plugin);
         playerData.setHighScore(player, score);
         playerScores.remove(player);
+
+        // Send the "Game Over" message along with the player's score
+        Component gameOverMessage = Component.text("Game Over! Your score: ", NamedTextColor.RED)
+                .append(Component.text(score, NamedTextColor.GOLD));
+        player.sendMessage(gameOverMessage);
+
+        // Remove and hide the boss bar
+        BossBar bossBar = playerScoreBars.get(player);
+        if (bossBar != null) {
+            player.hideBossBar(bossBar);
+            playerScoreBars.remove(player);
+        }
 
         // Teleport the player back to the lobby
         Location lobbyLocation = playerLobbyLocations.get(player);
@@ -374,6 +396,22 @@ public class GameManager {
      */
     public void updatePlayerScore(Player player) {
         playerScores.put(player, playerScores.getOrDefault(player, 0) + 1);
+        updateBossBarForPlayer(player);
+    }
+
+    /**
+     * Updates the boss bar with the player's score for the given player.
+     *
+     * @param player The player whose boss bar should be updated.
+     */
+    private void updateBossBarForPlayer(Player player) {
+        // Retrieve the boss bar for the player
+        BossBar bossBar = playerScoreBars.get(player);
+
+        // If the boss bar exists, update its name with the player's score
+        if (bossBar != null) {
+            bossBar.name(Component.text("Score: ", NamedTextColor.GOLD).append(Component.text(playerScores.get(player), NamedTextColor.WHITE)));
+        }
     }
 
     /**
