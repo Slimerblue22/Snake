@@ -8,10 +8,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -120,8 +117,8 @@ public class PlayerData {
     }
 
     /**
-     * Retrieves the top 10 high scores from the player data configuration.
-     * The leaderboard is sorted in descending order based on the scores.
+     * Retrieves the high scores from the player data configuration for a specific page.
+     * Each page contains 10 entries. The leaderboard is sorted in descending order based on the scores.
      *
      * @return A list of Map.Entry objects containing player names and their corresponding scores.
      */
@@ -138,8 +135,28 @@ public class PlayerData {
 
         return scores.entrySet().stream()
                 .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-                .limit(10)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Retrieves a paginated leaderboard with entries corresponding to the given page number.
+     * Each page contains up to 10 entries. The leaderboard is sorted in descending order based on the scores.
+     *
+     * @param page The desired page number, starting from 1.
+     * @return A list of Map.Entry objects containing player names and their corresponding scores for the specified page.
+     * If the page number exceeds available pages, an empty list is returned.
+     */
+    public List<Map.Entry<String, Integer>> getPaginatedLeaderboard(int page) {
+        List<Map.Entry<String, Integer>> allEntries = getLeaderboard();
+
+        int start = (page - 1) * 10;
+        int end = Math.min(start + 10, allEntries.size());
+
+        if (start >= allEntries.size()) {
+            return new ArrayList<>();  // Return an empty list if the starting index is beyond the list size
+        }
+
+        return allEntries.subList(start, end);
     }
 
     /**

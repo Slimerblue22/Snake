@@ -74,7 +74,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             case "help" -> handleHelpCommand(player);
             case "color" -> args.length > 1 && handleSetColorCommand(player, args[1], plugin);
             case "highscore" -> handleHighScoreCommand(player);
-            case "leaderboard" -> handleLeaderboardCommand(player);
+            case "leaderboard" -> handleLeaderboardCommand(player, args);
             default -> {
                 player.sendMessage(Component.text("Unknown subcommand. Use /snakegame <start|stop|gui|help|color|highscore|leaderboard>.", NamedTextColor.RED));
                 yield false;
@@ -275,20 +275,42 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
 
     /**
      * Sends the leaderboard data to the player as a series of chat messages.
-     * The leaderboard shows the top 10 player names and their scores.
+     * The leaderboard shows player names and their scores based on the provided page number.
      *
      * @param player The Player to whom the leaderboard will be sent.
+     * @param args   The arguments provided with the command.
      * @return True, indicating that the command was handled successfully.
      */
-    private boolean handleLeaderboardCommand(Player player) {
+    private boolean handleLeaderboardCommand(Player player, String[] args) {
+        int page = 1; // default page
+
+        if (args.length > 1) {
+            try {
+                page = Integer.parseInt(args[1]);
+                if (page < 1) {
+                    player.sendMessage(Component.text("Invalid page number. Please provide a positive page number.", NamedTextColor.RED));
+                    return false;
+                }
+            } catch (NumberFormatException e) {
+                player.sendMessage(Component.text("Invalid page number. Please provide a numeric page number.", NamedTextColor.RED));
+                return false;
+            }
+        }
+
         // Fetch leaderboard data
-        List<Map.Entry<String, Integer>> leaderboard = PlayerData.getInstance(plugin).getLeaderboard();
+        List<Map.Entry<String, Integer>> leaderboard = PlayerData.getInstance(plugin).getPaginatedLeaderboard(page);
+
+        // If there's no data for the given page, inform the player
+        if (leaderboard.isEmpty()) {
+            player.sendMessage(Component.text("There are no entries for this page.", NamedTextColor.RED));
+            return true;
+        }
 
         // Send the leaderboard to the player
-        player.sendMessage(Component.text("---- Leaderboard ----", NamedTextColor.GOLD));
+        player.sendMessage(Component.text("---- Leaderboard (Page " + page + ") ----", NamedTextColor.GOLD));
         for (int i = 0; i < leaderboard.size(); i++) {
             Map.Entry<String, Integer> entry = leaderboard.get(i);
-            player.sendMessage(Component.text((i + 1) + ". " + entry.getKey() + ": " + entry.getValue(), NamedTextColor.WHITE));
+            player.sendMessage(Component.text(((page - 1) * 10 + i + 1) + ". " + entry.getKey() + ": " + entry.getValue(), NamedTextColor.GRAY));
         }
         return true;
     }

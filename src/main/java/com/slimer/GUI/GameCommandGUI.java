@@ -18,6 +18,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * A class to handle the graphical user interface (GUI) for the Snake game commands.
@@ -138,16 +139,19 @@ public class GameCommandGUI implements Listener {
      *
      * @return An Inventory object representing the leaderboard menu.
      */
-    public Inventory createLeaderboardMenu() {
-        int maxRows = 4; // Including the border rows
-        int maxEntries = 10; // Maximum number of leaderboard entries to display
-        Inventory leaderboardMenu = Bukkit.createInventory(null, maxRows * 9, Component.text("Leaderboard"));
-        List<Map.Entry<String, Integer>> leaderboard = PlayerData.getInstance((JavaPlugin) plugin).getLeaderboard();
+    public Inventory createLeaderboardMenu(int page) {
+        int maxRows = 4;
+        int maxEntries = 10;
+        int startEntry = (page - 1) * maxEntries; // Calculate the starting entry for the current page
+        Inventory leaderboardMenu = Bukkit.createInventory(null, maxRows * 9, Component.text("Leaderboard (Page " + page + ")"));
+
+        List<Map.Entry<String, Integer>> allLeaderboardEntries = PlayerData.getInstance((JavaPlugin) plugin).getLeaderboard();
+        List<Map.Entry<String, Integer>> pageLeaderboardEntries = allLeaderboardEntries.subList(startEntry, Math.min(startEntry + maxEntries, allLeaderboardEntries.size()));
 
         int slot = 10; // Start from the second row and second column to accommodate the border
 
-        for (int i = 0; i < Math.min(maxEntries, leaderboard.size()); i++) {
-            Map.Entry<String, Integer> entry = leaderboard.get(i);
+        for (int i = 0; i < Math.min(maxEntries, pageLeaderboardEntries.size()); i++) {
+            Map.Entry<String, Integer> entry = pageLeaderboardEntries.get(i);
 
             // Special case to center the last 3 entries on the third row
             if (i == 7) {
@@ -176,8 +180,43 @@ public class GameCommandGUI implements Listener {
             }
         }
 
+        // Calculate slot positions for the 3rd row
+        int previousPageSlot = 1 + 9 * 2; // Slot 2 of the 3rd row
+        int nextPageSlot = 7 + 9 * 2; // Slot 8 of the 3rd row
+
+        // Add next and previous page buttons
+        if (page > 1) {
+            // Add "Previous Page" button
+            leaderboardMenu.setItem(previousPageSlot, createMenuItem(Material.ARROW, "Previous Page"));
+        }
+        if (allLeaderboardEntries.size() > page * maxEntries) {
+            // Add "Next Page" button
+            leaderboardMenu.setItem(nextPageSlot, createMenuItem(Material.ARROW, "Next Page"));
+        }
+
         startAnimation(leaderboardMenu, maxRows);
         return leaderboardMenu;
+    }
+
+    /**
+     * Extracts the current page number from the given inventory title.
+     * The inventory title should contain a section like "(Page x)", where x is the page number.
+     *
+     * @param title The Component representing the inventory title.
+     * @return The extracted page number. Returns -1 if the page number cannot be extracted.
+     */
+    private int getCurrentPage(Component title) {
+        String titleString = title.toString();
+        int startIndex = titleString.indexOf("(Page ");
+        int endIndex = titleString.indexOf(")");
+
+        // Check if both "(Page " and ")" are present in the title
+        if (startIndex == -1 || endIndex == -1) {
+            return -1; // Return an invalid page number to indicate an error
+        }
+
+        String pageString = titleString.substring(startIndex + 6, endIndex);
+        return Integer.parseInt(pageString);
     }
 
     /**
@@ -273,7 +312,7 @@ public class GameCommandGUI implements Listener {
                     return; // Return without closing the main menu
                 }
                 case DIAMOND -> {
-                    player.openInventory(createLeaderboardMenu()); // Open the leaderboard submenu
+                    player.openInventory(createLeaderboardMenu(1)); // Open the leaderboard submenu
                     event.setCancelled(true);
                     return; // Return without closing the main menu
                 }
@@ -293,8 +332,20 @@ public class GameCommandGUI implements Listener {
                 player.performCommand("snakegame color " + color);
                 player.closeInventory();
             }
-        } else if (title.equals(Component.text("Leaderboard"))) {
-            event.setCancelled(true);
+        } else if (title.toString().contains("Leaderboard")) {
+            event.setCancelled(true); // Prevent taking items from the GUI
+            ItemMeta meta = clickedItem.getItemMeta();
+            if (meta != null && meta.displayName() != null) {
+                if (Objects.equals(meta.displayName(), Component.text("Next Page"))) {
+                    // Increment the page number and open the next page
+                    int nextPage = getCurrentPage(title) + 1;
+                    player.openInventory(createLeaderboardMenu(nextPage));
+                } else if (Objects.equals(meta.displayName(), Component.text("Previous Page"))) {
+                    // Decrement the page number and open the previous page
+                    int prevPage = getCurrentPage(title) - 1;
+                    player.openInventory(createLeaderboardMenu(prevPage));
+                }
+            }
         }
     }
 }
