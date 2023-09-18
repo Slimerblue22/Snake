@@ -77,7 +77,15 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             case "leaderboard" -> handleLeaderboardCommand(player, args);
             case "music" -> handleMusicToggleCommand(player);
             default -> {
-                player.sendMessage(Component.text("Unknown subcommand. Use /snakegame <start|stop|gui|help|color|highscore|leaderboard|music>.", NamedTextColor.RED));
+                player.sendMessage(Component.text("Unknown subcommand. Use one of the following:", NamedTextColor.RED));
+                player.sendMessage(Component.text("/snakegame start", NamedTextColor.GRAY));
+                player.sendMessage(Component.text("/snakegame stop", NamedTextColor.GRAY));
+                player.sendMessage(Component.text("/snakegame gui", NamedTextColor.GRAY));
+                player.sendMessage(Component.text("/snakegame help", NamedTextColor.GRAY));
+                player.sendMessage(Component.text("/snakegame color", NamedTextColor.GRAY));
+                player.sendMessage(Component.text("/snakegame highscore", NamedTextColor.GRAY));
+                player.sendMessage(Component.text("/snakegame leaderboard", NamedTextColor.GRAY));
+                player.sendMessage(Component.text("/snakegame music", NamedTextColor.GRAY));
                 yield false;
             }
         };

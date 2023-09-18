@@ -69,7 +69,13 @@ public class RegionCommandHandler implements CommandExecutor, TabCompleter {
             return false;
         }
         if (args.length == 0) {
-            player.sendMessage(Component.text("Usage: /snakeadmin <register|unregister|link|unlink|addteleport|list>", NamedTextColor.RED));
+            player.sendMessage(Component.text("Usage: Use one of the following:", NamedTextColor.RED));
+            player.sendMessage(Component.text("/snakeadmin register", NamedTextColor.GRAY));
+            player.sendMessage(Component.text("/snakeadmin unregister", NamedTextColor.GRAY));
+            player.sendMessage(Component.text("/snakeadmin link", NamedTextColor.GRAY));
+            player.sendMessage(Component.text("/snakeadmin unlink", NamedTextColor.GRAY));
+            player.sendMessage(Component.text("/snakeadmin addteleport", NamedTextColor.GRAY));
+            player.sendMessage(Component.text("/snakeadmin list", NamedTextColor.GRAY));
             return false;
         }
         String subCommand = args[0].toLowerCase();
@@ -81,7 +87,13 @@ public class RegionCommandHandler implements CommandExecutor, TabCompleter {
             case "unregister" -> handleUnregisterRegionCommand(player, args);
             case "unlink" -> handleUnlinkRegionsCommand(player, args);
             default -> {
-                player.sendMessage(Component.text("Unknown subcommand. Use /snakeadmin <register|unregister|link|unlink|addteleport|list>.", NamedTextColor.RED));
+                player.sendMessage(Component.text("Unknown subcommand. Use one of the following:", NamedTextColor.RED));
+                player.sendMessage(Component.text("/snakeadmin register", NamedTextColor.GRAY));
+                player.sendMessage(Component.text("/snakeadmin unregister", NamedTextColor.GRAY));
+                player.sendMessage(Component.text("/snakeadmin link", NamedTextColor.GRAY));
+                player.sendMessage(Component.text("/snakeadmin unlink", NamedTextColor.GRAY));
+                player.sendMessage(Component.text("/snakeadmin addteleport", NamedTextColor.GRAY));
+                player.sendMessage(Component.text("/snakeadmin list", NamedTextColor.GRAY));
                 yield false;
             }
         };
