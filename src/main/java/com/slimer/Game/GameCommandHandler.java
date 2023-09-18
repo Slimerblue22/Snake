@@ -75,8 +75,9 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             case "color" -> args.length > 1 && handleSetColorCommand(player, args[1], plugin);
             case "highscore" -> handleHighScoreCommand(player);
             case "leaderboard" -> handleLeaderboardCommand(player, args);
+            case "music" -> handleMusicToggleCommand(player);
             default -> {
-                player.sendMessage(Component.text("Unknown subcommand. Use /snakegame <start|stop|gui|help|color|highscore|leaderboard>.", NamedTextColor.RED));
+                player.sendMessage(Component.text("Unknown subcommand. Use /snakegame <start|stop|gui|help|color|highscore|leaderboard|music>.", NamedTextColor.RED));
                 yield false;
             }
         };
@@ -113,6 +114,9 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             }
             if ("highscore".startsWith(args[0].toLowerCase())) {
                 completions.add("highscore");
+            }
+            if ("music".startsWith(args[0].toLowerCase())) {
+                completions.add("music");
             }
             if ("leaderboard".startsWith(args[0].toLowerCase())) {
                 completions.add("leaderboard");
@@ -311,6 +315,33 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
         for (int i = 0; i < leaderboard.size(); i++) {
             Map.Entry<String, Integer> entry = leaderboard.get(i);
             player.sendMessage(Component.text(((page - 1) * 10 + i + 1) + ". " + entry.getKey() + ": " + entry.getValue(), NamedTextColor.GRAY));
+        }
+        return true;
+    }
+
+    /**
+     * Handles the "music" subcommand.
+     *
+     * @param player The player issuing the command.
+     * @return true if the music preference is successfully toggled, otherwise false.
+     */
+    private boolean handleMusicToggleCommand(Player player) {
+        if (!gameManager.isMusicEnabled()) {
+            player.sendMessage(Component.text("Music is globally disabled on this server.", NamedTextColor.RED));
+            return false;
+        }
+
+        // Fetch the current music preference for the player
+        boolean currentPreference = PlayerData.getInstance(plugin).getMusicToggleState(player);
+
+        // Toggle the preference
+        PlayerData.getInstance(plugin).setMusicToggleState(player, !currentPreference);
+
+        // Notify the player of the change
+        if (!currentPreference) {
+            player.sendMessage(Component.text("Music has been enabled for your sessions.", NamedTextColor.GREEN));
+        } else {
+            player.sendMessage(Component.text("Music has been disabled for your sessions.", NamedTextColor.RED));
         }
         return true;
     }

@@ -82,6 +82,7 @@ public class GameCommandGUI implements Listener {
         menu.setItem(12, createMenuItem(Material.BOOK, "Help"));
         menu.setItem(13, createMenuItem(Material.PAINTING, "Set Color"));
         menu.setItem(14, createMenuItem(Material.DIAMOND, "Leaderboard"));
+        menu.setItem(16, createMenuItem(Material.JUKEBOX, "Toggle Music"));
 
         // Create player head with high score for the specific player
         ItemStack playerHead = createPlayerHead(player.getName());
@@ -306,6 +307,7 @@ public class GameCommandGUI implements Listener {
                 case GREEN_WOOL -> player.performCommand("snakegame start");
                 case RED_WOOL -> player.performCommand("snakegame stop");
                 case BOOK -> player.performCommand("snakegame help");
+                case JUKEBOX -> player.performCommand("snakegame music");
                 case PAINTING -> {
                     player.openInventory(createColorMenu()); // Open the color submenu
                     event.setCancelled(true);

@@ -185,6 +185,28 @@ public class PlayerData {
     }
 
     /**
+     * Retrieves the music toggle state of the given player.
+     *
+     * @param player The player whose music toggle state is to be fetched.
+     * @return The music toggle state. True means music is enabled for the player, and false means it's disabled.
+     */
+    public boolean getMusicToggleState(Player player) {
+        return getPlayerSection(player).getBoolean("musicToggle", true);
+    }
+
+    /**
+     * Sets the music toggle state for a given player.
+     *
+     * @param player The player whose music toggle state is to be set.
+     * @param state  The new state for the music toggle. True means music is enabled, and false means it's disabled.
+     */
+    public void setMusicToggleState(Player player, boolean state) {
+        String path = player.getUniqueId().toString();
+        playerDataConfig.set(path + ".musicToggle", state);
+        saveConfig(); // Save the config after setting the music toggle state
+    }
+
+    /**
      * Saves the YAML configuration to disk.
      */
     public void saveConfig() {

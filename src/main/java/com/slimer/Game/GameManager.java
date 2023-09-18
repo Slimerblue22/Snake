@@ -131,8 +131,8 @@ public class GameManager {
         appleCollectionTask.runTaskTimer(plugin, 0L, 0L);
         appleCollectionTasks.put(player, appleCollectionTask);
 
-        // Start music for the player if enabled
-        if (isMusicEnabled) {
+        // Start music for the player if music is globally enabled and player has toggled music on
+        if (isMusicEnabled && isPlayerMusicToggledOn(player)) {
             Objects.requireNonNull(musicManager).startMusic(player);
         }
     }
@@ -398,6 +398,25 @@ public class GameManager {
      */
     public void setSnakeMovement(SnakeMovement snakeMovement) {
         this.snakeMovement = snakeMovement;
+    }
+
+    /**
+     * Determines if the player has music toggled on.
+     *
+     * @param player The player whose music preference is checked.
+     * @return true if the player has toggled music on, otherwise false.
+     */
+    private boolean isPlayerMusicToggledOn(Player player) {
+        return PlayerData.getInstance((JavaPlugin) plugin).getMusicToggleState(player);
+    }
+
+    /**
+     * Checks whether the music feature is globally enabled on the server.
+     *
+     * @return true if music is globally enabled, otherwise false.
+     */
+    public boolean isMusicEnabled() {
+        return isMusicEnabled;
     }
 }
 
