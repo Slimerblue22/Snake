@@ -98,12 +98,11 @@ public final class Main extends JavaPlugin {
         // Now, pass the GameManager instance to Apple's constructor
         new Apple(this, gameManager);
 
-        SnakeMovement snakeMovement = new SnakeMovement(gameManager, null);
+        SnakeMovement snakeMovement = new SnakeMovement(gameManager, null, this);
         PlayerInputHandler playerInputHandler = new PlayerInputHandler(this);
         snakeMovement.setPlayerInputHandler(playerInputHandler);
         gameManager.setPlayerInputHandler(playerInputHandler);
         gameManager.setSnakeMovement(snakeMovement);
-        snakeMovement.setDesiredSpeed(snakeSpeed);
 
         // Initialize game command handler
         GameCommandHandler gameCommandHandler = new GameCommandHandler(gameManager, this);
@@ -144,5 +143,14 @@ public final class Main extends JavaPlugin {
      */
     public int getMaxPlayersPerGame() {
         return maxPlayersPerGame;
+    }
+
+    /**
+     * Gets the speed of the snake.
+     *
+     * @return The speed of the snake.
+     */
+    public double getSnakeSpeed() {
+        return snakeSpeed;
     }
 }

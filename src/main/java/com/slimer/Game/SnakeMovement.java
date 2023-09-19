@@ -1,7 +1,9 @@
 package com.slimer.Game;
 
+import com.slimer.Main.Main;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
 import java.util.*;
@@ -14,7 +16,7 @@ import java.util.*;
  */
 public class SnakeMovement {
     private final GameManager gameManager;
-    private double desiredSpeedInBlocksPerSecond;
+    private final double desiredSpeedInBlocksPerSecond;
     private final Map<Player, Vector> playerTargetPositions = new HashMap<>();
     private final Map<Player, Deque<Vector>> playerWaypoints = new HashMap<>();
     private final Map<Entity, Vector> lastPositions = new HashMap<>();
@@ -25,10 +27,13 @@ public class SnakeMovement {
      *
      * @param gameManager        The GameManager instance responsible for overall game management.
      * @param playerInputHandler The PlayerInputHandler instance responsible for handling player inputs.
+     * @param plugin             The main plugin instance, used to access configuration values.
      */
-    public SnakeMovement(GameManager gameManager, PlayerInputHandler playerInputHandler) {
+    public SnakeMovement(GameManager gameManager, PlayerInputHandler playerInputHandler, JavaPlugin plugin) {
         this.gameManager = gameManager;
         this.playerInputHandler = playerInputHandler;
+        Main mainPlugin = (Main) plugin;
+        this.desiredSpeedInBlocksPerSecond = mainPlugin.getSnakeSpeed();
     }
 
     /**
@@ -50,15 +55,6 @@ public class SnakeMovement {
      */
     public void setPlayerInputHandler(PlayerInputHandler playerInputHandler) {
         this.playerInputHandler = playerInputHandler;
-    }
-
-    /**
-     * Sets the desired speed for the snake.
-     *
-     * @param speed The desired speed in blocks per second.
-     */
-    public void setDesiredSpeed(double speed) {
-        this.desiredSpeedInBlocksPerSecond = speed;
     }
 
     /**
