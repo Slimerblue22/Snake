@@ -35,7 +35,7 @@ public class GameManager {
     private final Map<Player, SnakeCreation> playerSnakes;
     private final Map<Player, Location> playerLobbyLocations;
     private final Map<Player, Integer> playerScores = new HashMap<>();
-    private final Map<Player, Apple> playerApples = new HashMap<>();
+    private final Map<Player, List<Apple>> playerApples = new HashMap<>();
     private final Map<Player, BukkitRunnable> GameEndConditionsHandler = new HashMap<>();
     private final Plugin plugin;
     private final Map<Player, BukkitRunnable> movementTasks = new HashMap<>();
@@ -125,10 +125,23 @@ public class GameManager {
         GameEndEvents.runTaskTimer(plugin, 0L, 0L);
         GameEndConditionsHandler.put(player, GameEndEvents);
 
-        // Initialize the apple for the player
-        Apple apple = new Apple((JavaPlugin) plugin, this);
-        apple.spawnWithName(gameLocation, gameLocation.getBlockY(), player.getName());
-        playerApples.put(player, apple);
+        // Get the maximum number of apples allowed
+        Main mainPlugin = (Main) plugin;
+        int maxApples = mainPlugin.getMaxApplesPerGame();
+
+        // Retrieve the apples list for the player, or create a new list if it doesn't exist
+        List<Apple> applesForPlayer = playerApples.computeIfAbsent(player, k -> new ArrayList<>());
+
+        int currentAppleCount = applesForPlayer.size();
+
+        // Calculate the number of apples to spawn
+        int applesToSpawn = maxApples - currentAppleCount;
+
+        for (int i = 0; i < applesToSpawn; i++) {
+            Apple apple = new Apple((JavaPlugin) plugin, this);
+            apple.spawnWithName(gameLocation, gameLocation.getBlockY(), player.getName());
+            applesForPlayer.add(apple);
+        }
 
         // Initialize apple collection monitoring
         final JavaPlugin finalPlugin = (JavaPlugin) plugin;  // Make a final copy of the plugin instance
@@ -207,11 +220,12 @@ public class GameManager {
         GameEndConditionsHandler.remove(player);
 
         // Clear apple data
-        Apple apple = playerApples.get(player);
-        if (apple != null) {
+        List<Apple> apples = playerApples.getOrDefault(player, new ArrayList<>());
+        for (Apple apple : apples) {
             apple.clear();
-            playerApples.remove(player);
         }
+        playerApples.remove(player);
+
 
         // Cancel and remove apple collection task
         BukkitRunnable appleCollectionTask = appleCollectionTasks.get(player);
@@ -264,8 +278,10 @@ public class GameManager {
         appleCollectionTasks.clear();
 
         // Clear all apples
-        for (Apple apple : playerApples.values()) {
-            apple.clear();
+        for (List<Apple> apples : playerApples.values()) {
+            for (Apple apple : apples) {
+                apple.clear();
+            }
         }
         playerApples.clear();
     }
@@ -355,38 +371,87 @@ public class GameManager {
     }
 
     /**
-     * Checks and handles apple collection logic.
-     *
+     * Monitors and manages the apple collection process for the player's snake.
+     * <p>
+     * This method checks if the snake's head, represented by the sheep entity, collides with any apples.
+     * If a collision is detected, the {@link #handleAppleLogic(Apple, Entity, Player)} method is invoked to
+     * manage the apple collection logic. This includes increasing the player's score, adding a snake segment,
+     * playing a level-up sound, and spawning new apples.
+     * </p>
      * @param sheepEntity The entity representing the snake's head.
      * @param player      The player controlling the snake.
+     * @param plugin      The JavaPlugin instance for accessing game configurations.
      */
     public void checkAndCollectApple(Entity sheepEntity, Player player, JavaPlugin plugin) {
-        Apple apple = playerApples.get(player);
-        Location appleLocation = apple.getLocation();
-        Location sheepLocation = sheepEntity.getLocation();
-        if (appleLocation != null &&
-                appleLocation.getBlockX() == sheepLocation.getBlockX() &&
-                appleLocation.getBlockZ() == sheepLocation.getBlockZ()) {
+        List<Apple> apples = playerApples.getOrDefault(player, new ArrayList<>());
+        List<Apple> applesToHandle = new ArrayList<>();  // Temporary list to store apples for further processing
+
+        for (Apple apple : apples) {
+            Location appleLocation = apple.getLocation();
+            Location sheepLocation = sheepEntity.getLocation();
+
+            if (appleLocation != null &&
+                    appleLocation.getBlockX() == sheepLocation.getBlockX() &&
+                    appleLocation.getBlockZ() == sheepLocation.getBlockZ()) {
+
+                applesToHandle.add(apple);
+            }
+        }
+
+        // Now, handle apples outside the iteration loop
+        for (Apple apple : applesToHandle) {
             handleAppleLogic(apple, sheepEntity, player);
             updatePlayerScore(player);
             addSnakeSegment(player, plugin);
 
             // Play level up sound
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);
+
+            // Remove the apple from the list
+            apples.remove(apple);
+        }
+
+        // Get the maximum number of apples allowed
+        Main mainPlugin = (Main) plugin;
+        int maxApples = mainPlugin.getMaxApplesPerGame();
+
+        // Spawn new apples based on the difference between maxApples and currentAppleCount
+        int currentAppleCount = apples.size();  // Update the current count
+        int applesToSpawn = maxApples - currentAppleCount;
+
+        for (int i = 0; i < applesToSpawn; i++) {
+            Apple apple = new Apple(plugin, this);
+            apple.spawnWithName(sheepEntity.getLocation(), sheepEntity.getLocation().getBlockY(), player.getName());
+            apples.add(apple);
         }
     }
 
 
     /**
-     * Handles the logic for when a snake collides with an apple.
-     *
+     * Handles the logic when a snake collides with an apple.
+     * <p>
+     * This method is called by {@link #checkAndCollectApple(Entity, Player, JavaPlugin)} when a snake head collision
+     * with an apple is detected. It takes care of the apple collection process, including removing the apple from
+     * the game and spawning new apples to maintain the maximum apple count as defined in the configuration.
+     * </p>
      * @param apple       The Apple object.
      * @param sheepEntity The entity representing the snake's head.
      * @param player      The player controlling the snake.
      */
     public void handleAppleLogic(Apple apple, Entity sheepEntity, Player player) {
         apple.clear();
-        apple.spawnWithName(sheepEntity.getLocation(), sheepEntity.getLocation().getBlockY(), player.getName());
+
+        Main mainPlugin = (Main) plugin;
+        int maxApples = mainPlugin.getMaxApplesPerGame();
+        List<Apple> playerAppleList = playerApples.getOrDefault(player, new ArrayList<>());
+        int applesToSpawn = maxApples - playerAppleList.size(); // Calculate the number of apples needed to reach the limit
+
+        for (int i = 0; i < applesToSpawn; i++) {
+            Apple newApple = new Apple((JavaPlugin) plugin, this);
+            newApple.spawnWithName(sheepEntity.getLocation(), sheepEntity.getLocation().getBlockY(), player.getName());
+            playerAppleList.add(newApple);
+        }
+        playerApples.put(player, playerAppleList);
     }
 
     /**

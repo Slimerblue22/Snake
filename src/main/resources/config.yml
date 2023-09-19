@@ -19,3 +19,7 @@ snake-speed: 5.0
 #Max number of players per game zone
 #Default value: 1
 max-players-per-game: 1
+
+#Max number of apples spawning at once per game
+#Default value: 1
+max-apples-per-game: 1

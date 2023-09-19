@@ -30,6 +30,7 @@ public final class Main extends JavaPlugin {
     private String songFilePath;
     private double snakeSpeed;
     private int maxPlayersPerGame;
+    private int maxApplesPerGame;
 
     /**
      * Called when the plugin is enabled.
@@ -45,6 +46,7 @@ public final class Main extends JavaPlugin {
         songFilePath = config.getString("song-file-path", "songs/song.nbs"); // Default path of songs/song.nbs
         snakeSpeed = config.getDouble("snake-speed", 5.0);// Default value of 5
         maxPlayersPerGame = config.getInt("max-players-per-game", 1);  // Default value of 1
+        maxApplesPerGame = config.getInt("max-apples-per-game", 1);  // Default value of 1
 
         // Read the 'enable-music' setting from config
         boolean enableMusic = config.getBoolean("enable-music", true); // Default to true if not set
@@ -152,5 +154,14 @@ public final class Main extends JavaPlugin {
      */
     public double getSnakeSpeed() {
         return snakeSpeed;
+    }
+
+    /**
+     * Retrieves the maximum number of apples allowed to be present in the game at any given time.
+     *
+     * @return The maximum number of apples permitted per game.
+     */
+    public int getMaxApplesPerGame() {
+        return maxApplesPerGame;
     }
 }
