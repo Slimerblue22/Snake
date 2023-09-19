@@ -29,6 +29,7 @@ public final class Main extends JavaPlugin {
     private boolean isMusicEnabled = false; // Flag to indicate if music is enabled
     private String songFilePath;
     private double snakeSpeed;
+    private int maxPlayersPerGame;
 
     /**
      * Called when the plugin is enabled.
@@ -41,8 +42,9 @@ public final class Main extends JavaPlugin {
         // Load configuration
         this.saveDefaultConfig();
         FileConfiguration config = this.getConfig();
-        songFilePath = config.getString("song-file-path", "songs/song.nbs");
-        snakeSpeed = config.getDouble("snake-speed", 5.0);
+        songFilePath = config.getString("song-file-path", "songs/song.nbs"); // Default path of songs/song.nbs
+        snakeSpeed = config.getDouble("snake-speed", 5.0);// Default value of 5
+        maxPlayersPerGame = config.getInt("max-players-per-game", 1);  // Default value of 1
 
         // Read the 'enable-music' setting from config
         boolean enableMusic = config.getBoolean("enable-music", true); // Default to true if not set
@@ -133,5 +135,14 @@ public final class Main extends JavaPlugin {
      */
     public String getSongFilePath() {
         return songFilePath;
+    }
+
+    /**
+     * Gets the maximum number of players allowed per game.
+     *
+     * @return The maximum number of players per game.
+     */
+    public int getMaxPlayersPerGame() {
+        return maxPlayersPerGame;
     }
 }

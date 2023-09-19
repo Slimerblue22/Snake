@@ -2,6 +2,7 @@ package com.slimer.Game;
 
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.slimer.GUI.GameCommandGUI;
+import com.slimer.Main.Main;
 import com.slimer.Region.Region;
 import com.slimer.Region.RegionLink;
 import com.slimer.Region.RegionService;
@@ -147,6 +148,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      */
     private boolean handleStartGameCommand(Player player) {
         RegionService regionService = RegionService.getInstance();
+        int maxPlayersPerGame = ((Main) plugin).getMaxPlayersPerGame();
 
         // Loop through all available lobby regions
         for (Region region : regionService.getAllRegions().values()) {
@@ -162,6 +164,24 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
 
                         // Check if the lobby has a linked game region
                         if (regionLink != null) {
+                            ProtectedRegion gameRegion = regionService.getWorldGuardRegion(regionLink.getGameRegionName(), world);
+
+                            // Check the number of players inside the game region and playing
+                            int playersInGameRegion = 0;
+                            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                                if (onlinePlayer.getWorld().equals(world) && regionService.isLocationInRegion(onlinePlayer.getLocation(), gameRegion)) {
+                                    SnakeCreation snake = gameManager.getSnakeForPlayer(onlinePlayer); // Checks if the player inside is in a game.
+                                    if (snake != null) { // If there isn't a snake for that player, they must not be in a game, ignore them for the count.
+                                        playersInGameRegion++;
+                                    }
+                                }
+                            }
+
+                            if (playersInGameRegion >= maxPlayersPerGame) {
+                                player.sendMessage(Component.text("The game region has reached its maximum number of players (" + maxPlayersPerGame + " players).", NamedTextColor.RED));
+                                return false;
+                            }
+
                             Location gameTeleportLocation = regionLink.getGameTeleportLocation();
                             Location lobbyTeleportLocation = regionLink.getLobbyTeleportLocation();
 

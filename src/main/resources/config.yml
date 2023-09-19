@@ -15,3 +15,7 @@ song-file-path: "songs/song.nbs"
 #Some values cause unexpected issues, I am currently working on a fix for this.
 #### READ ME!! ####
 snake-speed: 5.0
+
+#Max number of players per game zone
+#Default value: 1
+max-players-per-game: 1
