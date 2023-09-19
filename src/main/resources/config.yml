@@ -1,8 +1,17 @@
 #Music toggle
 #Useful for if you have NoteblockAPI for another plugin but don't want to have music for the snake game.
 #Does nothing if NoteblockAPI is not installed.
+#Default value: true
 enable-music: true
 
 #Song path
 #Does nothing if NoteblockAPI is not installed.
+#Default path: "songs/song.nbs"
 song-file-path: "songs/song.nbs"
+
+#Speed in blocks per second for the snake to travel
+#Default value: 5.0
+#### READ ME!! ####
+#Some values cause unexpected issues, I am currently working on a fix for this.
+#### READ ME!! ####
+snake-speed: 5.0

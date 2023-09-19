@@ -28,6 +28,7 @@ public final class Main extends JavaPlugin {
     private GameManager gameManager; // Reference to the game manager
     private boolean isMusicEnabled = false; // Flag to indicate if music is enabled
     private String songFilePath;
+    private double snakeSpeed;
 
     /**
      * Called when the plugin is enabled.
@@ -41,6 +42,7 @@ public final class Main extends JavaPlugin {
         this.saveDefaultConfig();
         FileConfiguration config = this.getConfig();
         songFilePath = config.getString("song-file-path", "songs/song.nbs");
+        snakeSpeed = config.getDouble("snake-speed", 5.0);
 
         // Read the 'enable-music' setting from config
         boolean enableMusic = config.getBoolean("enable-music", true); // Default to true if not set
@@ -99,6 +101,7 @@ public final class Main extends JavaPlugin {
         snakeMovement.setPlayerInputHandler(playerInputHandler);
         gameManager.setPlayerInputHandler(playerInputHandler);
         gameManager.setSnakeMovement(snakeMovement);
+        snakeMovement.setDesiredSpeed(snakeSpeed);
 
         // Initialize game command handler
         GameCommandHandler gameCommandHandler = new GameCommandHandler(gameManager, this);

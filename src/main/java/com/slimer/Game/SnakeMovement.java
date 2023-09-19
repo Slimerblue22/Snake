@@ -14,7 +14,7 @@ import java.util.*;
  */
 public class SnakeMovement {
     private final GameManager gameManager;
-    private final double desiredSpeedInBlocksPerSecond = 5.0;
+    private double desiredSpeedInBlocksPerSecond;
     private final Map<Player, Vector> playerTargetPositions = new HashMap<>();
     private final Map<Player, Deque<Vector>> playerWaypoints = new HashMap<>();
     private final Map<Entity, Vector> lastPositions = new HashMap<>();
@@ -50,6 +50,15 @@ public class SnakeMovement {
      */
     public void setPlayerInputHandler(PlayerInputHandler playerInputHandler) {
         this.playerInputHandler = playerInputHandler;
+    }
+
+    /**
+     * Sets the desired speed for the snake.
+     *
+     * @param speed The desired speed in blocks per second.
+     */
+    public void setDesiredSpeed(double speed) {
+        this.desiredSpeedInBlocksPerSecond = speed;
     }
 
     /**
