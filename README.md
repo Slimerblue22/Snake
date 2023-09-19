@@ -44,7 +44,7 @@ NOTICE: Some features from V1 are not present in V2. These may be reintroduced i
 
 - **Snake Movement**: Transitioned from teleporting to a velocity-based system for a smoother user experience.
 - **Configuration**: V1 config files are incompatible with V2. Delete the old configs, allowing the plugin to generate new ones.
-- **Data Management**: Three primary data files: `PlayerData.yml`, `Regions.yml`, and `config.yml` cater to player specifics, region info, and music paths respectively.
+- **Data Management**: Three primary data files: `PlayerData.yml`, `Regions.yml`, and `config.yml` cater to player specifics, region info, and general config values respectively.
 - **GUI support**: The game now includes a GUI instead of only text-based commands. Text-based commands can still be used.
 
 ---
