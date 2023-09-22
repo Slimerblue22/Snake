@@ -105,7 +105,11 @@ public final class Main extends JavaPlugin {
         new Apple(this, gameManager);
 
         SnakeMovement snakeMovement = new SnakeMovement(gameManager, null, this);
-        PlayerInputHandler playerInputHandler = new PlayerInputHandler(this);
+
+        // Initialize PlayerInputHandler and pass GameManager to it
+        PlayerInputHandler playerInputHandler = new PlayerInputHandler(this, gameManager);
+
+        gameManager.setPlayerInputHandler(playerInputHandler);
         snakeMovement.setPlayerInputHandler(playerInputHandler);
         gameManager.setPlayerInputHandler(playerInputHandler);
         gameManager.setSnakeMovement(snakeMovement);

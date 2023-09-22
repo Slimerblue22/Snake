@@ -108,13 +108,21 @@ public class GameEndConditionsHandler implements Listener {
     }
 
     /**
-     * Checks for a collision between the snake's head and its segments.
+     * Checks for a collision between the snake's head and its body segments.
      *
-     * @return True if a self-collision is detected, false otherwise.
+     * <p>This method performs two types of checks:</p>
+     * <ol>
+     *   <li>Special Case: When the snake has one or more segments, a U-turn check is conducted.
+     *       This is to ensure that U-turns, which are considered self-collisions, are accurately detected.
+     *       The U-turn status is reset after this check.</li>
+     *   <li>General Case: For snakes with more than one segment, checks are performed to detect
+     *       any collisions between the head and the segments, skipping the first segment.
+     *       This is to avoid false positives that may arise due to the proximity of the first
+     *       segment to the head.</li>
+     * </ol>
+     *
+     * @return True if a self-collision is detected, either through a U-turn or a collision with another segment. False otherwise.
      */
-    // NOTICE: There is a rare chance collision will not always flag when only the head and 1 segment exist.
-    // This bug is fairly rare and seemingly random.
-    // Until further information is obtained, this bug is to be ignored as it's very rare and does not cause major issues.
     private boolean checkSelfCollision() {
         SnakeCreation snake = gameManager.getSnakeForPlayer(player);
         if (snake == null) {
@@ -132,8 +140,18 @@ public class GameEndConditionsHandler implements Listener {
             return false;
         }
 
-        // Iterate through the segments, starting from the first one
-        for (Entity segment : segments) {
+        // Special case: check for U-turn if there is one or more segments
+        if (gameManager.isUTurnDetected(player)) {
+            if (DebugManager.isDebugEnabled) {
+                Bukkit.getLogger().info(DebugManager.getDebugMessage("[GameEndConditionsHandler.java] U-turn self-collision detected!"));
+            }
+            gameManager.resetUTurnStatus(player);  // Reset the U-turn status
+            return true;  // U-turn detected
+        }
+
+        // Iterate through the segments, skipping the first one
+        for (int i = 1; i < segments.size(); i++) {
+            Entity segment = segments.get(i);
             Vector segmentLocation = segment.getLocation().toVector();
             if (headLocation.distance(segmentLocation) < 0.1) {  // Tolerance of 0.1 blocks
                 if (DebugManager.isDebugEnabled) {
@@ -142,8 +160,6 @@ public class GameEndConditionsHandler implements Listener {
                 return true;  // Self-collision detected
             }
         }
-
-
         return false;  // No self-collision detected
     }
 

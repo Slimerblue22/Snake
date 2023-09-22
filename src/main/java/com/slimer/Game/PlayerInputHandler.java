@@ -4,11 +4,14 @@ import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
+import com.slimer.Util.DebugManager;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Random;
 
@@ -19,16 +22,19 @@ public class PlayerInputHandler {
     private final Plugin plugin;
     private final Map<Player, Vector> playerDirections = new HashMap<>();
     private final Random random = new Random();
+    private final GameManager gameManager;
+    private final Map<Player, LinkedList<Vector>> lastTwoDirections = new HashMap<>();
 
     /**
      * Constructs a PlayerInputHandler and registers the packet listener for key presses.
      *
      * @param plugin The Bukkit plugin.
      */
-    public PlayerInputHandler(Plugin plugin) {
+    public PlayerInputHandler(Plugin plugin, GameManager gameManager) {
         this.plugin = plugin;
         new Vector();
         registerPacketListener();
+        this.gameManager = gameManager;
     }
 
     /**
@@ -111,7 +117,39 @@ public class PlayerInputHandler {
                     newDirection = new Vector(1, 0, 0);  // West
                 }
                 playerDirections.put(player, newDirection);
+
+                // Update direction history
+                LinkedList<Vector> directions = lastTwoDirections.getOrDefault(player, new LinkedList<>());
+                directions.addLast(newDirection);
+                if (directions.size() > 2) {
+                    directions.removeFirst();
+                }
+                lastTwoDirections.put(player, directions);
+
+                // Check for U-turn
+                if (isUTurn(player)) {
+                    if (DebugManager.isDebugEnabled) {
+                        Bukkit.getLogger().info(DebugManager.getDebugMessage("[PlayerInputHandler.java] U-Turn detected, sending info to GameManager!"));
+                    }
+                    gameManager.notifyUTurn(player);
+                }
             }
         }
+    }
+
+    /**
+     * Checks if the player made a U-turn based on the last two directions.
+     *
+     * @param player The player to check.
+     * @return True if a U-turn is detected, false otherwise.
+     */
+    private boolean isUTurn(Player player) {
+        LinkedList<Vector> directions = lastTwoDirections.get(player);
+        if (directions == null || directions.size() < 2) {
+            return false;
+        }
+        Vector last = directions.getLast();
+        Vector secondLast = directions.get(directions.size() - 2);
+        return last.clone().multiply(-1).equals(secondLast);
     }
 }

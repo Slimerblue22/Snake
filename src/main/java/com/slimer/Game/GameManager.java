@@ -43,9 +43,10 @@ public class GameManager {
     private final MusicManager musicManager;
     private final boolean isMusicEnabled;
     private final Set<UUID> disconnectedPlayerUUIDs = new HashSet<>();
+    private final Map<Player, BossBar> playerScoreBars = new HashMap<>();
+    private final Map<Player, Boolean> playerUTurnStatus = new HashMap<>();
     private PlayerInputHandler playerInputHandler;
     private SnakeMovement snakeMovement;
-    private final Map<Player, BossBar> playerScoreBars = new HashMap<>();
 
 
     /**
@@ -234,6 +235,10 @@ public class GameManager {
             appleCollectionTasks.remove(player);
 
         }
+
+        // Reset the U-turn flag for this player
+        resetUTurnStatus(player);
+
         // Stop music for the player if enabled
         if (isMusicEnabled) {
             Objects.requireNonNull(musicManager).stopMusic(player);
@@ -490,6 +495,9 @@ public class GameManager {
             Vector lastPosition = snakeMovement.getLastPositionOfLastSegmentOrHead(player);
             if (lastPosition != null) {
                 snake.addSegment(lastPosition, player, plugin);
+
+                // Reset the U-turn flag for this player
+                resetUTurnStatus(player);
             }
         }
     }
@@ -521,5 +529,32 @@ public class GameManager {
     public boolean isMusicEnabled() {
         return isMusicEnabled;
     }
-}
 
+    /**
+     * Notifies the GameManager that a player has made a U-turn.
+     *
+     * @param player The player who made the U-turn.
+     */
+    public void notifyUTurn(Player player) {
+        playerUTurnStatus.put(player, true);
+    }
+
+    /**
+     * Resets the U-turn status for the given player.
+     *
+     * @param player The player whose U-turn status needs to be reset.
+     */
+    public void resetUTurnStatus(Player player) {
+        playerUTurnStatus.put(player, false);
+    }
+
+    /**
+     * Checks if the player made a U-turn.
+     *
+     * @param player The player to check.
+     * @return True if a U-turn is detected, false otherwise.
+     */
+    public boolean isUTurnDetected(Player player) {
+        return playerUTurnStatus.getOrDefault(player, false);
+    }
+}
