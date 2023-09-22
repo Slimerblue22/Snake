@@ -1,6 +1,8 @@
 package com.slimer.Game;
 
 import com.slimer.Main.Main;
+import com.slimer.Util.DebugManager;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -17,6 +19,8 @@ import java.util.*;
 public class SnakeMovement {
     private final GameManager gameManager;
     private final double desiredSpeedInBlocksPerSecond;
+    private final double forceTeleportDistance;
+    private final double targetCloseEnoughDistance;
     private final Map<Player, Vector> playerTargetPositions = new HashMap<>();
     private final Map<Player, Deque<Vector>> playerWaypoints = new HashMap<>();
     private final Map<Entity, Vector> lastPositions = new HashMap<>();
@@ -34,6 +38,8 @@ public class SnakeMovement {
         this.playerInputHandler = playerInputHandler;
         Main mainPlugin = (Main) plugin;
         this.desiredSpeedInBlocksPerSecond = mainPlugin.getSnakeSpeed();
+        this.forceTeleportDistance = mainPlugin.getForceTeleportDistance();
+        this.targetCloseEnoughDistance = mainPlugin.getTargetCloseEnoughDistance();
     }
 
     /**
@@ -165,8 +171,15 @@ public class SnakeMovement {
             playerWaypoints.get(player).addLast(targetPosition.clone());
         }
 
-        // Update the target position if the snake is near it
-        if (currentPosition.distance(targetPosition) < 0.1) {
+        // Round the current and target positions to one decimal place
+        double roundedCurrentX = Math.round(currentPosition.getX() * 10) / 10.0;
+        double roundedCurrentZ = Math.round(currentPosition.getZ() * 10) / 10.0;
+        double roundedTargetX = Math.round(targetPosition.getX() * 10) / 10.0;
+        double roundedTargetZ = Math.round(targetPosition.getZ() * 10) / 10.0;
+
+        // Check if the rounded positions are close enough to the target
+        if (Math.abs(roundedCurrentX - roundedTargetX) <= targetCloseEnoughDistance &&
+                Math.abs(roundedCurrentZ - roundedTargetZ) <= targetCloseEnoughDistance) {
             targetPosition.add(currentDirection);
             if (playerWaypoints.get(player).isEmpty() ||
                     !Objects.equals(playerWaypoints.get(player).peekLast(), targetPosition)) {
@@ -235,13 +248,27 @@ public class SnakeMovement {
             Vector velocity = waypoint.clone().subtract(currentPosition).normalize()
                     .multiply(desiredSpeedInBlocksPerSecond / 20.0);
 
-            // Set the calculated velocity if it's finite
-            if (Double.isFinite(velocity.getX()) && Double.isFinite(velocity.getY()) && Double.isFinite(velocity.getZ())) {
-                segment.setVelocity(velocity);
+            // Check if the segment is too far from its target waypoint
+            double distanceToWaypoint = currentPosition.distance(waypoint);
+            if (distanceToWaypoint > forceTeleportDistance) { // How far away should segments be allowed to get before being forced back into place
+                // Capture the current yaw and pitch
+                float yaw = segment.getLocation().getYaw();
+                float pitch = segment.getLocation().getPitch();
 
-                // Calculate and set the yaw rotation for the segment based on the velocity direction
-                float yaw = (float) Math.toDegrees(Math.atan2(-velocity.getX(), velocity.getZ()));
-                segment.setRotation(yaw, segment.getLocation().getPitch());
+                // Forcefully teleport the segment to its target waypoint while preserving yaw and pitch
+                segment.teleport(waypoint.toLocation(segment.getWorld(), yaw, pitch));
+                if (DebugManager.isDebugEnabled) {
+                    Bukkit.getLogger().info(DebugManager.getDebugMessage("[SnakeMovement.java] Segment out of sync, teleporting!"));
+                }
+            } else {
+                // Set the calculated velocity if it's finite
+                if (Double.isFinite(velocity.getX()) && Double.isFinite(velocity.getY()) && Double.isFinite(velocity.getZ())) {
+                    segment.setVelocity(velocity);
+
+                    // Calculate and set the yaw rotation for the segment based on the velocity direction
+                    float yaw = (float) Math.toDegrees(Math.atan2(-velocity.getX(), velocity.getZ()));
+                    segment.setRotation(yaw, segment.getLocation().getPitch());
+                }
             }
         }
     }

@@ -31,6 +31,8 @@ public final class Main extends JavaPlugin {
     private double snakeSpeed;
     private int maxPlayersPerGame;
     private int maxApplesPerGame;
+    private double forceTeleportDistance;
+    private double targetCloseEnoughDistance;
 
     /**
      * Called when the plugin is enabled.
@@ -47,6 +49,8 @@ public final class Main extends JavaPlugin {
         snakeSpeed = config.getDouble("snake-speed", 5.0);// Default value of 5
         maxPlayersPerGame = config.getInt("max-players-per-game", 1);  // Default value of 1
         maxApplesPerGame = config.getInt("max-apples-per-game", 1);  // Default value of 1
+        forceTeleportDistance = config.getDouble("force-teleport-distance", 1.2); // Default value of 1.2
+        targetCloseEnoughDistance = config.getDouble("target-close-enough-distance", 0.1); // Default value of 0.1
 
         // Read the 'enable-music' setting from config
         boolean enableMusic = config.getBoolean("enable-music", true); // Default to true if not set
@@ -163,5 +167,23 @@ public final class Main extends JavaPlugin {
      */
     public int getMaxApplesPerGame() {
         return maxApplesPerGame;
+    }
+
+    /**
+     * Retrieves the distance before a segment is forcefully teleported back to its waypoint.
+     *
+     * @return The distance before forceful teleportation of a segment, as a double.
+     */
+    public double getForceTeleportDistance() {
+        return forceTeleportDistance;
+    }
+
+    /**
+     * Retrieves the distance threshold for determining if the snake's segment is close enough to its target waypoint.
+     *
+     * @return The distance threshold for target closeness, as a double.
+     */
+    public double getTargetCloseEnoughDistance() {
+        return targetCloseEnoughDistance;
     }
 }
