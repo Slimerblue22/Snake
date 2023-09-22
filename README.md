@@ -22,7 +22,7 @@ New in Snake 2.0.0:
 - A complete rewrite, introducing major gameplay enhancements and new features.
 - Watch the new movement system in action: [here](https://www.youtube.com/watch?v=c6Ihh8p-vGk)
 
-NOTICE: Some features from V1 are not present in V2. These may be reintroduced in future versions. Made for Minecraft 1.20.X.
+Made for Minecraft 1.20.X.
 
 ---
 
