@@ -31,7 +31,7 @@ public class DebugManager {
      * @return A formatted string with the plugin's version and the provided message.
      */
     public static String getDebugMessage(String message) {
-        String version = "2.0.1";
+        String version = "2.0.2";
         return "{Snake " + version + " DEBUG} " + message;
     }
 
