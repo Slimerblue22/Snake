@@ -109,7 +109,6 @@ public final class Main extends JavaPlugin {
         // Initialize PlayerInputHandler and pass GameManager to it
         PlayerInputHandler playerInputHandler = new PlayerInputHandler(this, gameManager);
 
-        gameManager.setPlayerInputHandler(playerInputHandler);
         snakeMovement.setPlayerInputHandler(playerInputHandler);
         gameManager.setPlayerInputHandler(playerInputHandler);
         gameManager.setSnakeMovement(snakeMovement);
