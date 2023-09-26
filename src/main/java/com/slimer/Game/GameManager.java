@@ -30,18 +30,25 @@ import java.util.*;
  * various game components. For instance, it receives segment information from {@code SnakeCreation}
  * and passes it to {@code SnakeMovement} for executing snake movements.
  */
-
 public class GameManager {
+
+    // Player and game state mappings
     private final Map<Player, SnakeCreation> playerSnakes;
     private final Map<Player, Location> playerLobbyLocations;
     private final Map<Player, Integer> playerScores = new HashMap<>();
     private final Map<Player, List<Apple>> playerApples = new HashMap<>();
-    private final Map<Player, BukkitRunnable> GameEndConditionsHandler = new HashMap<>();
-    private final Plugin plugin;
+
+    // Scheduled task mappings
     private final Map<Player, BukkitRunnable> movementTasks = new HashMap<>();
     private final Map<Player, BukkitRunnable> appleCollectionTasks = new HashMap<>();
+    private final Map<Player, BukkitRunnable> gameEndConditionsHandler = new HashMap<>();
+
+    // Game settings and utilities
+    private final Plugin plugin;
     private final MusicManager musicManager;
     private final boolean isMusicEnabled;
+
+    // Additional player-specific settings
     private final Set<UUID> disconnectedPlayerUUIDs = new HashSet<>();
     private final Map<Player, BossBar> playerScoreBars = new HashMap<>();
     private final Map<Player, Boolean> playerUTurnStatus = new HashMap<>();
@@ -69,13 +76,31 @@ public class GameManager {
     }
 
     /**
-     * Starts the game for a player, initializing snake, tasks, and apples.
+     * Starts a new game for the given player by initializing various game components.
      *
      * @param player        The player for whom the game is to be started.
-     * @param gameLocation  The location in the game world.
+     * @param gameLocation  The starting location in the game world.
      * @param lobbyLocation The location in the lobby world.
      */
     public void startGame(Player player, Location gameLocation, Location lobbyLocation) {
+        SnakeCreation snake = initializeGameAndPlayer(player, gameLocation, lobbyLocation);
+        initializeBossBar(player);
+        initializeMovement(player);
+        initializeGameEndConditions(player);
+        initializeApples(player, gameLocation, snake);
+        initializeMusic(player);
+    }
+
+    /**
+     * Initializes the game and prepares the player for a new game session.
+     *
+     * @param player        The player to initialize.
+     * @param gameLocation  The starting location in the game world.
+     * @param lobbyLocation The location in the lobby world.
+     * @return Initialized SnakeCreation object.
+     */
+    private SnakeCreation initializeGameAndPlayer(Player player, Location gameLocation, Location lobbyLocation) {
+
         // Initialize game start with sound
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 1.0f);
 
@@ -94,13 +119,28 @@ public class GameManager {
         playerSnakes.put(player, snake);
         playerLobbyLocations.put(player, lobbyLocation);
         playerScores.put(player, 0);
+        return snake;
+    }
 
+    /**
+     * Initializes the boss bar for the given player.
+     *
+     * @param player The player for whom to initialize the boss bar.
+     */
+    private void initializeBossBar(Player player) {
         // Initialization of boss bar
         BossBar bossBar = BossBar.bossBar(Component.text("Score: 0"), 1.0f, BossBar.Color.BLUE, BossBar.Overlay.PROGRESS);
         player.showBossBar(bossBar);
         playerScoreBars.put(player, bossBar);
         updateBossBarForPlayer(player);
+    }
 
+    /**
+     * Initializes the snake movement for the given player.
+     *
+     * @param player The player for whom to initialize the movement.
+     */
+    private void initializeMovement(Player player) {
         // Initialize input and movement handling
         playerInputHandler.startMonitoring(player);
 
@@ -114,7 +154,14 @@ public class GameManager {
         };
         movementTask.runTaskTimer(plugin, 0L, 0L);
         movementTasks.put(player, movementTask);
+    }
 
+    /**
+     * Initializes the game end conditions for the given player.
+     *
+     * @param player The player for whom to initialize the game end conditions.
+     */
+    private void initializeGameEndConditions(Player player) {
         // Initialize GameEndConditionsHandler
         GameEndConditionsHandler gameEndConditionsHandler = new GameEndConditionsHandler(this, player, plugin);
         BukkitRunnable GameEndEvents = new BukkitRunnable() {
@@ -124,8 +171,17 @@ public class GameManager {
             }
         };
         GameEndEvents.runTaskTimer(plugin, 0L, 0L);
-        GameEndConditionsHandler.put(player, GameEndEvents);
+        this.gameEndConditionsHandler.put(player, GameEndEvents);
+    }
 
+    /**
+     * Initializes the apples in the game world for the given player.
+     *
+     * @param player       The player for whom to spawn the apples.
+     * @param gameLocation The location where apples are to be spawned.
+     * @param snake        The SnakeCreation object for the current game.
+     */
+    private void initializeApples(Player player, Location gameLocation, SnakeCreation snake) {
         // Get the maximum number of apples allowed
         Main mainPlugin = (Main) plugin;
         int maxApples = mainPlugin.getMaxApplesPerGame();
@@ -154,7 +210,14 @@ public class GameManager {
         };
         appleCollectionTask.runTaskTimer(plugin, 0L, 0L);
         appleCollectionTasks.put(player, appleCollectionTask);
+    }
 
+    /**
+     * Initializes the background music for the game if the player has it enabled.
+     *
+     * @param player The player for whom to start the music.
+     */
+    private void initializeMusic(Player player) {
         // Start music for the player if music is globally enabled and player has toggled music on
         if (isMusicEnabled && isPlayerMusicToggledOn(player)) {
             Objects.requireNonNull(musicManager).startMusic(player);
@@ -162,51 +225,102 @@ public class GameManager {
     }
 
     /**
-     * Stops the game for a given player, saves their score, and cleans up resources.
+     * Stops the ongoing game for the given player and performs cleanup operations.
      *
      * @param player The player for whom the game is to be stopped.
      */
     public void stopGame(Player player) {
+        int score = updateAndSavePlayerScore(player);
+        updateAndSavePlayerScore(player);
+        sendGameOverMessage(player, score);
+        hideAndRemoveBossBar(player);
+        teleportPlayerToLobby(player);
+        cancelScheduledTasks(player);
+        clearAppleData(player);
+        stopMusicForPlayer(player);
+        destroySnakeAndClearData(player);
+    }
+
+    /**
+     * Destroys the snake and clears game-related data for the given player.
+     *
+     * @param player The player whose game data is to be cleared.
+     */
+    private void destroySnakeAndClearData(Player player) {
         // Destroy the snake and remove player's snake entry
         SnakeCreation snake = playerSnakes.get(player);
         if (snake != null) {
             snake.destroy();
         }
-
-        // Update and save the player's high score
-        int score = playerScores.getOrDefault(player, 0);
-        PlayerData playerData = PlayerData.getInstance((JavaPlugin) plugin);
-        playerData.setHighScore(player, score);
-        playerScores.remove(player);
-
-        // Send the "Game Over" message along with the player's score
-        Component gameOverMessage = Component.text("Game Over! Your score: ", NamedTextColor.RED)
-                .append(Component.text(score, NamedTextColor.GOLD));
-        player.sendMessage(gameOverMessage);
-
-        // Remove and hide the boss bar
-        BossBar bossBar = playerScoreBars.get(player);
-        if (bossBar != null) {
-            player.hideBossBar(bossBar);
-            playerScoreBars.remove(player);
-        }
-
-        // Teleport the player back to the lobby
-        Location lobbyLocation = playerLobbyLocations.get(player);
-        if (lobbyLocation != null) {
-            player.teleport(lobbyLocation);
-        }
-
-        // Play sound effect for game stop
-        player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
-
         // Clear other game-related data
         playerSnakes.remove(player);
         playerLobbyLocations.remove(player);
         playerInputHandler.stopMonitoring(player);
         snakeMovement.clearTargetPosition(player);
+    }
 
-        // Cancel and remove scheduled tasks
+    /**
+     * Updates and saves the player's high score.
+     *
+     * @param player The player whose score is to be updated.
+     * @return The score of the player.
+     */
+    private int updateAndSavePlayerScore(Player player) {
+        // Update and save the player's high score
+        int score = playerScores.getOrDefault(player, 0);
+        PlayerData playerData = PlayerData.getInstance((JavaPlugin) plugin);
+        playerData.setHighScore(player, score);
+        playerScores.remove(player);
+        return score;
+    }
+
+    /**
+     * Sends a "Game Over" message along with the player's score.
+     *
+     * @param player The player to whom the game over message is to be sent.
+     * @param score  The score of the player.
+     */
+    private void sendGameOverMessage(Player player, int score) {
+        // Send the "Game Over" message along with the player's score
+        Component gameOverMessage = Component.text("Game Over! Your score: ", NamedTextColor.RED)
+                .append(Component.text(score, NamedTextColor.GOLD));
+        player.sendMessage(gameOverMessage);
+    }
+
+    /**
+     * Hides and removes the boss bar for the given player.
+     *
+     * @param player The player for whom to hide and remove the boss bar.
+     */
+    private void hideAndRemoveBossBar(Player player) {
+        // Remove and hide the boss bar
+        BossBar bossBar = playerScoreBars.get(player);
+        if (bossBar != null) {
+            player.hideBossBar(bossBar);
+        }
+        playerScoreBars.remove(player);
+    }
+
+    /**
+     * Teleports the given player back to the lobby.
+     *
+     * @param player The player to be teleported.
+     */
+    private void teleportPlayerToLobby(Player player) {
+        // Teleport the player back to the lobby
+        Location lobbyLocation = playerLobbyLocations.get(player);
+        if (lobbyLocation != null) {
+            player.teleport(lobbyLocation);
+        }
+    }
+
+    /**
+     * Cancels any scheduled tasks related to the given player.
+     *
+     * @param player The player for whom to cancel scheduled tasks.
+     */
+    private void cancelScheduledTasks(Player player) {
+        // Cancel and remove scheduled movement tasks
         BukkitRunnable movementTask = movementTasks.get(player);
         if (movementTask != null) {
             movementTask.cancel();
@@ -214,31 +328,40 @@ public class GameManager {
         movementTasks.remove(player);
 
         // Cancel and remove GameEndConditionsHandler information
-        BukkitRunnable GameEndEvents = GameEndConditionsHandler.get(player);
+        BukkitRunnable GameEndEvents = gameEndConditionsHandler.get(player);
         if (GameEndEvents != null) {
             GameEndEvents.cancel();
         }
-        GameEndConditionsHandler.remove(player);
-
-        // Clear apple data
-        List<Apple> apples = playerApples.getOrDefault(player, new ArrayList<>());
-        for (Apple apple : apples) {
-            apple.clear();
-        }
-        playerApples.remove(player);
-
+        gameEndConditionsHandler.remove(player);
 
         // Cancel and remove apple collection task
         BukkitRunnable appleCollectionTask = appleCollectionTasks.get(player);
         if (appleCollectionTask != null) {
             appleCollectionTask.cancel();
             appleCollectionTasks.remove(player);
-
         }
+    }
 
-        // Reset the U-turn flag for this player
-        resetUTurnStatus(player);
+    /**
+     * Clears apple-related data for the given player.
+     *
+     * @param player The player whose apple data is to be cleared.
+     */
+    private void clearAppleData(Player player) {
+        // Clear apple data
+        List<Apple> apples = playerApples.getOrDefault(player, new ArrayList<>());
+        for (Apple apple : apples) {
+            apple.clear();
+        }
+        playerApples.remove(player);
+    }
 
+    /**
+     * Stops the background music for the given player if it is enabled.
+     *
+     * @param player The player for whom to stop the music.
+     */
+    private void stopMusicForPlayer(Player player) {
         // Stop music for the player if enabled
         if (isMusicEnabled) {
             Objects.requireNonNull(musicManager).stopMusic(player);
@@ -246,11 +369,20 @@ public class GameManager {
     }
 
     /**
-     * Stops all ongoing games and clears all game-related data.
-     * Used during server shutdown as cleanup.
+     * Stops all ongoing games and clears all game-related data. Typically used during server shutdown.
      */
     public void stopAllGames() {
-        // Destroy all snakes, teleport players back to lobby, and remove players' snake entries
+        destroyAllSnakesAndTeleportPlayers();
+        clearAllLobbyLocations();
+        cancelAllMovementTasks();
+        cancelAllAppleCollectionTasks();
+        clearAllApples();
+    }
+
+    /**
+     * Destroys all snakes and teleports all players back to the lobby.
+     */
+    private void destroyAllSnakesAndTeleportPlayers() {
         for (Map.Entry<Player, SnakeCreation> entry : playerSnakes.entrySet()) {
             Player player = entry.getKey();
             SnakeCreation snake = entry.getValue();
@@ -266,23 +398,39 @@ public class GameManager {
             }
         }
         playerSnakes.clear();
+    }
 
-        // Clear teleport locations back to lobby
+    /**
+     * Clears all lobby locations stored for players.
+     */
+    private void clearAllLobbyLocations() {
         playerLobbyLocations.clear();
+    }
 
-        // Cancel all scheduled movement tasks
+    /**
+     * Cancels all scheduled movement tasks for all players.
+     */
+    private void cancelAllMovementTasks() {
         for (BukkitRunnable task : movementTasks.values()) {
             task.cancel();
         }
         movementTasks.clear();
+    }
 
-        // Cancel all scheduled apple collection tasks
+    /**
+     * Cancels all scheduled apple collection tasks for all players.
+     */
+    private void cancelAllAppleCollectionTasks() {
         for (BukkitRunnable task : appleCollectionTasks.values()) {
             task.cancel();
         }
         appleCollectionTasks.clear();
+    }
 
-        // Clear all apples
+    /**
+     * Clears all apple data for all players.
+     */
+    private void clearAllApples() {
         for (List<Apple> apples : playerApples.values()) {
             for (Apple apple : apples) {
                 apple.clear();
@@ -291,9 +439,7 @@ public class GameManager {
         playerApples.clear();
     }
 
-    // Below this point are helper methods.
-    // These are used to pass information between classes connected via game manager.
-    // While not the cleanest looking thing, it allows me to simplify connections between classes.
+    // Helpers for getting and modifying snake segments
 
     /**
      * Retrieves the snake associated with a player.
@@ -312,58 +458,37 @@ public class GameManager {
      * @return A list of Entity objects representing the snake segments, or null if no snake exists.
      */
     public List<Entity> getSegmentsForPlayer(Player player) {
-        SnakeCreation snake = playerSnakes.get(player);
+        SnakeCreation snake = getSnakeForPlayer(player);
+        return snake != null ? snake.getSegments() : null;
+    }
+
+    /**
+     * Adds a segment to the snake controlled by the given player.
+     *
+     * @param player The player controlling the snake.
+     */
+    public void addSnakeSegment(Player player, JavaPlugin plugin) {
+        SnakeCreation snake = getSnakeForPlayer(player);
         if (snake != null) {
-            return snake.getSegments();
-        }
-        return null;
-    }
+            Vector lastPosition = snakeMovement.getLastPositionOfLastSegmentOrHead(player);
+            if (lastPosition != null) {
+                snake.addSegment(lastPosition, player, plugin);
 
-    /**
-     * Handles the actions to be taken when a player disconnects from the server.
-     * This is only called when a user leaves during a game.
-     *
-     * @param player The player who has disconnected.
-     */
-    public void handlePlayerDisconnect(Player player) {
-        // Store the player's UUID
-        disconnectedPlayerUUIDs.add(player.getUniqueId());
-    }
-
-    /**
-     * Handles the actions to be taken when a player reconnects to the server.
-     * Specifically, it teleports the reconnected player back to the lobby if they had previously disconnected.
-     *
-     * @param player The player who has reconnected.
-     */
-    public void handlePlayerReconnect(Player player) {
-        UUID uuid = player.getUniqueId();
-        if (disconnectedPlayerUUIDs.contains(uuid)) {
-            if (DebugManager.isDebugEnabled) {
-                Bukkit.getLogger().info(DebugManager.getDebugMessage("[GameManager.java] A previously disconnected player has been sent back to lobby!"));
-            }
-            // Fetch the game region the player is currently in
-            World world = player.getWorld();
-            Location loc = player.getLocation();
-            RegionService regionService = RegionService.getInstance();
-
-            for (Map.Entry<String, Region> entry : regionService.getAllRegions().entrySet()) {
-                String regionName = entry.getKey();
-                ProtectedRegion gameRegion = regionService.getWorldGuardRegion(regionName, world);
-
-                if (gameRegion != null && regionService.isLocationInRegion(loc, gameRegion)) {
-                    RegionLink link = regionService.getRegionLink(regionName, Region.RegionType.GAME);
-                    if (link != null) {
-                        Location lobbyTeleportLocation = link.getLobbyTeleportLocation();
-                        if (lobbyTeleportLocation != null) {
-                            player.teleport(lobbyTeleportLocation);
-                            disconnectedPlayerUUIDs.remove(uuid);
-                            break;
-                        }
-                    }
-                }
+                // Reset the U-turn flag for this player
+                resetUTurnStatus(player);
             }
         }
+    }
+
+    // Helpers for setting handlers, used for class connections
+
+    /**
+     * Sets the SnakeMovement handler for the GameManager.
+     *
+     * @param snakeMovement The SnakeMovement object to handle snake movements.
+     */
+    public void setSnakeMovement(SnakeMovement snakeMovement) {
+        this.snakeMovement = snakeMovement;
     }
 
     /**
@@ -375,89 +500,192 @@ public class GameManager {
         this.playerInputHandler = playerInputHandler;
     }
 
+    // Helpers for handling game disconnect and reconnect actions
+
+    /**
+     * Handles the actions to be taken when a player disconnects from the server.
+     *
+     * @param player The player who has disconnected.
+     */
+    public void handlePlayerDisconnect(Player player) {
+        // Store the player's UUID
+        disconnectedPlayerUUIDs.add(player.getUniqueId());
+    }
+
+    /**
+     * Handles the actions to be taken when a player reconnects to the server.
+     *
+     * @param player The player who has reconnected.
+     */
+    public void handlePlayerReconnect(Player player) {
+        UUID uuid = player.getUniqueId();
+        if (disconnectedPlayerUUIDs.contains(uuid)) {
+            logPlayerReconnection();
+            handleTeleportToLobby(player, uuid);
+        }
+    }
+
+    /**
+     * Logs the reconnection of a player.
+     */
+    private void logPlayerReconnection() {
+        if (DebugManager.isDebugEnabled) {
+            Bukkit.getLogger().info(DebugManager.getDebugMessage("[GameManager.java] A previously disconnected player has been sent back to lobby!"));
+        }
+    }
+
+    /**
+     * Handles teleporting the player back to the lobby.
+     *
+     * @param player The player who has reconnected.
+     * @param uuid   The UUID of the reconnected player.
+     */
+    private void handleTeleportToLobby(Player player, UUID uuid) {
+        World world = player.getWorld();
+        Location loc = player.getLocation();
+        RegionService regionService = RegionService.getInstance();
+
+        for (Map.Entry<String, Region> entry : regionService.getAllRegions().entrySet()) {
+            if (checkAndTeleportPlayer(player, uuid, world, loc, regionService, entry.getKey())) {
+                break;
+            }
+        }
+    }
+
+    /**
+     * Checks if the player is in a game region and teleports them to the lobby if so.
+     *
+     * @param player        The player.
+     * @param uuid          The UUID of the player.
+     * @param world         The world the player is in.
+     * @param loc           The location of the player.
+     * @param regionService The RegionService instance.
+     * @param regionName    The name of the region.
+     * @return true if the player was teleported, false otherwise.
+     */
+    private boolean checkAndTeleportPlayer(Player player, UUID uuid, World world, Location loc, RegionService regionService, String regionName) {
+        ProtectedRegion gameRegion = regionService.getWorldGuardRegion(regionName, world);
+
+        if (gameRegion != null && regionService.isLocationInRegion(loc, gameRegion)) {
+            RegionLink link = regionService.getRegionLink(regionName, Region.RegionType.GAME);
+            if (link != null) {
+                Location lobbyTeleportLocation = link.getLobbyTeleportLocation();
+                if (lobbyTeleportLocation != null) {
+                    player.teleport(lobbyTeleportLocation);
+                    disconnectedPlayerUUIDs.remove(uuid);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // Helpers for various apple services
+
     /**
      * Monitors and manages the apple collection process for the player's snake.
-     * <p>
-     * This method checks if the snake's head, represented by the sheep entity, collides with any apples.
-     * If a collision is detected, the {@link #handleAppleLogic(Apple, Entity, Player)} method is invoked to
-     * manage the apple collection logic. This includes increasing the player's score, adding a snake segment,
-     * playing a level-up sound, and spawning new apples.
-     * </p>
+     *
      * @param sheepEntity The entity representing the snake's head.
      * @param player      The player controlling the snake.
      * @param plugin      The JavaPlugin instance for accessing game configurations.
      */
     public void checkAndCollectApple(Entity sheepEntity, Player player, JavaPlugin plugin) {
+        List<Apple> applesToHandle = detectAppleCollision(sheepEntity, player);
+        handleCollidedApplesAndActions(applesToHandle, player, plugin);
+        spawnNewApples(sheepEntity, player, plugin);
+    }
+
+    /**
+     * Detects collisions between the snake's head and apples.
+     *
+     * @param sheepEntity The entity representing the snake's head.
+     * @param player      The player controlling the snake.
+     * @return List of collided apples.
+     */
+    private List<Apple> detectAppleCollision(Entity sheepEntity, Player player) {
+        List<Apple> collidedApples = new ArrayList<>();
         List<Apple> apples = playerApples.getOrDefault(player, new ArrayList<>());
-        List<Apple> applesToHandle = new ArrayList<>();  // Temporary list to store apples for further processing
 
         for (Apple apple : apples) {
-            Location appleLocation = apple.getLocation();
-            Location sheepLocation = sheepEntity.getLocation();
-
-            if (appleLocation != null &&
-                    appleLocation.getBlockX() == sheepLocation.getBlockX() &&
-                    appleLocation.getBlockZ() == sheepLocation.getBlockZ()) {
-
-                applesToHandle.add(apple);
+            if (isAppleCollisionDetected(apple, sheepEntity)) {
+                collidedApples.add(apple);
             }
         }
+        return collidedApples;
+    }
 
-        // Now, handle apples outside the iteration loop
-        for (Apple apple : applesToHandle) {
-            handleAppleLogic(apple, sheepEntity, player);
+    /**
+     * Checks if a collision has occurred between an apple and the snake's head.
+     *
+     * @param apple       The apple entity.
+     * @param sheepEntity The entity representing the snake's head.
+     * @return true if a collision is detected, false otherwise.
+     */
+    private boolean isAppleCollisionDetected(Apple apple, Entity sheepEntity) {
+        Location appleLocation = apple.getLocation();
+        Location sheepLocation = sheepEntity.getLocation();
+        return appleLocation != null &&
+                appleLocation.getBlockX() == sheepLocation.getBlockX() &&
+                appleLocation.getBlockZ() == sheepLocation.getBlockZ();
+    }
+
+    /**
+     * Handles the apples that have collided with the snake's head and performs all related actions.
+     *
+     * @param collidedApples List of apples that have collided.
+     * @param player         The player controlling the snake.
+     * @param plugin         The JavaPlugin instance for accessing game configurations.
+     */
+    private void handleCollidedApplesAndActions(List<Apple> collidedApples, Player player, JavaPlugin plugin) {
+        List<Apple> apples = playerApples.getOrDefault(player, new ArrayList<>());
+
+        for (Apple apple : collidedApples) {
+            // Clear the apple from the game
+            apple.clear();
+
+            // Update the player's score
             updatePlayerScore(player);
+
+            // Add a new segment to the snake
             addSnakeSegment(player, plugin);
 
-            // Play level up sound
+            // Play the level-up sound
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);
 
             // Remove the apple from the list
             apples.remove(apple);
         }
 
-        // Get the maximum number of apples allowed
-        Main mainPlugin = (Main) plugin;
-        int maxApples = mainPlugin.getMaxApplesPerGame();
-
-        // Spawn new apples based on the difference between maxApples and currentAppleCount
-        int currentAppleCount = apples.size();  // Update the current count
-        int applesToSpawn = maxApples - currentAppleCount;
-
-        for (int i = 0; i < applesToSpawn; i++) {
-            Apple apple = new Apple(plugin, this);
-            apple.spawnWithName(sheepEntity.getLocation(), sheepEntity.getLocation().getBlockY(), player.getName());
-            apples.add(apple);
-        }
+        // Update the playerApples map
+        playerApples.put(player, apples);
     }
-
 
     /**
-     * Handles the logic when a snake collides with an apple.
-     * <p>
-     * This method is called by {@link #checkAndCollectApple(Entity, Player, JavaPlugin)} when a snake head collision
-     * with an apple is detected. It takes care of the apple collection process, including removing the apple from
-     * the game and spawning new apples to maintain the maximum apple count as defined in the configuration.
-     * </p>
-     * @param apple       The Apple object.
+     * Spawns new apples based on the number of apples collected.
+     *
      * @param sheepEntity The entity representing the snake's head.
      * @param player      The player controlling the snake.
+     * @param plugin      The JavaPlugin instance for accessing game configurations.
      */
-    public void handleAppleLogic(Apple apple, Entity sheepEntity, Player player) {
-        apple.clear();
-
+    private void spawnNewApples(Entity sheepEntity, Player player, JavaPlugin plugin) {
         Main mainPlugin = (Main) plugin;
         int maxApples = mainPlugin.getMaxApplesPerGame();
-        List<Apple> playerAppleList = playerApples.getOrDefault(player, new ArrayList<>());
-        int applesToSpawn = maxApples - playerAppleList.size(); // Calculate the number of apples needed to reach the limit
+        List<Apple> apples = playerApples.getOrDefault(player, new ArrayList<>());
+
+        // Calculate the number of apples to spawn based on the current list
+        int applesToSpawn = maxApples - apples.size();
 
         for (int i = 0; i < applesToSpawn; i++) {
-            Apple newApple = new Apple((JavaPlugin) plugin, this);
+            Apple newApple = new Apple(plugin, this);
             newApple.spawnWithName(sheepEntity.getLocation(), sheepEntity.getLocation().getBlockY(), player.getName());
-            playerAppleList.add(newApple);
+            apples.add(newApple);
         }
-        playerApples.put(player, playerAppleList);
+
+        // Update the playerApples map
+        playerApples.put(player, apples);
     }
+
+    // Helpers for updating scores
 
     /**
      * Updates the score for a player.
@@ -484,32 +712,7 @@ public class GameManager {
         }
     }
 
-    /**
-     * Adds a segment to the snake controlled by the given player.
-     *
-     * @param player The player controlling the snake.
-     */
-    public void addSnakeSegment(Player player, JavaPlugin plugin) {
-        SnakeCreation snake = getSnakeForPlayer(player);
-        if (snake != null) {
-            Vector lastPosition = snakeMovement.getLastPositionOfLastSegmentOrHead(player);
-            if (lastPosition != null) {
-                snake.addSegment(lastPosition, player, plugin);
-
-                // Reset the U-turn flag for this player
-                resetUTurnStatus(player);
-            }
-        }
-    }
-
-    /**
-     * Sets the SnakeMovement handler for the GameManager.
-     *
-     * @param snakeMovement The SnakeMovement object to handle snake movements.
-     */
-    public void setSnakeMovement(SnakeMovement snakeMovement) {
-        this.snakeMovement = snakeMovement;
-    }
+    // Helpers for music toggles
 
     /**
      * Determines if the player has music toggled on.
@@ -529,6 +732,8 @@ public class GameManager {
     public boolean isMusicEnabled() {
         return isMusicEnabled;
     }
+
+    // Helpers for U-Turn check
 
     /**
      * Notifies the GameManager that a player has made a U-turn.
