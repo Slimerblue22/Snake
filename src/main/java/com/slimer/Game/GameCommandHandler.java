@@ -73,7 +73,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             case "stop" -> handleStopGameCommand(player);
             case "gui" -> handleGUICommand(player, plugin);
             case "help" -> handleHelpCommand(player);
-            case "color" -> args.length > 1 && handleSetColorCommand(player, args[1], plugin);
+            case "color" -> handleSetColorCommand(player, args, plugin);
             case "highscore" -> handleHighScoreCommand(player);
             case "leaderboard" -> handleLeaderboardCommand(player, args);
             case "music" -> handleMusicToggleCommand(player);
@@ -267,11 +267,19 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      * Validates the color input and updates the player's snake color if valid.
      *
      * @param player    The Player whose snake color is to be set.
-     * @param colorName The name of the color to be set.
+     * @param args The name of the color to be set.
      * @param plugin    The JavaPlugin instance for accessing plugin-specific features.
      * @return True if the color was set successfully, false otherwise.
      */
-    private boolean handleSetColorCommand(Player player, String colorName, JavaPlugin plugin) {
+    private boolean handleSetColorCommand(Player player, String[] args, JavaPlugin plugin) {
+        // Validate the number of arguments and correct usage
+        if (args.length != 2) {
+            player.sendMessage(Component.text("Please specify a color name. Use /snakegame color <color_name>.", NamedTextColor.RED));
+            return false;
+        }
+
+        String colorName = args[1];
+
         // Make sure the player is not in a game
         if (gameManager.getSnakeForPlayer(player) != null) {
             player.sendMessage(Component.text("You must not be in a game to change your sheep's color.", NamedTextColor.RED));
