@@ -321,6 +321,8 @@ public class GameManager {
         if (lobbyLocation != null) {
             player.teleport(lobbyLocation);
         }
+        // Play sound effect for game stop directly after teleporting
+        player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
     }
 
     /**
