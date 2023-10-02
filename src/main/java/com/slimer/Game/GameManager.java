@@ -82,21 +82,12 @@ public class GameManager {
      */
     public void startGame(Player player, Location gameLocation, Location lobbyLocation, String gameMode) {
         SnakeCreation snake = initializeGameAndPlayer(player, gameLocation, lobbyLocation);
-        initializeGameSettings(player, gameMode);
+        setGameModeForPlayer(player, gameMode);
         initializeBossBar(player);
         initializeMovement(player);
-        initializeGameEndConditions(player);
+        initializeGameEndConditions(player, gameMode);
         initializeApples(player, gameLocation, snake);
         initializeMusic(player);
-    }
-
-    private void initializeGameSettings(Player player, String gameMode) { // Has dev debug, remove later
-        setGameModeForPlayer(player, gameMode);
-        if (gameMode != null) {
-            Bukkit.getLogger().info("Selected game mode for player " + player.getName() + ": " + gameMode);
-        } else {
-            Bukkit.getLogger().warning("No game mode found for player " + player.getName());
-        }
     }
 
     /**
@@ -167,15 +158,16 @@ public class GameManager {
     /**
      * Initializes the game end conditions for the given player.
      *
-     * @param player The player for whom to initialize the game end conditions.
+     * @param player   The player for whom to initialize the game end conditions.
+     * @param gameMode The game mode type for the player.
      */
-    private void initializeGameEndConditions(Player player) {
+    private void initializeGameEndConditions(Player player, String gameMode) {
         // Initialize GameEndConditionsHandler
         GameEndConditionsHandler gameEndConditionsHandler = new GameEndConditionsHandler(this, player, plugin);
         BukkitRunnable GameEndEvents = new BukkitRunnable() {
             @Override
             public void run() {
-                gameEndConditionsHandler.runGameEndEventsChecks();
+                gameEndConditionsHandler.runGameEndEventsChecks(gameMode);
             }
         };
         GameEndEvents.runTaskTimer(plugin, 0L, 0L);
@@ -451,6 +443,9 @@ public class GameManager {
         playerApples.clear();
     }
 
+    /**
+     * Clears all stored game mode information for all players.
+     */
     private void clearAllGameModeInfo() {
         selectedGameModes.clear();
     }
@@ -781,16 +776,33 @@ public class GameManager {
 
     // Helpers for game mode checks
 
+    /**
+     * Sets the game mode for a specific player.
+     *
+     * @param player    The player for whom the game mode is being set.
+     * @param gameMode  The game mode to set for the player. Valid values include "classic", "pvp", etc.
+     */
     public void setGameModeForPlayer(Player player, String gameMode) {
         selectedGameModes.put(player, gameMode);
     }
 
-    public String getGameModeForPlayer(Player player) { // Will be used later
+    /**
+     * Retrieves the game mode currently set for a specific player.
+     *
+     * @param player  The player whose game mode is to be retrieved.
+     * @return        The game mode associated with the player, or null if no game mode has been set.
+     */
+    public String getGameModeForPlayer(Player player) {
         return selectedGameModes.get(player);
     }
 
-    public void clearGameModeForPlayer(Player player) { // Has dev debug, remove later
+    /**
+     * Clears the game mode information for a specific player.
+     * This can be used when a player leaves a game or during cleanup processes.
+     *
+     * @param player  The player for whom the game mode information is to be cleared.
+     */
+    public void clearGameModeForPlayer(Player player) {
         selectedGameModes.remove(player);
-            Bukkit.getLogger().info("Cleared game mode for player " + player.getName());
     }
 }

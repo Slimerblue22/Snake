@@ -12,6 +12,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 
 import java.util.List;
@@ -44,9 +45,71 @@ public class GameEndConditionsHandler implements Listener {
      * Runs collision checks for the snake.
      * If a collision is detected, the game for the player is stopped.
      */
-    public void runGameEndEventsChecks() {
-        if (checkWallCollision() || checkSolidBlockBelow() || checkSelfCollision() || checkPlayerDismounted()) {
-            gameManager.stopGame(player);  // End the game for the player
+    public void runGameEndEventsChecks(String gameMode) {
+        boolean isClassicMode = "classic".equalsIgnoreCase(gameMode);
+        boolean isPvPMode = "pvp".equalsIgnoreCase(gameMode);
+
+        if (isClassicMode || isPvPMode) {
+            if (checkWallCollision() || checkSolidBlockBelow() || checkSelfCollision() || checkPlayerDismounted()) {
+                gameManager.stopGame(player);  // End the game for the player
+            }
+        }
+
+        if (isPvPMode) {
+            checkPvPModeCollision();  // PvP mode specific logic
+        }
+    }
+
+    /**
+     * Checks for collisions between players in PvP mode using their bounding boxes.
+     * <ul>
+     *     <li>If there's a head-to-head collision between two players, both players' games are ended.</li>
+     *     <li>If a player's head collides with another player's body segment, only the game of the player whose head collided is ended.</li>
+     * </ul>
+     */
+    private void checkPvPModeCollision() {
+        SnakeCreation checkingPlayerSnake = gameManager.getSnakeForPlayer(player);
+        if (checkingPlayerSnake == null) {
+            return;
+        }
+
+        String checkingPlayerGameMode = gameManager.getGameModeForPlayer(player);
+        if (checkingPlayerGameMode == null || !checkingPlayerGameMode.equals("pvp")) {
+            return;  // The player being checked is not in PvP mode
+        }
+
+        BoundingBox checkingPlayerHeadBox = checkingPlayerSnake.getSheepEntity().getBoundingBox();
+
+        for (Player potentialCollidingPlayer : Bukkit.getOnlinePlayers()) {
+            if (!potentialCollidingPlayer.equals(player)) {
+                SnakeCreation collidingPlayerSnake = gameManager.getSnakeForPlayer(potentialCollidingPlayer);
+                if (collidingPlayerSnake == null) {
+                    continue;
+                }
+
+                String collidingPlayerGameMode = gameManager.getGameModeForPlayer(potentialCollidingPlayer);
+                if (collidingPlayerGameMode == null || !collidingPlayerGameMode.equals("pvp")) {
+                    continue;  // The potentially colliding player is not in PvP mode
+                }
+
+                BoundingBox collidingPlayerHeadBox = collidingPlayerSnake.getSheepEntity().getBoundingBox();
+
+                if (checkingPlayerHeadBox.overlaps(collidingPlayerHeadBox)) {
+                    // Head-to-head collision, end both games
+                    gameManager.stopGame(player);
+                    gameManager.stopGame(potentialCollidingPlayer);
+                    return;
+                }
+
+                // Check if the head of 'checkingPlayer' collides with the body segments of 'potentialCollidingPlayer'
+                for (Entity segment : gameManager.getSegmentsForPlayer(potentialCollidingPlayer)) {
+                    if (checkingPlayerHeadBox.overlaps(segment.getBoundingBox())) {
+                        // Head to body collision, end the game of the player being checked
+                        gameManager.stopGame(player);
+                        return;
+                    }
+                }
+            }
         }
     }
 
