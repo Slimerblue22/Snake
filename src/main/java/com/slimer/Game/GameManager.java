@@ -37,6 +37,10 @@ public class GameManager {
     private final Map<Player, Location> playerLobbyLocations;
     private final Map<Player, Integer> playerScores = new HashMap<>();
     private final Map<Player, List<Apple>> playerApples = new HashMap<>();
+    private final Set<UUID> disconnectedPlayerUUIDs = new HashSet<>();
+    private final Map<Player, BossBar> playerScoreBars = new HashMap<>();
+    private final Map<Player, Boolean> playerUTurnStatus = new HashMap<>();
+    private final Map<Player, String> selectedGameModes = new HashMap<>();
 
     // Scheduled task mappings
     private final Map<Player, BukkitRunnable> movementTasks = new HashMap<>();
@@ -47,14 +51,8 @@ public class GameManager {
     private final Plugin plugin;
     private final MusicManager musicManager;
     private final boolean isMusicEnabled;
-
-    // Additional player-specific settings
-    private final Set<UUID> disconnectedPlayerUUIDs = new HashSet<>();
-    private final Map<Player, BossBar> playerScoreBars = new HashMap<>();
-    private final Map<Player, Boolean> playerUTurnStatus = new HashMap<>();
     private PlayerInputHandler playerInputHandler;
     private SnakeMovement snakeMovement;
-
 
     /**
      * Constructs a new GameManager.
@@ -82,13 +80,23 @@ public class GameManager {
      * @param gameLocation  The starting location in the game world.
      * @param lobbyLocation The location in the lobby world.
      */
-    public void startGame(Player player, Location gameLocation, Location lobbyLocation) {
+    public void startGame(Player player, Location gameLocation, Location lobbyLocation, String gameMode) {
         SnakeCreation snake = initializeGameAndPlayer(player, gameLocation, lobbyLocation);
+        initializeGameSettings(player, gameMode);
         initializeBossBar(player);
         initializeMovement(player);
         initializeGameEndConditions(player);
         initializeApples(player, gameLocation, snake);
         initializeMusic(player);
+    }
+
+    private void initializeGameSettings(Player player, String gameMode) { // Has dev debug, remove later
+        setGameModeForPlayer(player, gameMode);
+        if (gameMode != null) {
+            Bukkit.getLogger().info("Selected game mode for player " + player.getName() + ": " + gameMode);
+        } else {
+            Bukkit.getLogger().warning("No game mode found for player " + player.getName());
+        }
     }
 
     /**
@@ -239,6 +247,7 @@ public class GameManager {
         clearAppleData(player);
         stopMusicForPlayer(player);
         destroySnakeAndClearData(player);
+        clearGameModeForPlayer(player);
     }
 
     /**
@@ -377,6 +386,7 @@ public class GameManager {
         cancelAllMovementTasks();
         cancelAllAppleCollectionTasks();
         clearAllApples();
+        clearAllGameModeInfo();
     }
 
     /**
@@ -437,6 +447,10 @@ public class GameManager {
             }
         }
         playerApples.clear();
+    }
+
+    private void clearAllGameModeInfo() {
+        selectedGameModes.clear();
     }
 
     // Helpers for getting and modifying snake segments
@@ -761,5 +775,20 @@ public class GameManager {
      */
     public boolean isUTurnDetected(Player player) {
         return playerUTurnStatus.getOrDefault(player, false);
+    }
+
+    // Helpers for game mode checks
+
+    public void setGameModeForPlayer(Player player, String gameMode) {
+        selectedGameModes.put(player, gameMode);
+    }
+
+    public String getGameModeForPlayer(Player player) { // Will be used later
+        return selectedGameModes.get(player);
+    }
+
+    public void clearGameModeForPlayer(Player player) { // Has dev debug, remove later
+        selectedGameModes.remove(player);
+            Bukkit.getLogger().info("Cleared game mode for player " + player.getName());
     }
 }

@@ -63,13 +63,13 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             player.sendMessage(Component.text("You don't have permission to run this command.", NamedTextColor.RED));
             return false;
         }
-        if (args.length == 0) { // If the user only types `/snakegame` or `/sg` just open the GUI for them.
+        if (args.length == 0) { // If the user only types `/snakegame` or `/sg` just open the GUI for them
             handleGUICommand(player, plugin);
             return false;
         }
         String subCommand = args[0].toLowerCase();
         return switch (subCommand) {
-            case "start" -> handleStartGameCommand(player);
+            case "start" -> handleStartGameCommand(player, args);
             case "stop" -> handleStopGameCommand(player);
             case "gui" -> handleGUICommand(player, plugin);
             case "help" -> handleHelpCommand(player);
@@ -129,7 +129,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             }
             if ("leaderboard".startsWith(args[0].toLowerCase())) {
                 completions.add("leaderboard");
-            } // This bit below adds tab support for the different color options.
+            } // This bit below adds tab support for the different color options
         } else if (args.length == 2 && "color".equalsIgnoreCase(args[0])) {
             for (DyeColor dyeColor : DyeColor.values()) {
                 if (dyeColor.name().toLowerCase().startsWith(args[1].toLowerCase())) {
@@ -146,7 +146,23 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      * @param player The player issuing the command.
      * @return true if the game is successfully started, otherwise false.
      */
-    private boolean handleStartGameCommand(Player player) {
+    private boolean handleStartGameCommand(Player player, String[] args) {
+        // Check for game mode argument
+        if (args.length < 2) {
+            player.sendMessage(Component.text("Please specify a game mode. Use /snakegame start <game_mode>.", NamedTextColor.RED));
+            return false;
+        }
+
+        String gameMode = args[1].toLowerCase();
+
+        if (!gameMode.equals("classic") && !gameMode.equals("pvp")) {
+            player.sendMessage(Component.text("Invalid game mode. Available modes: classic, pvp.", NamedTextColor.RED));
+            return false;
+        }
+
+        player.sendMessage(Component.text("Selected game mode: " + gameMode, NamedTextColor.GREEN));
+
+        // Continue the rest of the starting logic
         RegionService regionService = RegionService.getInstance();
         int maxPlayersPerGame = ((Main) plugin).getMaxPlayersPerGame();
 
@@ -170,8 +186,8 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
                             int playersInGameRegion = 0;
                             for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
                                 if (onlinePlayer.getWorld().equals(world) && regionService.isLocationInRegion(onlinePlayer.getLocation(), gameRegion)) {
-                                    SnakeCreation snake = gameManager.getSnakeForPlayer(onlinePlayer); // Checks if the player inside is in a game.
-                                    if (snake != null) { // If there isn't a snake for that player, they must not be in a game, ignore them for the count.
+                                    SnakeCreation snake = gameManager.getSnakeForPlayer(onlinePlayer); // Checks if the player inside is in a game
+                                    if (snake != null) {
                                         playersInGameRegion++;
                                     }
                                 }
@@ -188,7 +204,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
                             // Start the game
                             if (gameTeleportLocation != null) {
                                 player.teleport(gameTeleportLocation);
-                                gameManager.startGame(player, gameTeleportLocation, lobbyTeleportLocation);
+                                gameManager.startGame(player, gameTeleportLocation, lobbyTeleportLocation, gameMode);
                                 player.sendMessage(Component.text("Starting the snake game...", NamedTextColor.GREEN));
                                 return true;
                             }
