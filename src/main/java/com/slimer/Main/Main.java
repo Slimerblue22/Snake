@@ -65,6 +65,10 @@ public final class Main extends JavaPlugin {
         // Initialize game components
         initializeGameComponents();
 
+        // Initialize QueueManager singleton
+        QueueManager queueManager = QueueManager.getInstance(gameManager);
+        getServer().getPluginManager().registerEvents(queueManager, this);
+
         // Initialize region services and handlers
         initializeRegionServices();
 

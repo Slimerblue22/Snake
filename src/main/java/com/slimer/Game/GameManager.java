@@ -81,6 +81,12 @@ public class GameManager {
      * @param lobbyLocation The location in the lobby world.
      */
     public void startGame(Player player, Location gameLocation, Location lobbyLocation, String gameMode) {
+        // If it's PvP mode, make some adjustments to gameLocation before initializing
+        if (gameMode.equals("pvp")) {
+            // This is just a simple mechanism to place the second player a few blocks away from the first player
+            // Replace with something better later
+            gameLocation.add(5, 0, 5);
+        }
         SnakeCreation snake = initializeGameAndPlayer(player, gameLocation, lobbyLocation);
         setGameModeForPlayer(player, gameMode);
         initializeBossBar(player);
