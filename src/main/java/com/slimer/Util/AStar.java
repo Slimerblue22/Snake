@@ -1,6 +1,5 @@
 package com.slimer.Util;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 
 import java.util.*;
@@ -33,9 +32,6 @@ public class AStar {
             if (!neighbor.getBlock().getType().isSolid() && isSolid3x3Below(neighbor)) {
                 neighbors.add(neighbor);
             }
-        }
-        if (DebugManager.isDebugEnabled) {
-            Bukkit.getLogger().info(DebugManager.getDebugMessage("[AStar.java] Found " + neighbors.size() + " valid neighbors for location (" + location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ() + ")"));
         }
         return neighbors;
     }
@@ -94,11 +90,7 @@ public class AStar {
      */
     public boolean pathExists(Location start, Location goal) {
         List<Location> path = findPath(start, goal);
-        boolean exists = path != null && !path.isEmpty();
-        if (DebugManager.isDebugEnabled) {
-            Bukkit.getLogger().info(DebugManager.getDebugMessage("[AStar.java] Path exists between start (" + start.getBlockX() + ", " + start.getBlockY() + ", " + start.getBlockZ() + ") and goal (" + goal.getBlockX() + ", " + goal.getBlockY() + ", " + goal.getBlockZ() + "): " + exists));
-        }
-        return exists;
+        return path != null && !path.isEmpty();
     }
 
     /**
@@ -109,9 +101,6 @@ public class AStar {
      * @return A list representing the path, or null if no path is found.
      */
     public List<Location> findPath(Location start, Location goal) {
-        if (DebugManager.isDebugEnabled) {
-            Bukkit.getLogger().info(DebugManager.getDebugMessage("[AStar.java] Finding path between start (" + start.getBlockX() + ", " + start.getBlockY() + ", " + start.getBlockZ() + ") and goal (" + goal.getBlockX() + ", " + goal.getBlockY() + ", " + goal.getBlockZ() + ")"));
-        }
         Set<Location> openSet = new HashSet<>();
         Set<Location> closedSet = new HashSet<>();
         openSet.add(start);
@@ -128,11 +117,7 @@ public class AStar {
             }
             Location current = getLowestFScoreNode(openSet, fScore);
             if (isSameBlock(current, goal)) {
-                List<Location> path = reconstructPath(cameFrom, current);
-                if (DebugManager.isDebugEnabled) {
-                    Bukkit.getLogger().info(DebugManager.getDebugMessage("[AStar.java] Path found with length: " + path.size()));
-                }
-                return path;
+                return reconstructPath(cameFrom, current);
             }
 
             openSet.remove(current);
@@ -151,9 +136,6 @@ public class AStar {
                     openSet.add(neighbor);
                 }
             }
-        }
-        if (DebugManager.isDebugEnabled) {
-            Bukkit.getLogger().info(DebugManager.getDebugMessage("[AStar.java] No path found"));
         }
         return null; // Return the path or null if not found
     }

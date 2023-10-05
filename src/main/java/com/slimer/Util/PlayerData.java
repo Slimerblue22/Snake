@@ -13,8 +13,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import static com.slimer.Util.DebugManager.getDebugMessage;
-
 /**
  * Singleton class responsible for managing player-specific data, such as high scores.
  */
@@ -37,10 +35,10 @@ public class PlayerData {
         if (!playerDataFile.exists()) {
             try {
                 if (!playerDataFile.createNewFile()) {
-                    logger.log(Level.WARNING, getDebugMessage("[PlayerData.java] Failed to create PlayerData.yml file. It may already exist."));
+                    logger.log(Level.WARNING,("[PlayerData.java] Failed to create PlayerData.yml file. It may already exist."));
                 }
             } catch (IOException e) {
-                logger.log(Level.SEVERE, getDebugMessage("[PlayerData.java] An error occurred while creating PlayerData.yml"), e);
+                logger.log(Level.SEVERE,("[PlayerData.java] An error occurred while creating PlayerData.yml"), e);
             }
         }
 
@@ -213,7 +211,7 @@ public class PlayerData {
         try {
             playerDataConfig.save(playerDataFile);
         } catch (IOException e) {
-            logger.log(Level.SEVERE, getDebugMessage("[PlayerData.java] An error occurred while saving PlayerData.yml"), e);
+            logger.log(Level.SEVERE,("[PlayerData.java] An error occurred while saving PlayerData.yml"), e);
         }
     }
 }

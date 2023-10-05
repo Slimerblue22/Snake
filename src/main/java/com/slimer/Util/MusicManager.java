@@ -49,13 +49,13 @@ public class MusicManager {
         File songFolder = songFile.getParentFile();
         if (!songFolder.exists()) {
             if (!songFolder.mkdirs()) {
-                Bukkit.getLogger().severe(DebugManager.getDebugMessage("[MusicManager.java] Failed to create songs folder. It may already exist."));
+                Bukkit.getLogger().severe("[MusicManager.java] Failed to create songs folder. It may already exist.");
             }
         }
 
         // Check if song file exists
         if (!songFile.exists()) {
-            Bukkit.getLogger().warning(DebugManager.getDebugMessage("[MusicManager.java] No song file found at " + fullPath + ". Music will not be played."));
+            Bukkit.getLogger().warning("[MusicManager.java] No song file found at " + fullPath + ". Music will not be played.");
             return;
         }
 
@@ -63,7 +63,7 @@ public class MusicManager {
         try {
             Song song = NBSDecoder.parse(songFile);
             if (song == null) {
-                Bukkit.getLogger().severe(DebugManager.getDebugMessage("[MusicManager.java] Error loading the music file. Please ensure it's a valid NBS file."));
+                Bukkit.getLogger().severe("[MusicManager.java] Error loading the music file. Please ensure it's a valid NBS file.");
                 return;
             }
 
@@ -75,7 +75,7 @@ public class MusicManager {
             songPlayers.put(player, songPlayer);
 
         } catch (Exception e) {
-            Bukkit.getLogger().severe(DebugManager.getDebugMessage("[MusicManager.java] Could not load song from file " + fullPath + ": " + e.getMessage()));
+            Bukkit.getLogger().severe("[MusicManager.java] Could not load song from file " + fullPath + ": " + e.getMessage());
         }
     }
 

@@ -4,7 +4,6 @@ import com.slimer.Game.*;
 import com.slimer.Region.RegionCommandHandler;
 import com.slimer.Region.RegionFileHandler;
 import com.slimer.Region.RegionService;
-import com.slimer.Util.DebugManager;
 import com.slimer.Util.MusicManager;
 import com.slimer.Util.PlayerData;
 import org.bstats.bukkit.Metrics;
@@ -78,10 +77,6 @@ public final class Main extends JavaPlugin {
         // Initialize BStats
         int pluginId = 19729;
         new Metrics(this, pluginId);
-
-        // Adds a command to toggle debugs on or off, disabled by default.
-        Objects.requireNonNull(this.getCommand("snaketoggledebug")).setExecutor(new DebugManager.ToggleDebugCommand());
-
     }
 
     /**

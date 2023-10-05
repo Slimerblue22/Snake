@@ -1,6 +1,5 @@
 package com.slimer.Game;
 
-import com.slimer.Util.DebugManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -135,9 +134,6 @@ public class GameEndConditionsHandler implements Listener {
         Location roundedLocation = new Location(currentLocation.getWorld(), x, y, z);
 
         if (lastKnownLocation != null && lastKnownLocation.equals(roundedLocation)) {
-            if (DebugManager.isDebugEnabled) {
-                Bukkit.getLogger().info(DebugManager.getDebugMessage("[GameEndConditionsHandler.java] Wall collision detected!"));
-            }
             return true; // Collision detected
         } else {
             lastKnownLocation = roundedLocation; // No collision detected
@@ -160,14 +156,7 @@ public class GameEndConditionsHandler implements Listener {
         Location currentLocation = sheepEntity.getLocation();
         Block blockBelow = currentLocation.getWorld().getBlockAt(currentLocation.add(0, -1, 0));
 
-        if (!blockBelow.getType().isSolid()) {
-            if (DebugManager.isDebugEnabled) {
-                Bukkit.getLogger().info(DebugManager.getDebugMessage("[GameEndConditionsHandler.java] Non-solid block below detected!"));
-            }
-            return true; // True if the block below is not solid
-        }
-
-        return false; // False if the block below is solid
+        return !blockBelow.getType().isSolid();
     }
 
     /**
@@ -205,9 +194,6 @@ public class GameEndConditionsHandler implements Listener {
 
         // Special case: check for U-turn if there is one or more segments
         if (gameManager.isUTurnDetected(player)) {
-            if (DebugManager.isDebugEnabled) {
-                Bukkit.getLogger().info(DebugManager.getDebugMessage("[GameEndConditionsHandler.java] U-turn self-collision detected!"));
-            }
             gameManager.resetUTurnStatus(player);  // Reset the U-turn status
             return true;  // U-turn detected
         }
@@ -217,9 +203,6 @@ public class GameEndConditionsHandler implements Listener {
             Entity segment = segments.get(i);
             Vector segmentLocation = segment.getLocation().toVector();
             if (headLocation.distance(segmentLocation) < 0.1) {  // Tolerance of 0.1 blocks
-                if (DebugManager.isDebugEnabled) {
-                    Bukkit.getLogger().info(DebugManager.getDebugMessage("[GameEndConditionsHandler.java] Self-collision detected!"));
-                }
                 return true;  // Self-collision detected
             }
         }
@@ -241,14 +224,7 @@ public class GameEndConditionsHandler implements Listener {
 
         // Check if the list of passengers is empty or not containing the player
         List<Entity> passengers = sheepEntity.getPassengers();
-        if (passengers.isEmpty() || !passengers.contains(player)) {
-            if (DebugManager.isDebugEnabled) {
-                Bukkit.getLogger().info(DebugManager.getDebugMessage("[GameEndConditionsHandler.java] Player dismounted!"));
-            }
-            return true;  // Player has dismounted
-        }
-
-        return false;  // Player is still mounted
+        return passengers.isEmpty() || !passengers.contains(player);
     }
 
     /**
@@ -265,9 +241,6 @@ public class GameEndConditionsHandler implements Listener {
         // Check if the quitting player is the same as the one managed by this GameEndConditionsHandler instance
         if (quittingPlayer.equals(player)) {
             if (riddenEntity != null && isSnakeEntity(riddenEntity)) {
-                if (DebugManager.isDebugEnabled) {
-                    Bukkit.getLogger().info(DebugManager.getDebugMessage("[GameEndConditionsHandler.java] A player has disconnected mid game!"));
-                }
                 gameManager.stopGame(quittingPlayer);  // Perform cleanup
                 gameManager.handlePlayerDisconnect(quittingPlayer); // Handle player disconnection
             }

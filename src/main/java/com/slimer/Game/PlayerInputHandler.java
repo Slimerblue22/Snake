@@ -4,8 +4,6 @@ import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
-import com.slimer.Util.DebugManager;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
@@ -128,9 +126,6 @@ public class PlayerInputHandler {
 
                 // Check for U-turn
                 if (isUTurn(player)) {
-                    if (DebugManager.isDebugEnabled) {
-                        Bukkit.getLogger().info(DebugManager.getDebugMessage("[PlayerInputHandler.java] U-Turn detected, sending info to GameManager!"));
-                    }
                     gameManager.notifyUTurn(player);
                 }
             }

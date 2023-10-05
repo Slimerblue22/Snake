@@ -4,7 +4,6 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.slimer.Region.Region;
 import com.slimer.Region.RegionService;
 import com.slimer.Util.AStar;
-import com.slimer.Util.DebugManager;
 import com.slimer.Util.PlayerData;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -136,9 +135,6 @@ public class Apple {
                         // This runs on the main thread once the calculation is complete
                         Bukkit.getScheduler().runTask(plugin, () -> {
                             if (loc == null) {
-                                if (DebugManager.isDebugEnabled) {
-                                    Bukkit.getLogger().info(DebugManager.getDebugMessage("[Apple.java] Could not find a valid location for apple spawn."));
-                                }
                                 return;
                             }
                             // Check if the game is still running for the player
@@ -234,9 +230,6 @@ public class Apple {
             int z = random.nextInt(maxZ - minZ + 1) + minZ;
 
             return new Location(world, x, yLevel, z);
-        }
-        if (DebugManager.isDebugEnabled) {
-            Bukkit.getLogger().info(DebugManager.getDebugMessage("[Apple.java] Region not found for game zone name: " + gameZoneName));
         }
         return null;
     }

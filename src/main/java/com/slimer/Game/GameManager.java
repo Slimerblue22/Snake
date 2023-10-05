@@ -5,13 +5,11 @@ import com.slimer.Main.Main;
 import com.slimer.Region.Region;
 import com.slimer.Region.RegionLink;
 import com.slimer.Region.RegionService;
-import com.slimer.Util.DebugManager;
 import com.slimer.Util.MusicManager;
 import com.slimer.Util.PlayerData;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;
@@ -549,17 +547,7 @@ public class GameManager {
     public void handlePlayerReconnect(Player player) {
         UUID uuid = player.getUniqueId();
         if (disconnectedPlayerUUIDs.contains(uuid)) {
-            logPlayerReconnection();
             handleTeleportToLobby(player, uuid);
-        }
-    }
-
-    /**
-     * Logs the reconnection of a player.
-     */
-    private void logPlayerReconnection() {
-        if (DebugManager.isDebugEnabled) {
-            Bukkit.getLogger().info(DebugManager.getDebugMessage("[GameManager.java] A previously disconnected player has been sent back to lobby!"));
         }
     }
 

@@ -1,8 +1,6 @@
 package com.slimer.Game;
 
 import com.slimer.Main.Main;
-import com.slimer.Util.DebugManager;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -257,9 +255,6 @@ public class SnakeMovement {
 
                 // Forcefully teleport the segment to its target waypoint while preserving yaw and pitch
                 segment.teleport(waypoint.toLocation(segment.getWorld(), yaw, pitch));
-                if (DebugManager.isDebugEnabled) {
-                    Bukkit.getLogger().info(DebugManager.getDebugMessage("[SnakeMovement.java] Segment out of sync, teleporting!"));
-                }
             } else {
                 // Set the calculated velocity if it's finite
                 if (Double.isFinite(velocity.getX()) && Double.isFinite(velocity.getY()) && Double.isFinite(velocity.getZ())) {

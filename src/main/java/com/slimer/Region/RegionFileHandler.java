@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.logging.Level;
 
-import static com.slimer.Util.DebugManager.getDebugMessage;
 import static org.bukkit.Bukkit.getLogger;
 import static org.bukkit.Bukkit.getPluginManager;
 
@@ -51,10 +50,10 @@ public class RegionFileHandler {
         if (!regionsFile.exists()) {
             try {
                 if (!regionsFile.createNewFile()) {
-                    Bukkit.getLogger().warning(getDebugMessage("[RegionFileHandler.java] Regions.yml file already exists!"));
+                    Bukkit.getLogger().warning("[RegionFileHandler.java] Regions.yml file already exists!");
                 }
             } catch (IOException e) {
-                getLogger().log(Level.SEVERE, getDebugMessage("[RegionFileHandler.java] Could not create Regions.yml file!"), e);
+                getLogger().log(Level.SEVERE,("[RegionFileHandler.java] Could not create Regions.yml file!"), e);
             }
         }
         regionsConfig = YamlConfiguration.loadConfiguration(regionsFile);
@@ -68,7 +67,7 @@ public class RegionFileHandler {
         try {
             regionsConfig.save(regionsFile);
         } catch (IOException e) {
-            getLogger().log(Level.SEVERE, getDebugMessage("[RegionFileHandler.java] Could not save Regions.yml file!"), e);
+            getLogger().log(Level.SEVERE,("[RegionFileHandler.java] Could not save Regions.yml file!"), e);
         }
     }
 
@@ -247,7 +246,7 @@ public class RegionFileHandler {
                 }
             }
         } catch (Exception e) {
-            getLogger().log(Level.SEVERE, getDebugMessage("[RegionFileHandler.java] Unexpected error in Regions.yml. Please review the configuration."), e);
+            getLogger().log(Level.SEVERE,("[RegionFileHandler.java] Unexpected error in Regions.yml. Please review the configuration."), e);
             getPluginManager().disablePlugin(plugin); // Disable the plugin if an error occurs
         }
     }
