@@ -1,7 +1,9 @@
 package com.slimer.Game;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -82,7 +84,15 @@ public class QueueManager implements Listener {
         List<Player> specificPvpQueue = pvpQueues.getOrDefault(lobbyLocation, new ArrayList<>());
 
         specificPvpQueue.add(player);
-        player.sendMessage(Component.text("You've been added to the PvP queue. Waiting for another player...", NamedTextColor.YELLOW));
+
+        Component commandComponent = Component.text("/snakegame stop", NamedTextColor.YELLOW)
+                .decoration(TextDecoration.UNDERLINED, true)
+                .clickEvent(ClickEvent.runCommand("/snakegame stop"));
+
+        player.sendMessage(Component.text("You've been added to the PvP queue. Waiting for another player. To leave the queue, run ", NamedTextColor.YELLOW)
+                .append(commandComponent)
+                .append(Component.text(" or click on the command.", NamedTextColor.YELLOW)));
+
         pvpQueues.put(lobbyLocation, specificPvpQueue);
 
         if (specificPvpQueue.size() >= 2) {
@@ -106,6 +116,21 @@ public class QueueManager implements Listener {
             return true;
         }
         return true;
+    }
+
+    /**
+     * Checks if the provided player is in any PvP queue.
+     *
+     * @param player The player to check.
+     * @return True if the player is in a PvP queue, false otherwise.
+     */
+    public boolean isPlayerInPvPQueue(Player player) {
+        for (List<Player> queue : pvpQueues.values()) {
+            if (queue.contains(player)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

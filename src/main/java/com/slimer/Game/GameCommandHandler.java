@@ -182,20 +182,24 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
         }
     }
 
-
     /**
      * Handles the "stop" subcommand.
      *
      * @param player The player issuing the command.
-     * @return true indicating the game has been stopped.
+     * @return true if the game or queue was stopped for the player, false otherwise.
      */
     private boolean handleStopGameCommand(Player player) {
+        QueueManager queueManager = QueueManager.getInstance();
         if (gameManager.getSnakeForPlayer(player) != null) {  // Check if player is in a game
             gameManager.stopGame(player);
             player.sendMessage(Component.text("Stopping the snake game...", NamedTextColor.RED));
             return true;
+        } else if (queueManager.isPlayerInPvPQueue(player)) {  // Check if player is in a PvP queue
+            queueManager.removePlayerFromQueues(player);
+            player.sendMessage(Component.text("You've been removed from the PvP queue.", NamedTextColor.RED));
+            return true;
         } else {
-            player.sendMessage(Component.text("You are not currently in a game.", NamedTextColor.RED));
+            player.sendMessage(Component.text("You are not currently in a game or queue.", NamedTextColor.RED));
             return false;
         }
     }
