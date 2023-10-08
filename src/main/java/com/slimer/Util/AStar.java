@@ -42,7 +42,7 @@ public class AStar {
      * @param center The central location above which the 3x3 grid is checked.
      * @return True if the 3x3 area below the center consists of solid blocks, false otherwise.
      */
-    private boolean isSolid3x3Below(Location center) {
+    public boolean isSolid3x3Below(Location center) {
         int[][] offset = {
                 {-1, -1}, {0, -1}, {1, -1},
                 {-1, 0}, {0, 0}, {1, 0},

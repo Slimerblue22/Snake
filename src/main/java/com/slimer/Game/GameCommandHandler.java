@@ -171,10 +171,12 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
 
         Location lobbyLocation = locations.getMiddle();
         Location gameLocation = locations.getLeft();
+        String regionName = locations.getRight();
+        World gameWorld = gameLocation.getWorld();
 
         if (gameMode.equals("pvp")) {
             // Get the instance of QueueManager and use its method to enqueue the player for PvP
-            return QueueManager.getInstance().handlePvPQueue(player, lobbyLocation, gameLocation);
+            return QueueManager.getInstance().handlePvPQueue(player, lobbyLocation, gameLocation, regionName, gameWorld);
         } else {
             return handleClassicGameStart(player);
         }

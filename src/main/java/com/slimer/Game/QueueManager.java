@@ -2,16 +2,15 @@ package com.slimer.Game;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Manages the player queues for different game modes, ensuring players are matched appropriately.
@@ -26,6 +25,7 @@ public class QueueManager implements Listener {
     private static QueueManager instance;
     private final Map<Location, List<Player>> pvpQueues = new HashMap<>();
     private final GameManager gameManager;
+    private final SpawnLocationFinder spawnLocationFinder = new SpawnLocationFinder();
 
     /**
      * Private constructor to ensure only one instance of QueueManager is created.
@@ -70,7 +70,7 @@ public class QueueManager implements Listener {
      * @param gameLocation  The location where the game will take place.
      * @return True if the player has been added to the queue or the game has started, false if the player is already in the queue.
      */
-    public boolean handlePvPQueue(Player player, Location lobbyLocation, Location gameLocation) {
+    public boolean handlePvPQueue(Player player, Location lobbyLocation, Location gameLocation, String regionName, World gameWorld) {
         // Check if the player is already in a PvP queue
         for (List<Player> queue : pvpQueues.values()) {
             if (queue.contains(player)) {
@@ -88,8 +88,19 @@ public class QueueManager implements Listener {
         if (specificPvpQueue.size() >= 2) {
             Player player1 = specificPvpQueue.remove(0);
             Player player2 = specificPvpQueue.remove(0);
-            gameManager.startGame(player1, gameLocation, lobbyLocation, "pvp");
-            gameManager.startGame(player2, gameLocation, lobbyLocation, "pvp");
+
+            // Get spawn locations for both players
+            Pair<Location, Location> validSpawnPoints = spawnLocationFinder.getValidPlayerSpawnPoints(gameWorld, gameLocation.getBlockY(), regionName);
+
+            // Ensure valid spawn points were found
+            if (validSpawnPoints.getLeft() == null || validSpawnPoints.getRight() == null) {
+                player1.sendMessage(Component.text("Unable to find suitable spawn points. Please try again.", NamedTextColor.RED));
+                player2.sendMessage(Component.text("Unable to find suitable spawn points. Please try again.", NamedTextColor.RED));
+                return false;
+            }
+
+            gameManager.startGame(player1, validSpawnPoints.getLeft(), lobbyLocation, "pvp");
+            gameManager.startGame(player2, validSpawnPoints.getRight(), lobbyLocation, "pvp");
             player1.sendMessage(Component.text("PvP game starting!", NamedTextColor.GREEN));
             player2.sendMessage(Component.text("PvP game starting!", NamedTextColor.GREEN));
             return true;
