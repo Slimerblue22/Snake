@@ -4,6 +4,7 @@ import com.slimer.Game.*;
 import com.slimer.Region.RegionCommandHandler;
 import com.slimer.Region.RegionFileHandler;
 import com.slimer.Region.RegionService;
+import com.slimer.Util.DebugManager;
 import com.slimer.Util.MusicManager;
 import com.slimer.Util.PlayerData;
 import org.bstats.bukkit.Metrics;
@@ -24,6 +25,7 @@ import java.util.Objects;
  * from configuration, and setting up the required command handlers.
  */
 public final class Main extends JavaPlugin {
+    private static String pluginVersion;
     private GameManager gameManager; // Reference to the game manager
     private boolean isMusicEnabled = false; // Flag to indicate if music is enabled
     private String songFilePath;
@@ -50,6 +52,7 @@ public final class Main extends JavaPlugin {
         maxApplesPerGame = config.getInt("max-apples-per-game", 1);  // Default value of 1
         forceTeleportDistance = config.getDouble("force-teleport-distance", 1.2); // Default value of 1.2
         targetCloseEnoughDistance = config.getDouble("target-close-enough-distance", 0.1); // Default value of 0.1
+        pluginVersion = this.getDescription().getVersion(); // Deprecated yet no alternative, still works though
 
         // Read the 'enable-music' setting from config
         boolean enableMusic = config.getBoolean("enable-music", true); // Default to true if not set
@@ -77,6 +80,9 @@ public final class Main extends JavaPlugin {
         // Initialize BStats
         int pluginId = 19729;
         new Metrics(this, pluginId);
+
+        // Register the DebugManager's command
+        Objects.requireNonNull(getCommand("snakedebug")).setExecutor(new DebugManager.ToggleDebugCommand());
     }
 
     /**
@@ -187,5 +193,14 @@ public final class Main extends JavaPlugin {
      */
     public double getTargetCloseEnoughDistance() {
         return targetCloseEnoughDistance;
+    }
+
+    /**
+     * Retrieves the version of the Snake plugin.
+     *
+     * @return The version string of the Snake plugin.
+     */
+    public static String getPluginVersion() {
+        return pluginVersion;
     }
 }
