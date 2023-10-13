@@ -3,6 +3,8 @@ package com.slimer.Util;
 import com.slimer.Main.Main;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -260,6 +262,12 @@ public class DebugManager {
          */
         private boolean handleHelpCommand(Player player) {
             player.sendMessage(Component.text("The Snake Debugging system provides insights into the internal operations of the Snake plugin. Here's how to use it:", NamedTextColor.GOLD));
+
+            TextComponent linkMessage = Component.text("For more details, click here to visit the debugging documentation.", NamedTextColor.AQUA)
+                    // This URL is a placeholder
+                    .clickEvent(ClickEvent.openUrl("http://www.example.com"))
+                    .hoverEvent(HoverEvent.showText(Component.text("Click to open the documentation website!")));
+            player.sendMessage(linkMessage);
 
             player.sendMessage(Component.text("/snakedebug category [Category]", NamedTextColor.YELLOW));
             player.sendMessage(Component.text(" - Toggle the debug mode for a specific category.", NamedTextColor.GREEN));
