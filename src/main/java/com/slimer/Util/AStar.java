@@ -13,7 +13,9 @@ public class AStar {
      * @return The Manhattan distance between the two locations.
      */
     public double heuristic(Location a, Location b) {
-        return Math.abs(a.getX() - b.getX()) + Math.abs(a.getZ() - b.getZ());
+        double hValue = Math.abs(a.getX() - b.getX()) + Math.abs(a.getZ() - b.getZ());
+        DebugManager.log(DebugManager.Category.ASTAR, "Heuristic value calculated as: " + hValue);
+        return hValue;
     }
 
     /**
@@ -30,6 +32,7 @@ public class AStar {
             Location neighbor = location.clone().add(direction[0], 0, direction[1]);
 
             if (!neighbor.getBlock().getType().isSolid() && isSolid3x3Below(neighbor)) {
+                DebugManager.log(DebugManager.Category.ASTAR, "Valid neighbor found at " + neighbor);
                 neighbors.add(neighbor);
             }
         }
@@ -101,6 +104,7 @@ public class AStar {
      * @return A list representing the path, or null if no path is found.
      */
     public List<Location> findPath(Location start, Location goal) {
+        DebugManager.log(DebugManager.Category.ASTAR, "Starting pathfinding from " + start + " to " + goal);
         Set<Location> openSet = new HashSet<>();
         Set<Location> closedSet = new HashSet<>();
         openSet.add(start);
@@ -113,10 +117,12 @@ public class AStar {
         int iterationCount = 0;
         while (!openSet.isEmpty()) {
             if (iterationCount++ > 1000) {
+                DebugManager.log(DebugManager.Category.ASTAR, "Iteration count exceeded 1000. Breaking out of loop.");
                 break;
             }
             Location current = getLowestFScoreNode(openSet, fScore);
             if (isSameBlock(current, goal)) {
+                DebugManager.log(DebugManager.Category.ASTAR, "Path found with length: " + reconstructPath(cameFrom, current).size());
                 return reconstructPath(cameFrom, current);
             }
 
@@ -130,6 +136,7 @@ public class AStar {
                 }
                 double tentativeGScore = gScore.getOrDefault(current, Double.MAX_VALUE) + 1;
                 if (tentativeGScore < gScore.getOrDefault(neighbor, Double.MAX_VALUE)) {
+                    DebugManager.log(DebugManager.Category.ASTAR, "Updating gScore for neighbor " + neighbor + " with value: " + tentativeGScore);
                     cameFrom.put(neighbor, current);
                     gScore.put(neighbor, tentativeGScore);
                     fScore.put(neighbor, tentativeGScore + heuristic(neighbor, goal));
@@ -137,6 +144,7 @@ public class AStar {
                 }
             }
         }
+        DebugManager.log(DebugManager.Category.ASTAR, "No path found from " + start + " to " + goal);
         return null; // Return the path or null if not found
     }
 
@@ -186,6 +194,7 @@ public class AStar {
             path.add(0, current);
             current = cameFrom.get(current);
         }
+        DebugManager.log(DebugManager.Category.ASTAR, "Path reconstructed with length: " + path.size());
         return path;
     }
 }

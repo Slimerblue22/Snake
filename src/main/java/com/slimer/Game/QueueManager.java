@@ -1,5 +1,6 @@
 package com.slimer.Game;
 
+import com.slimer.Util.DebugManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -77,6 +78,7 @@ public class QueueManager implements Listener {
         for (List<Player> queue : pvpQueues.values()) {
             if (queue.contains(player)) {
                 player.sendMessage(Component.text("You are already in a PvP queue!", NamedTextColor.RED));
+                DebugManager.log(DebugManager.Category.QUEUE_MANAGER, "Player: " + player.getName() + " is already in the PvP queue.");
                 return false;
             }
         }
@@ -84,6 +86,7 @@ public class QueueManager implements Listener {
         List<Player> specificPvpQueue = pvpQueues.getOrDefault(lobbyLocation, new ArrayList<>());
 
         specificPvpQueue.add(player);
+        DebugManager.log(DebugManager.Category.QUEUE_MANAGER, "Player: " + player.getName() + " added to the PvP queue.");
 
         Component commandComponent = Component.text("/snakegame stop", NamedTextColor.YELLOW)
                 .decoration(TextDecoration.UNDERLINED, true)
@@ -113,6 +116,7 @@ public class QueueManager implements Listener {
             gameManager.startGame(player2, validSpawnPoints.getRight(), lobbyLocation, "pvp");
             player1.sendMessage(Component.text("PvP game starting!", NamedTextColor.GREEN));
             player2.sendMessage(Component.text("PvP game starting!", NamedTextColor.GREEN));
+            DebugManager.log(DebugManager.Category.QUEUE_MANAGER, "PvP game starting for players: " + player1.getName() + " and " + player2.getName());
             return true;
         }
         return true;
@@ -151,7 +155,9 @@ public class QueueManager implements Listener {
      */
     public void removePlayerFromQueues(Player player) {
         for (List<Player> queue : pvpQueues.values()) {
-            queue.remove(player);
+            if (queue.remove(player)) {
+                DebugManager.log(DebugManager.Category.QUEUE_MANAGER, "Player: " + player.getName() + " removed from the PvP queue.");
+            }
         }
     }
 }

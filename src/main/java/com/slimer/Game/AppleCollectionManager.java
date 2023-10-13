@@ -1,6 +1,7 @@
 package com.slimer.Game;
 
 import com.slimer.Main.Main;
+import com.slimer.Util.DebugManager;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
@@ -43,6 +44,7 @@ public class AppleCollectionManager {
 
         for (Apple apple : apples) {
             if (isAppleCollisionDetected(apple, sheepEntity)) {
+                DebugManager.log(DebugManager.Category.APPLE_COLLECTION, "Detected apple collision for player: " + player.getName() + " at location: " + apple.getLocation());
                 collidedApples.add(apple);
             }
         }
@@ -75,6 +77,7 @@ public class AppleCollectionManager {
         List<Apple> apples = gameManager.getPlayerApples().getOrDefault(player, new ArrayList<>());
 
         for (Apple apple : collidedApples) {
+            DebugManager.log(DebugManager.Category.APPLE_COLLECTION, "Handling collided apple for player: " + player.getName());
             // Clear the apple from the game
             apple.clear();
 
@@ -112,6 +115,7 @@ public class AppleCollectionManager {
         int applesToSpawn = maxApples - apples.size();
 
         for (int i = 0; i < applesToSpawn; i++) {
+            DebugManager.log(DebugManager.Category.APPLE_COLLECTION, "Attempting to spawn " + applesToSpawn + " new apples for player: " + player.getName());
             Apple newApple = new Apple(plugin, gameManager);
             newApple.spawnWithName(sheepEntity.getLocation(), sheepEntity.getLocation().getBlockY(), player.getName());
             apples.add(newApple);

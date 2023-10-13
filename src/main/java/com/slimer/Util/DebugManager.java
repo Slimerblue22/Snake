@@ -95,10 +95,16 @@ public class DebugManager {
     /**
      * Enum representing the various debug categories available for the Snake plugin.
      */
-    public enum Category { // Examples to be removed when debug logs are added
-        EXAMPLE_ONE,
-        EXAMPLE_TWO,
-        EXAMPLE_THREE,
+    public enum Category {
+        ASTAR,
+        APPLE,
+        APPLE_COLLECTION,
+        GAME_END_CONDITIONS,
+        GAME_MANAGER,
+        PLAYER_INPUT,
+        QUEUE_MANAGER,
+        SNAKE_CREATION,
+        SPAWN_LOCATION_FINDER,
     }
 
     /**

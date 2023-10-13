@@ -1,5 +1,6 @@
 package com.slimer.Game;
 
+import com.slimer.Util.DebugManager;
 import com.slimer.Util.PlayerData;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
@@ -37,6 +38,8 @@ public class SnakeCreation {
         // Set sheep color
         DyeColor color = PlayerData.getInstance(plugin).getSheepColor(player);
         this.sheep.setColor(color == null ? DyeColor.WHITE : color);
+
+        DebugManager.log(DebugManager.Category.SNAKE_CREATION, "New snake created for player: " + player.getName() + " at location: " + location);
     }
 
     /**
@@ -57,6 +60,8 @@ public class SnakeCreation {
             ((Sheep) segment).setCollidable(false);
             DyeColor color = PlayerData.getInstance(plugin).getSheepColor(player);
             ((Sheep) segment).setColor(color == null ? DyeColor.WHITE : color);
+
+            DebugManager.log(DebugManager.Category.SNAKE_CREATION, "Segment added for player: " + player.getName() + " at waypoint: " + lastWaypoint);
         }
     }
 
@@ -65,6 +70,7 @@ public class SnakeCreation {
      */
     public void destroy() {
         this.sheep.remove();
+        DebugManager.log(DebugManager.Category.SNAKE_CREATION, "Snake destroyed for player with lead sheep at: " + this.sheep.getLocation());
         for (Entity segment : segments) {
             segment.remove();
         }

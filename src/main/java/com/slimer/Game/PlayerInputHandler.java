@@ -4,6 +4,7 @@ import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
+import com.slimer.Util.DebugManager;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
@@ -42,6 +43,7 @@ public class PlayerInputHandler {
      * @param player The player to be monitored.
      */
     public void startMonitoring(Player player) {
+        DebugManager.log(DebugManager.Category.PLAYER_INPUT, "Starting to monitor player: " + player.getName());
         // Possible directions the snake can move
         Vector[] possibleDirections = {
                 new Vector(0, 0, -1),  // North
@@ -61,6 +63,7 @@ public class PlayerInputHandler {
      * @param player The player to stop monitoring.
      */
     public void stopMonitoring(Player player) {
+        DebugManager.log(DebugManager.Category.PLAYER_INPUT, "Stopping monitoring of player: " + player.getName());
         playerDirections.remove(player);
     }
 
@@ -104,17 +107,24 @@ public class PlayerInputHandler {
                 float yaw = player.getLocation().getYaw();
                 yaw = (yaw % 360 + 360) % 360;
                 Vector newDirection;
+                String facingDirection;
+                DebugManager.log(DebugManager.Category.PLAYER_INPUT, "Handling key press for player: " + event.getPlayer().getName());
 
                 if (yaw >= 315 || yaw < 45) {
                     newDirection = new Vector(0, 0, 1);  // South
+                    facingDirection = "South";
                 } else if (yaw >= 45 && yaw < 135) {
                     newDirection = new Vector(-1, 0, 0);  // East
+                    facingDirection = "East";
                 } else if (yaw >= 135 && yaw < 225) {
                     newDirection = new Vector(0, 0, -1);  // North
+                    facingDirection = "North";
                 } else {  // yaw >= 225 && yaw < 315
                     newDirection = new Vector(1, 0, 0);  // West
+                    facingDirection = "West";
                 }
                 playerDirections.put(player, newDirection);
+                DebugManager.log(DebugManager.Category.PLAYER_INPUT, "Player: " + player.getName() + " is facing: " + facingDirection);
 
                 // Update direction history
                 LinkedList<Vector> directions = lastTwoDirections.getOrDefault(player, new LinkedList<>());

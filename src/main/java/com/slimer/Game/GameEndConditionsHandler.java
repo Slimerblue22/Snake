@@ -1,5 +1,6 @@
 package com.slimer.Game;
 
+import com.slimer.Util.DebugManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -95,6 +96,7 @@ public class GameEndConditionsHandler implements Listener {
 
                 if (checkingPlayerHeadBox.overlaps(collidingPlayerHeadBox)) {
                     // Head-to-head collision, end both games
+                    DebugManager.log(DebugManager.Category.GAME_END_CONDITIONS, "Head-to-head collision detected between players " + player.getName() + " and " + potentialCollidingPlayer.getName());
                     gameManager.stopGame(player);
                     gameManager.stopGame(potentialCollidingPlayer);
                     return;
@@ -104,6 +106,7 @@ public class GameEndConditionsHandler implements Listener {
                 for (Entity segment : gameManager.getSegmentsForPlayer(potentialCollidingPlayer)) {
                     if (checkingPlayerHeadBox.overlaps(segment.getBoundingBox())) {
                         // Head to body collision, end the game of the player being checked
+                        DebugManager.log(DebugManager.Category.GAME_END_CONDITIONS, "Player " + player.getName() + " head collided with body segment of player " + potentialCollidingPlayer.getName());
                         gameManager.stopGame(player);
                         return;
                     }
@@ -126,7 +129,6 @@ public class GameEndConditionsHandler implements Listener {
         Entity sheepEntity = snake.getSheepEntity();  // This is the head of the snake
         Location currentLocation = sheepEntity.getLocation();
 
-        // Round off the coordinates to a few decimal places
         double roundTo = 1e-3; // Consider up to the third decimal place
         double x = Math.round(currentLocation.getX() / roundTo) * roundTo;
         double y = Math.round(currentLocation.getY() / roundTo) * roundTo;
@@ -134,6 +136,7 @@ public class GameEndConditionsHandler implements Listener {
         Location roundedLocation = new Location(currentLocation.getWorld(), x, y, z);
 
         if (lastKnownLocation != null && lastKnownLocation.equals(roundedLocation)) {
+            DebugManager.log(DebugManager.Category.GAME_END_CONDITIONS, "Wall collision detected for player: " + player.getName() + ". Last known location: " + lastKnownLocation + ", Current location: " + currentLocation);
             return true; // Collision detected
         } else {
             lastKnownLocation = roundedLocation; // No collision detected
@@ -156,7 +159,11 @@ public class GameEndConditionsHandler implements Listener {
         Location currentLocation = sheepEntity.getLocation();
         Block blockBelow = currentLocation.getWorld().getBlockAt(currentLocation.add(0, -1, 0));
 
-        return !blockBelow.getType().isSolid();
+        if (!blockBelow.getType().isSolid()) {
+            DebugManager.log(DebugManager.Category.GAME_END_CONDITIONS, "Solid block check failed for player: " + player.getName() + ". Block below is: " + blockBelow.getType());
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -194,6 +201,7 @@ public class GameEndConditionsHandler implements Listener {
 
         // Special case: check for U-turn if there is one or more segments
         if (gameManager.isUTurnDetected(player)) {
+            DebugManager.log(DebugManager.Category.GAME_END_CONDITIONS, "U-turn detected for player: " + player.getName());
             gameManager.resetUTurnStatus(player);  // Reset the U-turn status
             return true;  // U-turn detected
         }
@@ -203,6 +211,7 @@ public class GameEndConditionsHandler implements Listener {
             Entity segment = segments.get(i);
             Vector segmentLocation = segment.getLocation().toVector();
             if (headLocation.distance(segmentLocation) < 0.1) {  // Tolerance of 0.1 blocks
+                DebugManager.log(DebugManager.Category.GAME_END_CONDITIONS, "Self-collision detected for player: " + player.getName() + " with segment at location: " + segment.getLocation());
                 return true;  // Self-collision detected
             }
         }
@@ -224,7 +233,11 @@ public class GameEndConditionsHandler implements Listener {
 
         // Check if the list of passengers is empty or not containing the player
         List<Entity> passengers = sheepEntity.getPassengers();
-        return passengers.isEmpty() || !passengers.contains(player);
+        if (passengers.isEmpty() || !passengers.contains(player)) {
+            DebugManager.log(DebugManager.Category.GAME_END_CONDITIONS, "Player " + player.getName() + " dismounted from snake.");
+            return true;
+        }
+        return false;
     }
 
     /**

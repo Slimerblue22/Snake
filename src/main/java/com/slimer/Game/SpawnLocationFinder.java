@@ -3,6 +3,7 @@ package com.slimer.Game;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.slimer.Region.RegionService;
 import com.slimer.Util.AStar;
+import com.slimer.Util.DebugManager;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -25,6 +26,7 @@ public class SpawnLocationFinder {
      * @return A random Location within the game zone suitable for player spawn, or null if region not found.
      */
     private Location getRandomPlayerSpawnWithinGameZone(World world, int yLevel, String gameZoneName) {
+        DebugManager.log(DebugManager.Category.SPAWN_LOCATION_FINDER, "Trying to get a random spawn location within game zone: " + gameZoneName);
         RegionService regionService = RegionService.getInstance();
         ProtectedRegion worldGuardRegion = regionService.getWorldGuardRegion(gameZoneName, world);
 
@@ -57,6 +59,7 @@ public class SpawnLocationFinder {
      * cannot be found, both Locations in the Pair will be null.
      */
     public Pair<Location, Location> getValidPlayerSpawnPoints(World world, int yLevel, String gameZoneName) {
+        DebugManager.log(DebugManager.Category.SPAWN_LOCATION_FINDER, "Attempting to find valid spawn points within game zone" + gameZoneName);
         List<Location> validSpawns = new ArrayList<>();
         int attempts = 0;
         int maxAttempts = 1000;
@@ -71,9 +74,11 @@ public class SpawnLocationFinder {
         }
 
         if (validSpawns.size() < 2) {
+            DebugManager.log(DebugManager.Category.SPAWN_LOCATION_FINDER, "Insufficient valid spawn points found for game zone: " + gameZoneName);
             return Pair.of(null, null);
         }
 
+        DebugManager.log(DebugManager.Category.SPAWN_LOCATION_FINDER, "Found valid spawn points: " + validSpawns.size() + " for game zone: " + gameZoneName);
         Collections.shuffle(validSpawns);
         return Pair.of(validSpawns.get(0), validSpawns.get(1));
     }
@@ -86,6 +91,7 @@ public class SpawnLocationFinder {
      * @return True if the location is valid for player spawning, false otherwise.
      */
     private boolean isLocationValid(Location location) {
+        DebugManager.log(DebugManager.Category.SPAWN_LOCATION_FINDER, "Validating location: " + location.toString());
         AStar aStar = new AStar();
         return !aStar.hasSolidNeighbors(location) &&
                 aStar.isSolid3x3Below(location);

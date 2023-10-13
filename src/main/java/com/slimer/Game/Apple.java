@@ -4,6 +4,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.slimer.Region.Region;
 import com.slimer.Region.RegionService;
 import com.slimer.Util.AStar;
+import com.slimer.Util.DebugManager;
 import com.slimer.Util.PlayerData;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -60,7 +61,7 @@ public class Apple {
         meta.setOwningPlayer(Bukkit.getOfflinePlayer(ownerUUID));
         appleHead.setItemMeta(meta);
         armorStand.getEquipment().setHelmet(appleHead);
-
+        DebugManager.log(DebugManager.Category.APPLE, "Apple ArmorStand spawned at " + location);
         return armorStand;
     }
 
@@ -81,15 +82,17 @@ public class Apple {
 
         do {
             location = getRandomLocationWithinGameZone(world, snakeYLevel, region.getName());
+            DebugManager.log(DebugManager.Category.APPLE, "Checking suitability of random location: " + location);
             if (location == null || !isLocationValid(location, snakeLocation, aStar)) {
                 location = null;
             }
             attempts++;
             if (attempts >= maxAttempts) {
+                DebugManager.log(DebugManager.Category.APPLE, "Exceeded maximum apple spawn attempts (" + maxAttempts + "). No suitable location found.");
                 return null;
             }
         } while (location == null);
-
+        DebugManager.log(DebugManager.Category.APPLE, "Suitable apple spawn location found at " + location);
         return location;
     }
 
@@ -102,9 +105,12 @@ public class Apple {
      * @return true if location is valid, false otherwise.
      */
     private boolean isLocationValid(Location location, Location snakeLocation, AStar aStar) {
+        DebugManager.log(DebugManager.Category.APPLE, "Validating apple spawn location: " + location);
         if (aStar.hasSolidNeighbors(location) || aStar.isSameBlock(location, snakeLocation)) {
             return false;
         }
+        boolean pathExists = aStar.pathExists(snakeLocation, location);
+        DebugManager.log(DebugManager.Category.APPLE, "Path from snake to apple exists: " + pathExists);
         return aStar.pathExists(snakeLocation, location);
     }
 
@@ -155,6 +161,7 @@ public class Apple {
                             Component customName = Component.text(playerName + "'s apple").color(color);
                             armorStand.customName(customName);
                             armorStand.setCustomNameVisible(true);
+                            DebugManager.log(DebugManager.Category.APPLE, "Apple named after player: " + playerName);
                         });
                     });
                 }
@@ -203,6 +210,7 @@ public class Apple {
     public void clear() {
         if (this.armorStand != null) {
             armorStand.remove();
+            DebugManager.log(DebugManager.Category.APPLE, "Apple ArmorStand cleared at " + (this.armorStand != null ? this.armorStand.getLocation() : "unknown location"));
             this.armorStand = null;
         }
     }
@@ -229,8 +237,11 @@ public class Apple {
             int x = random.nextInt(maxX - minX + 1) + minX;
             int z = random.nextInt(maxZ - minZ + 1) + minZ;
 
-            return new Location(world, x, yLevel, z);
+            Location location = new Location(world, x, yLevel, z);
+            DebugManager.log(DebugManager.Category.APPLE, "Generated random apple spawn location at " + location);
+            return location;
         }
+        DebugManager.log(DebugManager.Category.APPLE, "Failed to find a WorldGuard region for game zone: " + gameZoneName);
         return null;
     }
 }

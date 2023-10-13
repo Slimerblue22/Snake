@@ -5,6 +5,7 @@ import com.slimer.Main.Main;
 import com.slimer.Region.Region;
 import com.slimer.Region.RegionLink;
 import com.slimer.Region.RegionService;
+import com.slimer.Util.DebugManager;
 import com.slimer.Util.MusicManager;
 import com.slimer.Util.PlayerData;
 import net.kyori.adventure.bossbar.BossBar;
@@ -80,6 +81,7 @@ public class GameManager {
      * @param lobbyLocation The location in the lobby world.
      */
     public void startGame(Player player, Location gameLocation, Location lobbyLocation, String gameMode) {
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Starting game for player " + player.getName() + " with game mode: " + gameMode);
         SnakeCreation snake = initializeGameAndPlayer(player, gameLocation, lobbyLocation);
         setGameModeForPlayer(player, gameMode);
         initializeBossBar(player);
@@ -98,7 +100,7 @@ public class GameManager {
      * @return Initialized SnakeCreation object.
      */
     private SnakeCreation initializeGameAndPlayer(Player player, Location gameLocation, Location lobbyLocation) {
-
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Initializing game and player " + player.getName());
         // Initialize game start with sound
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 1.0f);
 
@@ -126,6 +128,7 @@ public class GameManager {
      * @param player The player for whom to initialize the boss bar.
      */
     private void initializeBossBar(Player player) {
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Initializing boss bar for player " + player.getName());
         // Initialization of boss bar
         BossBar bossBar = BossBar.bossBar(Component.text("Score: 0"), 1.0f, BossBar.Color.BLUE, BossBar.Overlay.PROGRESS);
         player.showBossBar(bossBar);
@@ -139,6 +142,7 @@ public class GameManager {
      * @param player The player for whom to initialize the movement.
      */
     private void initializeMovement(Player player) {
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Initializing movement for player " + player.getName());
         // Initialize input and movement handling
         playerInputHandler.startMonitoring(player);
 
@@ -161,6 +165,7 @@ public class GameManager {
      * @param gameMode The game mode type for the player.
      */
     private void initializeGameEndConditions(Player player, String gameMode) {
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Initializing game end conditions for player " + player.getName());
         // Initialize GameEndConditionsHandler
         GameEndConditionsHandler gameEndConditionsHandler = new GameEndConditionsHandler(this, player, plugin);
         BukkitRunnable GameEndEvents = new BukkitRunnable() {
@@ -181,6 +186,7 @@ public class GameManager {
      * @param snake        The SnakeCreation object for the current game.
      */
     private void initializeApples(Player player, Location gameLocation, SnakeCreation snake) {
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Initializing apples for player " + player.getName());
         // Get the maximum number of apples allowed
         Main mainPlugin = (Main) plugin;
         int maxApples = mainPlugin.getMaxApplesPerGame();
@@ -219,6 +225,7 @@ public class GameManager {
     private void initializeMusic(Player player) {
         // Start music for the player if music is globally enabled and player has toggled music on
         if (isMusicEnabled && isPlayerMusicToggledOn(player)) {
+            DebugManager.log(DebugManager.Category.GAME_MANAGER, "Initializing music for player " + player.getName());
             Objects.requireNonNull(musicManager).startMusic(player);
         }
     }
@@ -229,6 +236,7 @@ public class GameManager {
      * @param player The player for whom the game is to be stopped.
      */
     public void stopGame(Player player) {
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Stopping game for player " + player.getName());
         int score = updateAndSavePlayerScore(player);
         sendGameOverMessage(player, score);
         hideAndRemoveBossBar(player);
@@ -246,6 +254,7 @@ public class GameManager {
      * @param player The player whose game data is to be cleared.
      */
     private void destroySnakeAndClearData(Player player) {
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Destroying snake and clearing data for player " + player.getName());
         // Destroy the snake and remove player's snake entry
         SnakeCreation snake = playerSnakes.get(player);
         if (snake != null) {
@@ -265,6 +274,7 @@ public class GameManager {
      * @return The score of the player.
      */
     private int updateAndSavePlayerScore(Player player) {
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Updating and saving score for player " + player.getName());
         // Update and save the player's high score
         int score = playerScores.getOrDefault(player, 0);
         PlayerData playerData = PlayerData.getInstance((JavaPlugin) plugin);
@@ -280,6 +290,7 @@ public class GameManager {
      * @param score  The score of the player.
      */
     private void sendGameOverMessage(Player player, int score) {
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Sending game over message to player " + player.getName() + " with score: " + score);
         // Send the "Game Over" message along with the player's score
         Component gameOverMessage = Component.text("Game Over! Your score: ", NamedTextColor.RED)
                 .append(Component.text(score, NamedTextColor.GOLD));
@@ -292,6 +303,7 @@ public class GameManager {
      * @param player The player for whom to hide and remove the boss bar.
      */
     private void hideAndRemoveBossBar(Player player) {
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Hiding and removing boss bar for player " + player.getName());
         // Remove and hide the boss bar
         BossBar bossBar = playerScoreBars.get(player);
         if (bossBar != null) {
@@ -306,6 +318,7 @@ public class GameManager {
      * @param player The player to be teleported.
      */
     private void teleportPlayerToLobby(Player player) {
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Teleporting player " + player.getName() + " to lobby");
         // Teleport the player back to the lobby
         Location lobbyLocation = playerLobbyLocations.get(player);
         if (lobbyLocation != null) {
@@ -321,6 +334,7 @@ public class GameManager {
      * @param player The player for whom to cancel scheduled tasks.
      */
     private void cancelScheduledTasks(Player player) {
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Cancelling scheduled tasks for player " + player.getName());
         // Cancel and remove scheduled movement tasks
         BukkitRunnable movementTask = movementTasks.get(player);
         if (movementTask != null) {
@@ -349,6 +363,7 @@ public class GameManager {
      * @param player The player whose apple data is to be cleared.
      */
     private void clearAppleData(Player player) {
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Clearing apple data for player " + player.getName());
         // Clear apple data
         List<Apple> apples = playerApples.getOrDefault(player, new ArrayList<>());
         for (Apple apple : apples) {
@@ -365,6 +380,7 @@ public class GameManager {
     private void stopMusicForPlayer(Player player) {
         // Stop music for the player if enabled
         if (isMusicEnabled) {
+            DebugManager.log(DebugManager.Category.GAME_MANAGER, "Stopping music for player " + player.getName());
             Objects.requireNonNull(musicManager).stopMusic(player);
         }
     }
@@ -373,6 +389,7 @@ public class GameManager {
      * Stops all ongoing games and clears all game-related data. Typically used during server shutdown.
      */
     public void stopAllGames() {
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Stopping all ongoing games");
         destroyAllSnakesAndTeleportPlayers();
         clearAllLobbyLocations();
         cancelAllMovementTasks();
@@ -477,6 +494,7 @@ public class GameManager {
      * @param player The player controlling the snake.
      */
     public void addSnakeSegment(Player player, JavaPlugin plugin) {
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Adding segment to snake for player " + player.getName());
         SnakeCreation snake = getSnakeForPlayer(player);
         if (snake != null) {
             Vector lastPosition = snakeMovement.getLastPositionOfLastSegmentOrHead(player);
@@ -528,6 +546,7 @@ public class GameManager {
      * @param player The player who has disconnected.
      */
     public void handlePlayerDisconnect(Player player) {
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Handling disconnect for player " + player.getName());
         // Store the player's UUID
         disconnectedPlayerUUIDs.add(player.getUniqueId());
     }
@@ -538,6 +557,7 @@ public class GameManager {
      * @param player The player who has reconnected.
      */
     public void handlePlayerReconnect(Player player) {
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Handling reconnect for player " + player.getName());
         UUID uuid = player.getUniqueId();
         if (disconnectedPlayerUUIDs.contains(uuid)) {
             handleTeleportToLobby(player, uuid);
@@ -598,6 +618,7 @@ public class GameManager {
      * @param player The player whose score needs to be updated.
      */
     public void updatePlayerScore(Player player) {
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Updating score for player " + player.getName());
         playerScores.put(player, playerScores.getOrDefault(player, 0) + 1);
         updateBossBarForPlayer(player);
     }
@@ -677,6 +698,7 @@ public class GameManager {
      * @param gameMode  The game mode to set for the player. Valid values include "classic", "pvp", etc.
      */
     public void setGameModeForPlayer(Player player, String gameMode) {
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Setting game mode " + gameMode + " for player " + player.getName());
         selectedGameModes.put(player, gameMode);
     }
 
@@ -697,6 +719,7 @@ public class GameManager {
      * @param player  The player for whom the game mode information is to be cleared.
      */
     public void clearGameModeForPlayer(Player player) {
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Clearing game mode for player " + player.getName());
         selectedGameModes.remove(player);
     }
 }
