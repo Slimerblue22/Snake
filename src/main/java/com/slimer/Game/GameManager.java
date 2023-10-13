@@ -230,7 +230,6 @@ public class GameManager {
      */
     public void stopGame(Player player) {
         int score = updateAndSavePlayerScore(player);
-        updateAndSavePlayerScore(player);
         sendGameOverMessage(player, score);
         hideAndRemoveBossBar(player);
         teleportPlayerToLobby(player);
