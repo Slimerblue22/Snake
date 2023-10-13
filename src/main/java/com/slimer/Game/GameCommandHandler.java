@@ -174,6 +174,13 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
         String regionName = locations.getRight();
         World gameWorld = gameLocation.getWorld();
 
+        // Logic to get game region name from the lobby region's name
+        RegionService regionService = RegionService.getInstance();
+        RegionLink regionLink = regionService.getRegionLink(regionName, Region.RegionType.LOBBY);
+        if (regionLink != null) {
+            regionName = regionLink.getGameRegionName();
+        }
+
         if (gameMode.equals("pvp")) {
             // Get the instance of QueueManager and use its method to enqueue the player for PvP
             return QueueManager.getInstance().handlePvPQueue(player, lobbyLocation, gameLocation, regionName, gameWorld);
