@@ -235,10 +235,10 @@ public class GameManager {
      *
      * @param player The player for whom the game is to be stopped.
      */
-    public void stopGame(Player player) {
+    public void stopGame(Player player, String reason) {
         DebugManager.log(DebugManager.Category.GAME_MANAGER, "Stopping game for player " + player.getName());
         int score = updateAndSavePlayerScore(player);
-        sendGameOverMessage(player, score);
+        sendGameOverMessage(player, score, reason);
         hideAndRemoveBossBar(player);
         teleportPlayerToLobby(player);
         cancelScheduledTasks(player);
@@ -288,12 +288,18 @@ public class GameManager {
      *
      * @param player The player to whom the game over message is to be sent.
      * @param score  The score of the player.
+     * @param reason The reason for the game being ended.
      */
-    private void sendGameOverMessage(Player player, int score) {
+    private void sendGameOverMessage(Player player, int score, String reason) {
         DebugManager.log(DebugManager.Category.GAME_MANAGER, "Sending game over message to player " + player.getName() + " with score: " + score);
         // Send the "Game Over" message along with the player's score
-        Component gameOverMessage = Component.text("Game Over! Your score: ", NamedTextColor.RED)
-                .append(Component.text(score, NamedTextColor.GOLD));
+        Component gameOverMessage = Component.text("Game Over!", NamedTextColor.RED)
+                .append(Component.newline())
+                .append(Component.text("Reason: ", NamedTextColor.RED))
+                .append(Component.text(reason, NamedTextColor.GOLD))
+                .append(Component.newline())
+                .append(Component.text("Your score: ", NamedTextColor.RED))
+                .append(Component.text(String.valueOf(score), NamedTextColor.GOLD));
         player.sendMessage(gameOverMessage);
     }
 

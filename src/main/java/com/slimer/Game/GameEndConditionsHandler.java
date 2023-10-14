@@ -49,15 +49,34 @@ public class GameEndConditionsHandler implements Listener {
         boolean isClassicMode = "classic".equalsIgnoreCase(gameMode);
         boolean isPvPMode = "pvp".equalsIgnoreCase(gameMode);
 
-        if (isClassicMode || isPvPMode) {
-            if (checkWallCollision() || checkSolidBlockBelow() || checkSelfCollision() || checkPlayerDismounted()) {
-                gameManager.stopGame(player);  // End the game for the player
-            }
+        String gameEndReason = getGameEndReason(); // Get the game end reason
+
+        if ((isClassicMode || isPvPMode) && gameEndReason != null) {
+            gameManager.stopGame(player, gameEndReason);  // End the game for the player with the reason
         }
 
         if (isPvPMode) {
             checkPvPModeCollision();  // PvP mode specific logic
         }
+    }
+
+    /**
+     * Determines the reason for the game's end based on various conditions like wall collisions,
+     * block checks, self-collisions, and player dismounting from the snake.
+     *
+     * @return A string describing the reason for the game's end. If no conditions are met, it returns null.
+     */
+    public String getGameEndReason() {
+        if (checkWallCollision()) {
+            return "Hit a wall!";
+        } else if (checkSolidBlockBelow()) {
+            return "No solid block below!";
+        } else if (checkSelfCollision()) {
+            return "Self-collision detected!";
+        } else if (checkPlayerDismounted()) {
+            return "Dismounted from the snake!";
+        }
+        return null; // No end conditions met
     }
 
     /**
@@ -97,8 +116,8 @@ public class GameEndConditionsHandler implements Listener {
                 if (checkingPlayerHeadBox.overlaps(collidingPlayerHeadBox)) {
                     // Head-to-head collision, end both games
                     DebugManager.log(DebugManager.Category.GAME_END_CONDITIONS, "Head-to-head collision detected between players " + player.getName() + " and " + potentialCollidingPlayer.getName());
-                    gameManager.stopGame(player);
-                    gameManager.stopGame(potentialCollidingPlayer);
+                    gameManager.stopGame(player, "Head-to-head collision with" + player.getName() + "!");
+                    gameManager.stopGame(potentialCollidingPlayer, "Head-to-head collision with" + potentialCollidingPlayer.getName() + "!");
                     return;
                 }
 
@@ -107,7 +126,7 @@ public class GameEndConditionsHandler implements Listener {
                     if (checkingPlayerHeadBox.overlaps(segment.getBoundingBox())) {
                         // Head to body collision, end the game of the player being checked
                         DebugManager.log(DebugManager.Category.GAME_END_CONDITIONS, "Player " + player.getName() + " head collided with body segment of player " + potentialCollidingPlayer.getName());
-                        gameManager.stopGame(player);
+                        gameManager.stopGame(player, "Ran into" + potentialCollidingPlayer.getName() + "'s snake!");
                         return;
                     }
                 }
@@ -254,7 +273,7 @@ public class GameEndConditionsHandler implements Listener {
         // Check if the quitting player is the same as the one managed by this GameEndConditionsHandler instance
         if (quittingPlayer.equals(player)) {
             if (riddenEntity != null && isSnakeEntity(riddenEntity)) {
-                gameManager.stopGame(quittingPlayer);  // Perform cleanup
+                gameManager.stopGame(quittingPlayer, "Quit during a game!");  // Perform cleanup
                 gameManager.handlePlayerDisconnect(quittingPlayer); // Handle player disconnection
             }
         }

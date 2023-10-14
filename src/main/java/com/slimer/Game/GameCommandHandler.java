@@ -198,7 +198,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
     private boolean handleStopGameCommand(Player player) {
         QueueManager queueManager = QueueManager.getInstance();
         if (gameManager.getSnakeForPlayer(player) != null) {  // Check if player is in a game
-            gameManager.stopGame(player);
+            gameManager.stopGame(player, "Manual cancellation!");
             player.sendMessage(Component.text("Stopping the snake game...", NamedTextColor.RED));
             return true;
         } else if (queueManager.isPlayerInPvPQueue(player)) {  // Check if player is in a PvP queue
