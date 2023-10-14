@@ -29,6 +29,7 @@ public class QueueManager implements Listener {
     private final Map<Location, List<Player>> pvpQueues = new HashMap<>();
     private final GameManager gameManager;
     private final SpawnLocationFinder spawnLocationFinder = new SpawnLocationFinder();
+    private final Map<UUID, UUID> pvpAssociations = new HashMap<>();
 
     /**
      * Private constructor to ensure only one instance of QueueManager is created.
@@ -112,6 +113,10 @@ public class QueueManager implements Listener {
                 return false;
             }
 
+            // Add the players to the PvP associations map
+            pvpAssociations.put(player1.getUniqueId(), player2.getUniqueId());
+            pvpAssociations.put(player2.getUniqueId(), player1.getUniqueId());
+
             gameManager.startGame(player1, validSpawnPoints.getLeft(), lobbyLocation, "pvp");
             gameManager.startGame(player2, validSpawnPoints.getRight(), lobbyLocation, "pvp");
             player1.sendMessage(Component.text("PvP game starting!", NamedTextColor.GREEN));
@@ -135,6 +140,29 @@ public class QueueManager implements Listener {
             }
         }
         return false;
+    }
+
+    /**
+     * Retrieves the UUID of the opponent associated with the provided player in a PvP match.
+     * Returns null if the player is not in a PvP match or if an opponent is not found.
+     *
+     * @param playerUUID The UUID of the player whose opponent's UUID is to be fetched.
+     * @return The UUID of the opponent in the PvP match, or null if not found.
+     */
+    public UUID getPvPAssociation(UUID playerUUID) {
+        return pvpAssociations.get(playerUUID);
+    }
+
+    /**
+     * Removes the PvP association between two players.
+     * This method ensures that both players are no longer associated in the PvP match.
+     *
+     * @param player1UUID The UUID of the first player.
+     * @param player2UUID The UUID of the second player.
+     */
+    public void removePvPAssociation(UUID player1UUID, UUID player2UUID) {
+        pvpAssociations.remove(player1UUID);
+        pvpAssociations.remove(player2UUID);
     }
 
     /**

@@ -11,6 +11,7 @@ import com.slimer.Util.PlayerData;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;
@@ -246,6 +247,7 @@ public class GameManager {
         stopMusicForPlayer(player);
         destroySnakeAndClearData(player);
         clearGameModeForPlayer(player);
+        pvpSpecificChecks(player);
     }
 
     /**
@@ -388,6 +390,29 @@ public class GameManager {
         if (isMusicEnabled) {
             DebugManager.log(DebugManager.Category.GAME_MANAGER, "Stopping music for player " + player.getName());
             Objects.requireNonNull(musicManager).stopMusic(player);
+        }
+    }
+
+    /**
+     * Handles specific PvP checks when a player's game ends.
+     * If the provided player was in a PvP match, this method ensures that the
+     * opponent's game also ends and removes the PvP association between them.
+     *
+     * @param player The player whose game has ended.
+     */
+    private void pvpSpecificChecks(Player player) {
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Checking PvP data for player " + player.getName());
+        // Check if the player was in a PvP match
+        UUID opponentUUID = QueueManager.getInstance().getPvPAssociation(player.getUniqueId());
+        if (opponentUUID != null) {
+            Player opponent = Bukkit.getPlayer(opponentUUID);
+            if (opponent != null) {
+                // Remove the association from the map
+                QueueManager.getInstance().removePvPAssociation(player.getUniqueId(), opponentUUID);
+
+                // End the game for the opponent with an appropriate reason
+                stopGame(opponent, "Opponent has died, you win!");
+            }
         }
     }
 
