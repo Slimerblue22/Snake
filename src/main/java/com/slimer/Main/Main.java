@@ -20,14 +20,15 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Main class responsible for initializing and managing the Snake game plugin.
- * This class handles the enabling and disabling of the plugin, loading regions
- * from configuration, and setting up the required command handlers.
+ * Main entry point for the Snake game plugin.
+ * Manages the game's initialization and various settings.
  */
 public final class Main extends JavaPlugin {
+
+    // Plugin Metadata
     private static String pluginVersion;
-    private GameManager gameManager; // Reference to the game manager
-    private boolean isMusicEnabled = false; // Flag to indicate if music is enabled
+
+    // Configuration Settings
     private String songFilePath;
     private double snakeSpeed;
     private int maxPlayersPerGame;
@@ -35,15 +36,46 @@ public final class Main extends JavaPlugin {
     private double forceTeleportDistance;
     private double targetCloseEnoughDistance;
 
+    // Game Management
+    private GameManager gameManager;
+    private boolean isMusicEnabled = false;
+
     /**
      * Called when the plugin is enabled.
-     * This method initializes the game components such as GameManager, SnakeMovement,
-     * PlayerInputHandler, and game and region command handlers. It also loads regions
-     * from configuration.
+     * Initializes all components and settings necessary for the game.
      */
     @Override
     public void onEnable() {
-        // Load configuration
+        // Initialize Configuration
+        initConfig();
+
+        // Initialize Music
+        initMusic();
+
+        // Initialize Game Components
+        initializeGameComponents();
+
+        // Initialize Queue Manager
+        initQueueManager();
+
+        // Initialize Region Services
+        initializeRegionServices();
+
+        // Initialize Player Data
+        initPlayerData();
+
+        // Initialize Metrics
+        initMetrics();
+
+        // Register Commands
+        registerCommands();
+    }
+
+    /**
+     * Initializes the configuration settings from the config file.
+     * Sets default values if the settings are not found.
+     */
+    private void initConfig() {
         this.saveDefaultConfig();
         FileConfiguration config = this.getConfig();
         songFilePath = config.getString("song-file-path", "songs/song.nbs"); // Default path of songs/song.nbs
@@ -53,46 +85,45 @@ public final class Main extends JavaPlugin {
         forceTeleportDistance = config.getDouble("force-teleport-distance", 1.2); // Default value of 1.2
         targetCloseEnoughDistance = config.getDouble("target-close-enough-distance", 0.1); // Default value of 0.1
         pluginVersion = this.getDescription().getVersion(); // Deprecated yet no alternative, still works though
-
-        // Read the 'enable-music' setting from config
-        boolean enableMusic = config.getBoolean("enable-music", true); // Default to true if not set
-
-        // Check for NoteblockAPI and the 'enable-music' setting
-        if (Bukkit.getPluginManager().isPluginEnabled("NoteBlockAPI") && enableMusic) {
-            isMusicEnabled = true;
-            new MusicManager(this); // Initialize only if NoteblockAPI is present and music is enabled
-        } else {
-            isMusicEnabled = false;
-        }
-        // Initialize game components
-        initializeGameComponents();
-
-        // Initialize QueueManager singleton
-        QueueManager queueManager = QueueManager.getInstance(gameManager);
-        getServer().getPluginManager().registerEvents(queueManager, this);
-
-        // Initialize region services and handlers
-        initializeRegionServices();
-
-        // Initialize PlayerData singleton
-        PlayerData.getInstance(this);
-
-        // Initialize BStats
-        int pluginId = 19729;
-        new Metrics(this, pluginId);
-
-        // Register the DebugManager's command
-        Objects.requireNonNull(getCommand("snakedebug")).setExecutor(new DebugManager.ToggleDebugCommand());
     }
 
     /**
-     * Called when the plugin is disabled.
-     * This method stops all active games and performs any necessary cleanup logic.
+     * Initializes the music settings and checks if NoteBlockAPI is present.
+     * Sets the music state accordingly.
      */
-    @Override
-    public void onDisable() {
-        // Stop all active games
-        gameManager.stopAllGames();
+    private void initMusic() {
+        boolean enableMusic = getConfig().getBoolean("enable-music", true);
+        if (Bukkit.getPluginManager().isPluginEnabled("NoteBlockAPI") && enableMusic) {
+            isMusicEnabled = true;
+            new MusicManager(this);
+        } else {
+            isMusicEnabled = false;
+        }
+    }
+
+    /**
+     * Initializes the queue manager and registers its events.
+     */
+    private void initQueueManager() {
+        QueueManager queueManager = QueueManager.getInstance(gameManager);
+        getServer().getPluginManager().registerEvents(queueManager, this);
+    }
+
+    /**
+     * Initializes the player data and performs migration if necessary.
+     */
+    private void initPlayerData() {
+        PlayerData.getInstance(this);
+        // Run migration checks
+        PlayerData.getInstance().migrateFromYmlToSql(this);
+    }
+
+    /**
+     * Initializes the metrics for the plugin.
+     */
+    private void initMetrics() {
+        int pluginId = 19729;
+        new Metrics(this, pluginId);
     }
 
     /**
@@ -119,8 +150,7 @@ public final class Main extends JavaPlugin {
         gameManager.setSnakeMovement(snakeMovement);
 
         // Initialize game command handler
-        GameCommandHandler gameCommandHandler = new GameCommandHandler(gameManager, this);
-        Objects.requireNonNull(getCommand("snakegame")).setExecutor(gameCommandHandler);
+        new GameCommandHandler(gameManager, this);
     }
 
     /**
@@ -136,8 +166,31 @@ public final class Main extends JavaPlugin {
         regionFileHandler.loadRegionsFromConfig();
 
         // Initialize region command handler
-        RegionCommandHandler regionCommandHandler = new RegionCommandHandler(regionService);
-        Objects.requireNonNull(getCommand("snakeadmin")).setExecutor(regionCommandHandler);
+        new RegionCommandHandler(regionService);
+    }
+
+    /**
+     * Registers all the commands used in the plugin.
+     */
+    private void registerCommands() {
+        // Register the Debug Command
+        Objects.requireNonNull(getCommand("snakedebug")).setExecutor(new DebugManager.ToggleDebugCommand());
+
+        // Register the Game Command
+        Objects.requireNonNull(getCommand("snakegame")).setExecutor(new GameCommandHandler(gameManager, this));
+
+        // Register the Admin Command for Regions
+        Objects.requireNonNull(getCommand("snakeadmin")).setExecutor(new RegionCommandHandler(RegionService.getInstance()));
+    }
+
+    /**
+     * Called when the plugin is disabled.
+     * This method stops all active games and performs any necessary cleanup logic.
+     */
+    @Override
+    public void onDisable() {
+        // Stop all active games
+        gameManager.stopAllGames();
     }
 
     /**
