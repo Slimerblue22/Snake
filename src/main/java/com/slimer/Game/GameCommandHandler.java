@@ -70,7 +70,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
         }
         String subCommand = args[0].toLowerCase();
         return switch (subCommand) {
-            case "start" -> handleStartGameCommand(player, args);
+            case "start" -> handleStartGameCommand(player);
             case "stop" -> handleStopGameCommand(player);
             case "gui" -> handleGUICommand(player, plugin);
             case "help" -> handleHelpCommand(player);
@@ -147,46 +147,19 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      * @param player The player issuing the command.
      * @return true if the game is successfully started, otherwise false.
      */
-    private boolean handleStartGameCommand(Player player, String[] args) {
-        // Check for game mode argument
-        if (args.length < 2) {
-            player.sendMessage(Component.text("Please specify a game mode. Use /snakegame start <game_mode>.", NamedTextColor.RED));
-            return false;
-        }
-
-        String gameMode = args[1].toLowerCase();
-
-        if (!gameMode.equals("classic") && !gameMode.equals("pvp")) {
-            player.sendMessage(Component.text("Invalid game mode. Available modes: classic, pvp.", NamedTextColor.RED));
-            return false;
-        }
-
-        player.sendMessage(Component.text("Selected game mode: " + gameMode, NamedTextColor.GREEN));
-
+    private boolean handleStartGameCommand(Player player) {
         Triple<Location, Location, String> locations = findGameAndLobbyLocations(player);
         if (locations == null) {
             player.sendMessage(Component.text("You must be within a lobby region to start the game.", NamedTextColor.RED));
             return false;
         }
-
-        Location lobbyLocation = locations.getMiddle();
+        locations.getMiddle();
         Location gameLocation = locations.getLeft();
         String regionName = locations.getRight();
-        World gameWorld = gameLocation.getWorld();
-
-        // Logic to get game region name from the lobby region's name
+        gameLocation.getWorld();
         RegionService regionService = RegionService.getInstance();
-        RegionLink regionLink = regionService.getRegionLink(regionName, Region.RegionType.LOBBY);
-        if (regionLink != null) {
-            regionName = regionLink.getGameRegionName();
-        }
-
-        if (gameMode.equals("pvp")) {
-            // Get the instance of QueueManager and use its method to enqueue the player for PvP
-            return QueueManager.getInstance().handlePvPQueue(player, lobbyLocation, gameLocation, regionName, gameWorld);
-        } else {
-            return handleClassicGameStart(player);
-        }
+        regionService.getRegionLink(regionName, Region.RegionType.LOBBY);
+        return handleClassicGameStart(player);
     }
 
     /**
@@ -196,17 +169,12 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      * @return true if the game or queue was stopped for the player, false otherwise.
      */
     private boolean handleStopGameCommand(Player player) {
-        QueueManager queueManager = QueueManager.getInstance();
         if (gameManager.getSnakeForPlayer(player) != null) {  // Check if player is in a game
             gameManager.stopGame(player, "Manual cancellation!");
             player.sendMessage(Component.text("Stopping the snake game...", NamedTextColor.RED));
             return true;
-        } else if (queueManager.isPlayerInPvPQueue(player)) {  // Check if player is in a PvP queue
-            queueManager.removePlayerFromQueues(player);
-            player.sendMessage(Component.text("You've been removed from the PvP queue.", NamedTextColor.RED));
-            return true;
         } else {
-            player.sendMessage(Component.text("You are not currently in a game or queue.", NamedTextColor.RED));
+            player.sendMessage(Component.text("You are not currently in a game.", NamedTextColor.RED));
             return false;
         }
     }
@@ -450,7 +418,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
 
         // Start the game
         player.teleport(gameTeleportLocation);
-        gameManager.startGame(player, gameTeleportLocation, lobbyLocation, "classic");
+        gameManager.startGame(player, gameTeleportLocation, lobbyLocation);
         player.sendMessage(Component.text("Starting the snake game...", NamedTextColor.GREEN));
         return true;
     }

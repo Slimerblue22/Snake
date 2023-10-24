@@ -12,7 +12,6 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 
 import java.util.List;
@@ -45,18 +44,11 @@ public class GameEndConditionsHandler implements Listener {
      * Runs collision checks for the snake.
      * If a collision is detected, the game for the player is stopped.
      */
-    public void runGameEndEventsChecks(String gameMode) {
-        boolean isClassicMode = "classic".equalsIgnoreCase(gameMode);
-        boolean isPvPMode = "pvp".equalsIgnoreCase(gameMode);
-
+    public void runGameEndEventsChecks() {
         String gameEndReason = getGameEndReason(); // Get the game end reason
 
-        if ((isClassicMode || isPvPMode) && gameEndReason != null) {
+        if (gameEndReason != null) {
             gameManager.stopGame(player, gameEndReason);  // End the game for the player with the reason
-        }
-
-        if (isPvPMode) {
-            checkPvPModeCollision();  // PvP mode specific logic
         }
     }
 
@@ -77,61 +69,6 @@ public class GameEndConditionsHandler implements Listener {
             return "Dismounted from the snake!";
         }
         return null; // No end conditions met
-    }
-
-    /**
-     * Checks for collisions between players in PvP mode using their bounding boxes.
-     * <ul>
-     *     <li>If there's a head-to-head collision between two players, both players' games are ended.</li>
-     *     <li>If a player's head collides with another player's body segment, only the game of the player whose head collided is ended.</li>
-     * </ul>
-     */
-    private void checkPvPModeCollision() {
-        SnakeCreation checkingPlayerSnake = gameManager.getSnakeForPlayer(player);
-        if (checkingPlayerSnake == null) {
-            return;
-        }
-
-        String checkingPlayerGameMode = gameManager.getGameModeForPlayer(player);
-        if (checkingPlayerGameMode == null || !checkingPlayerGameMode.equals("pvp")) {
-            return;  // The player being checked is not in PvP mode
-        }
-
-        BoundingBox checkingPlayerHeadBox = checkingPlayerSnake.getSheepEntity().getBoundingBox();
-
-        for (Player potentialCollidingPlayer : Bukkit.getOnlinePlayers()) {
-            if (!potentialCollidingPlayer.equals(player)) {
-                SnakeCreation collidingPlayerSnake = gameManager.getSnakeForPlayer(potentialCollidingPlayer);
-                if (collidingPlayerSnake == null) {
-                    continue;
-                }
-
-                String collidingPlayerGameMode = gameManager.getGameModeForPlayer(potentialCollidingPlayer);
-                if (collidingPlayerGameMode == null || !collidingPlayerGameMode.equals("pvp")) {
-                    continue;  // The potentially colliding player is not in PvP mode
-                }
-
-                BoundingBox collidingPlayerHeadBox = collidingPlayerSnake.getSheepEntity().getBoundingBox();
-
-                if (checkingPlayerHeadBox.overlaps(collidingPlayerHeadBox)) {
-                    // Head-to-head collision, end both games
-                    DebugManager.log(DebugManager.Category.GAME_END_CONDITIONS, "Head-to-head collision detected between players " + player.getName() + " and " + potentialCollidingPlayer.getName());
-                    gameManager.stopGame(player, "Head-to-head collision with" + player.getName() + "!");
-                    gameManager.stopGame(potentialCollidingPlayer, "Head-to-head collision with" + potentialCollidingPlayer.getName() + "!");
-                    return;
-                }
-
-                // Check if the head of 'checkingPlayer' collides with the body segments of 'potentialCollidingPlayer'
-                for (Entity segment : gameManager.getSegmentsForPlayer(potentialCollidingPlayer)) {
-                    if (checkingPlayerHeadBox.overlaps(segment.getBoundingBox())) {
-                        // Head to body collision, end the game of the player being checked
-                        DebugManager.log(DebugManager.Category.GAME_END_CONDITIONS, "Player " + player.getName() + " head collided with body segment of player " + potentialCollidingPlayer.getName());
-                        gameManager.stopGame(player, "Ran into" + potentialCollidingPlayer.getName() + "'s snake!");
-                        return;
-                    }
-                }
-            }
-        }
     }
 
     /**

@@ -136,24 +136,6 @@ public class GameCommandGUI implements Listener {
     }
 
     /**
-     * Creates a game mode selection submenu for the Snake game.
-     *
-     * @return An Inventory object representing the game mode selection submenu.
-     */
-    private Inventory createGameModeSubMenu() {
-        int maxRows = 3;
-        Inventory gameModeMenu = Bukkit.createInventory(null, maxRows * 9, Component.text("Select Game Mode"));
-
-        // Adding game mode options in the middle of the inventory
-        gameModeMenu.setItem(9 + 4, createMenuItem(Material.GRASS_BLOCK, "Classic Mode"));
-        gameModeMenu.setItem(9 + 5, createMenuItem(Material.DIAMOND_SWORD, "PvP Mode"));
-
-        startAnimation(gameModeMenu, maxRows);
-
-        return gameModeMenu;
-    }
-
-    /**
      * Creates a leaderboard menu for the Snake game.
      *
      * @return An Inventory object representing the leaderboard menu.
@@ -322,11 +304,7 @@ public class GameCommandGUI implements Listener {
         Component title = event.getView().title();
         if (title.equals(Component.text("Snake Main Menu"))) {
             switch (clickedItem.getType()) {
-                case GREEN_WOOL -> {
-                    player.openInventory(createGameModeSubMenu()); // Open the game mode submenu
-                    event.setCancelled(true);
-                    return; // Return without closing the main menu
-                }
+                case GREEN_WOOL -> player.performCommand("snakegame start");
                 case RED_WOOL -> player.performCommand("snakegame stop");
                 case BOOK -> player.performCommand("snakegame help");
                 case JUKEBOX -> player.performCommand("snakegame music");
@@ -343,15 +321,7 @@ public class GameCommandGUI implements Listener {
             }
             player.closeInventory();  // Close the main menu
             event.setCancelled(true);  // Cancel the event to prevent taking items
-        } else if (title.equals(Component.text("Select Game Mode"))) {
-            event.setCancelled(true); // Prevent taking items from the GUI
-            if (clickedItem.getType() == Material.GRASS_BLOCK) {
-                player.performCommand("snakegame start classic");
-                player.closeInventory();
-            } else if (clickedItem.getType() == Material.DIAMOND_SWORD) {
-                player.performCommand("snakegame start pvp");
-                player.closeInventory();
-            }
+
         } else if (title.equals(Component.text("Select Snake Color"))) {
             // Cancel the event to prevent taking items, including the glass panes
             event.setCancelled(true);

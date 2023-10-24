@@ -11,7 +11,6 @@ import com.slimer.Util.PlayerData;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.World;
@@ -40,7 +39,6 @@ public class GameManager {
     private final Set<UUID> disconnectedPlayerUUIDs = new HashSet<>();
     private final Map<Player, BossBar> playerScoreBars = new HashMap<>();
     private final Map<Player, Boolean> playerUTurnStatus = new HashMap<>();
-    private final Map<Player, String> selectedGameModes = new HashMap<>();
 
     // Scheduled task mappings
     private final Map<Player, BukkitRunnable> movementTasks = new HashMap<>();
@@ -81,13 +79,12 @@ public class GameManager {
      * @param gameLocation  The starting location in the game world.
      * @param lobbyLocation The location in the lobby world.
      */
-    public void startGame(Player player, Location gameLocation, Location lobbyLocation, String gameMode) {
-        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Starting game for player " + player.getName() + " with game mode: " + gameMode);
+    public void startGame(Player player, Location gameLocation, Location lobbyLocation) {
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Starting game for player " + player.getName());
         SnakeCreation snake = initializeGameAndPlayer(player, gameLocation, lobbyLocation);
-        setGameModeForPlayer(player, gameMode);
         initializeBossBar(player);
         initializeMovement(player);
-        initializeGameEndConditions(player, gameMode);
+        initializeGameEndConditions(player);
         initializeApples(player, gameLocation, snake);
         initializeMusic(player);
     }
@@ -163,16 +160,15 @@ public class GameManager {
      * Initializes the game end conditions for the given player.
      *
      * @param player   The player for whom to initialize the game end conditions.
-     * @param gameMode The game mode type for the player.
      */
-    private void initializeGameEndConditions(Player player, String gameMode) {
+    private void initializeGameEndConditions(Player player) {
         DebugManager.log(DebugManager.Category.GAME_MANAGER, "Initializing game end conditions for player " + player.getName());
         // Initialize GameEndConditionsHandler
         GameEndConditionsHandler gameEndConditionsHandler = new GameEndConditionsHandler(this, player, plugin);
         BukkitRunnable GameEndEvents = new BukkitRunnable() {
             @Override
             public void run() {
-                gameEndConditionsHandler.runGameEndEventsChecks(gameMode);
+                gameEndConditionsHandler.runGameEndEventsChecks();
             }
         };
         GameEndEvents.runTaskTimer(plugin, 0L, 0L);
@@ -246,8 +242,6 @@ public class GameManager {
         clearAppleData(player);
         stopMusicForPlayer(player);
         destroySnakeAndClearData(player);
-        clearGameModeForPlayer(player);
-        pvpSpecificChecks(player);
     }
 
     /**
@@ -394,29 +388,6 @@ public class GameManager {
     }
 
     /**
-     * Handles specific PvP checks when a player's game ends.
-     * If the provided player was in a PvP match, this method ensures that the
-     * opponent's game also ends and removes the PvP association between them.
-     *
-     * @param player The player whose game has ended.
-     */
-    private void pvpSpecificChecks(Player player) {
-        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Checking PvP data for player " + player.getName());
-        // Check if the player was in a PvP match
-        UUID opponentUUID = QueueManager.getInstance().getPvPAssociation(player.getUniqueId());
-        if (opponentUUID != null) {
-            Player opponent = Bukkit.getPlayer(opponentUUID);
-            if (opponent != null) {
-                // Remove the association from the map
-                QueueManager.getInstance().removePvPAssociation(player.getUniqueId(), opponentUUID);
-
-                // End the game for the opponent with an appropriate reason
-                stopGame(opponent, "Opponent has died, you win!");
-            }
-        }
-    }
-
-    /**
      * Stops all ongoing games and clears all game-related data. Typically used during server shutdown.
      */
     public void stopAllGames() {
@@ -426,7 +397,6 @@ public class GameManager {
         cancelAllMovementTasks();
         cancelAllAppleCollectionTasks();
         clearAllApples();
-        clearAllGameModeInfo();
     }
 
     /**
@@ -487,13 +457,6 @@ public class GameManager {
             }
         }
         playerApples.clear();
-    }
-
-    /**
-     * Clears all stored game mode information for all players.
-     */
-    private void clearAllGameModeInfo() {
-        selectedGameModes.clear();
     }
 
     // Helpers for getting and modifying snake segments
@@ -718,39 +681,5 @@ public class GameManager {
      */
     public boolean isUTurnDetected(Player player) {
         return playerUTurnStatus.getOrDefault(player, false);
-    }
-
-    // Helpers for game mode checks
-
-    /**
-     * Sets the game mode for a specific player.
-     *
-     * @param player    The player for whom the game mode is being set.
-     * @param gameMode  The game mode to set for the player. Valid values include "classic", "pvp", etc.
-     */
-    public void setGameModeForPlayer(Player player, String gameMode) {
-        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Setting game mode " + gameMode + " for player " + player.getName());
-        selectedGameModes.put(player, gameMode);
-    }
-
-    /**
-     * Retrieves the game mode currently set for a specific player.
-     *
-     * @param player  The player whose game mode is to be retrieved.
-     * @return        The game mode associated with the player, or null if no game mode has been set.
-     */
-    public String getGameModeForPlayer(Player player) {
-        return selectedGameModes.get(player);
-    }
-
-    /**
-     * Clears the game mode information for a specific player.
-     * This can be used when a player leaves a game or during cleanup processes.
-     *
-     * @param player  The player for whom the game mode information is to be cleared.
-     */
-    public void clearGameModeForPlayer(Player player) {
-        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Clearing game mode for player " + player.getName());
-        selectedGameModes.remove(player);
     }
 }

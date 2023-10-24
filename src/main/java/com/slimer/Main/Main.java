@@ -58,8 +58,6 @@ public final class Main extends JavaPlugin {
         // Initialize Game Components
         initializeGameComponents();
 
-        // Initialize Queue Manager
-        initQueueManager();
 
         // Initialize Region Services
         initializeRegionServices();
@@ -106,14 +104,6 @@ public final class Main extends JavaPlugin {
         } else {
             isMusicEnabled = false;
         }
-    }
-
-    /**
-     * Initializes the queue manager and registers its events.
-     */
-    private void initQueueManager() {
-        QueueManager queueManager = QueueManager.getInstance(gameManager);
-        getServer().getPluginManager().registerEvents(queueManager, this);
     }
 
     /**
