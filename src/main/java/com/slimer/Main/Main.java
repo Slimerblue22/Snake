@@ -7,6 +7,9 @@ import com.slimer.Region.RegionService;
 import com.slimer.Util.DebugManager;
 import com.slimer.Util.MusicManager;
 import com.slimer.Util.PlayerData;
+import com.slimer.WIP.NewRegionCommandHandler;
+import com.slimer.WIP.NewRegionService;
+import com.slimer.WIP.NewWGHelpers;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -60,6 +63,10 @@ public final class Main extends JavaPlugin {
 
         // Initialize Region Services
         initializeRegionServices();
+
+        NewRegionService.initializeInstance(this);
+        NewWGHelpers.getInstance();
+        //NewRegionService.getInstance().migrateRegionsFromYmlToSql(this);
 
         // Initialize Player Data
         initPlayerData();
@@ -181,6 +188,9 @@ public final class Main extends JavaPlugin {
 
         // Register the Admin Command for Regions
         Objects.requireNonNull(getCommand("snakeadmin")).setExecutor(new RegionCommandHandler(RegionService.getInstance()));
+
+        // Register the new Region Command
+        Objects.requireNonNull(getCommand("snakedev")).setExecutor(new NewRegionCommandHandler());
     }
 
     /**
@@ -191,6 +201,8 @@ public final class Main extends JavaPlugin {
     public void onDisable() {
         // Stop all active games
         gameManager.stopAllGames();
+        // Close active SQL connections
+        NewRegionService.getInstance().closeDatabase();
     }
 
     /**
