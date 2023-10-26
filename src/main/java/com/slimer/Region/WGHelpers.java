@@ -1,4 +1,4 @@
-package com.slimer.WIP;
+package com.slimer.Region;
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldguard.WorldGuard;
@@ -13,20 +13,20 @@ import org.bukkit.entity.Player;
 /**
  * Provides utility methods for WorldGuard related operations.
  */
-public class NewWGHelpers {
-    private static NewWGHelpers instance;
+public class WGHelpers {
+    private static WGHelpers instance;
 
-    private NewWGHelpers() {
+    private WGHelpers() {
     }
 
     /**
      * Singleton instance retrieval method.
      *
-     * @return The singleton instance of the NewWGHelpers class.
+     * @return The singleton instance of the WGHelpers class.
      */
-    public static synchronized NewWGHelpers getInstance() {
+    public static synchronized WGHelpers getInstance() {
         if (instance == null) {
-            instance = new NewWGHelpers();
+            instance = new WGHelpers();
         }
         return instance;
     }

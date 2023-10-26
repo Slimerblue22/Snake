@@ -1,11 +1,10 @@
 package com.slimer.Game;
 
-import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import com.slimer.Region.Region;
-import com.slimer.Region.RegionService;
+import com.slimer.Region.WGHelpers;
 import com.slimer.Util.AStar;
 import com.slimer.Util.DebugManager;
 import com.slimer.Util.PlayerData;
+import com.slimer.Region.RegionHelpers;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.*;
@@ -15,6 +14,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.Objects;
 import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -70,18 +70,17 @@ public class Apple {
      *
      * @param world         The world in which the game is occurring.
      * @param snakeYLevel   The Y-level of the snake.
-     * @param region        The region representing the game zone.
      * @param snakeLocation The location of the snake.
      * @return A suitable Location for apple spawn, or null if not found.
      */
-    private Location findSuitableLocation(World world, int snakeYLevel, Region region, Location snakeLocation) {
+    private Location findSuitableLocation(World world, int snakeYLevel, String regionName, Location snakeLocation) {
         AStar aStar = new AStar();
         int attempts = 0;
         int maxAttempts = 1000;
         Location location;
 
         do {
-            location = getRandomLocationWithinGameZone(world, snakeYLevel, region.getName());
+            location = getRandomLocationWithinGameZone(world, snakeYLevel, regionName);
             DebugManager.log(DebugManager.Category.APPLE, "Checking suitability of random location: " + location);
             if (location == null || !isLocationValid(location, snakeLocation, aStar)) {
                 location = null;
@@ -122,48 +121,37 @@ public class Apple {
      * @param playerName    The name of the player.
      */
     public void spawnWithName(Location snakeLocation, int snakeYLevel, String playerName) {
-        Player player = Bukkit.getPlayer(playerName); // Retrieve the Player object based on playerName
-        RegionService regionService = RegionService.getInstance();
+        Player player = Bukkit.getPlayer(playerName);
+        RegionHelpers regionHelpers = RegionHelpers.getInstance();
+        WGHelpers wgHelpers = WGHelpers.getInstance();
 
-        // Iterate through all game regions
-        for (Region region : regionService.getAllRegions().values()) {
-            if (region.getType() == Region.RegionType.GAME) {
-                World world = Bukkit.getWorld(region.getWorldName());
-                ProtectedRegion worldGuardRegion = regionService.getWorldGuardRegion(region.getName(), world);
+        for (String regionName : regionHelpers.getAllRegisteredRegionNames()) {
+            String regionType = regionHelpers.getRegionType(regionName);
 
-                if (world != null && worldGuardRegion != null && regionService.isLocationInRegion(snakeLocation, worldGuardRegion)) {
-                    CompletableFuture<Location> future = CompletableFuture.supplyAsync(() -> {
-                        // This runs findSuitableLocation on a separate thread
-                        return findSuitableLocation(world, snakeYLevel, region, snakeLocation);
-                    });
+            if ("game".equals(regionType)) {
+                World world = regionHelpers.getRegionWorld(regionName);
 
-                    future.thenAccept(loc -> {
-                        // This runs on the main thread once the calculation is complete
-                        Bukkit.getScheduler().runTask(plugin, () -> {
-                            if (loc == null) {
-                                return;
-                            }
-                            // Check if the game is still running for the player
-                            Player playerObj = Bukkit.getPlayer(playerName);
-                            if (playerObj != null && gameManager.getSnakeForPlayer(playerObj) == null) {
-                                return; // Do not spawn the apple if the game has ended
-                            }
-                            // Center the ArmorStand on the block
-                            loc.setX(loc.getBlockX() + 0.5);
-                            loc.setZ(loc.getBlockZ() + 0.5);
-                            Location adjustedLocation = loc.clone().subtract(0, 1.4, 0);
-
-                            this.armorStand = spawnArmorStand(adjustedLocation);
-
-                            DyeColor sheepColor = PlayerData.getInstance().getSheepColor(player); // Get the sheep color
-                            NamedTextColor color = convertDyeColorToTextColor(sheepColor); // Convert DyeColor to NamedTextColor
-
-                            Component customName = Component.text(playerName + "'s apple").color(color);
-                            armorStand.customName(customName);
-                            armorStand.setCustomNameVisible(true);
-                            DebugManager.log(DebugManager.Category.APPLE, "Apple named after player: " + playerName);
-                        });
-                    });
+                if (world != null && wgHelpers.areCoordinatesInWGRegion(world.getName(), regionName, snakeLocation.getBlockX(), snakeLocation.getBlockY(), snakeLocation.getBlockZ())) {
+                    CompletableFuture<Location> future = CompletableFuture.supplyAsync(() -> findSuitableLocation(world, snakeYLevel, regionName, snakeLocation));
+                    future.thenAccept(loc -> Bukkit.getScheduler().runTask(plugin, () -> {
+                        if (loc == null) {
+                            return;
+                        }
+                        Player playerObj = Bukkit.getPlayer(playerName);
+                        if (playerObj != null && gameManager.getSnakeForPlayer(playerObj) == null) {
+                            return;
+                        }
+                        loc.setX(loc.getBlockX() + 0.5);
+                        loc.setZ(loc.getBlockZ() + 0.5);
+                        Location adjustedLocation = loc.clone().subtract(0, 1.4, 0);
+                        this.armorStand = spawnArmorStand(adjustedLocation);
+                        DyeColor sheepColor = PlayerData.getInstance().getSheepColor(Objects.requireNonNull(player));
+                        NamedTextColor color = convertDyeColorToTextColor(sheepColor);
+                        Component customName = Component.text(playerName + "'s apple").color(color);
+                        armorStand.customName(customName);
+                        armorStand.setCustomNameVisible(true);
+                        DebugManager.log(DebugManager.Category.APPLE, "Apple named after player: " + playerName);
+                    }));
                 }
             }
         }
@@ -224,14 +212,18 @@ public class Apple {
      * @return A random Location within the game zone, or null if region not found.
      */
     private Location getRandomLocationWithinGameZone(World world, int yLevel, String gameZoneName) {
-        RegionService regionService = RegionService.getInstance();
-        ProtectedRegion worldGuardRegion = regionService.getWorldGuardRegion(gameZoneName, world);
+        WGHelpers wgHelpers = WGHelpers.getInstance();
+        String boundaries = wgHelpers.getBoundariesOfRegion(world.getName(), gameZoneName);
 
-        if (worldGuardRegion != null) {
-            int minX = worldGuardRegion.getMinimumPoint().getBlockX();
-            int maxX = worldGuardRegion.getMaximumPoint().getBlockX();
-            int minZ = worldGuardRegion.getMinimumPoint().getBlockZ();
-            int maxZ = worldGuardRegion.getMaximumPoint().getBlockZ();
+        if (boundaries != null && !boundaries.isEmpty()) {
+            String[] parts = boundaries.split(" - ");
+            String[] minCoords = parts[0].substring(parts[0].indexOf('(') + 1, parts[0].indexOf(')')).split(", ");
+            String[] maxCoords = parts[1].substring(parts[1].indexOf('(') + 1, parts[1].indexOf(')')).split(", ");
+
+            int minX = Integer.parseInt(minCoords[0]);
+            int maxX = Integer.parseInt(maxCoords[0]);
+            int minZ = Integer.parseInt(minCoords[2]);
+            int maxZ = Integer.parseInt(maxCoords[2]);
 
             Random random = new Random();
             int x = random.nextInt(maxX - minX + 1) + minX;
@@ -241,6 +233,7 @@ public class Apple {
             DebugManager.log(DebugManager.Category.APPLE, "Generated random apple spawn location at " + location);
             return location;
         }
+
         DebugManager.log(DebugManager.Category.APPLE, "Failed to find a WorldGuard region for game zone: " + gameZoneName);
         return null;
     }

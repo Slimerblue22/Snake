@@ -1,13 +1,11 @@
 package com.slimer.Game;
 
-import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.slimer.Main.Main;
-import com.slimer.Region.Region;
-import com.slimer.Region.RegionLink;
-import com.slimer.Region.RegionService;
+import com.slimer.Region.RegionHelpers;
 import com.slimer.Util.DebugManager;
 import com.slimer.Util.MusicManager;
 import com.slimer.Util.PlayerData;
+import com.slimer.Region.WGHelpers;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -565,12 +563,13 @@ public class GameManager {
      * @param uuid   The UUID of the reconnected player.
      */
     private void handleTeleportToLobby(Player player, UUID uuid) {
+        RegionHelpers regionHelpers = RegionHelpers.getInstance();
         World world = player.getWorld();
         Location loc = player.getLocation();
-        RegionService regionService = RegionService.getInstance();
+        String worldName = world.getName();
 
-        for (Map.Entry<String, Region> entry : regionService.getAllRegions().entrySet()) {
-            if (checkAndTeleportPlayer(player, uuid, world, loc, regionService, entry.getKey())) {
+        for (String regionName : regionHelpers.getAllRegisteredRegionNames()) {
+            if (checkAndTeleportPlayer(player, uuid, worldName, loc, regionName)) {
                 break;
             }
         }
@@ -581,26 +580,36 @@ public class GameManager {
      *
      * @param player        The player.
      * @param uuid          The UUID of the player.
-     * @param world         The world the player is in.
      * @param loc           The location of the player.
-     * @param regionService The RegionService instance.
      * @param regionName    The name of the region.
      * @return true if the player was teleported, false otherwise.
      */
-    private boolean checkAndTeleportPlayer(Player player, UUID uuid, World world, Location loc, RegionService regionService, String regionName) {
-        ProtectedRegion gameRegion = regionService.getWorldGuardRegion(regionName, world);
+    private boolean checkAndTeleportPlayer(Player player, UUID uuid, String worldName, Location loc, String regionName) {
+        RegionHelpers regionHelpers = RegionHelpers.getInstance();
+        WGHelpers wgHelpers = WGHelpers.getInstance();
+        int x = loc.getBlockX();
+        int y = loc.getBlockY();
+        int z = loc.getBlockZ();
 
-        if (gameRegion != null && regionService.isLocationInRegion(loc, gameRegion)) {
-            RegionLink link = regionService.getRegionLink(regionName, Region.RegionType.GAME);
-            if (link != null) {
-                Location lobbyTeleportLocation = link.getLobbyTeleportLocation();
-                if (lobbyTeleportLocation != null) {
-                    player.teleport(lobbyTeleportLocation);
-                    disconnectedPlayerUUIDs.remove(uuid);
-                    return true;
+        if (wgHelpers.areCoordinatesInWGRegion(worldName, regionName, x, y, z)) {
+            String regionType = regionHelpers.getRegionType(regionName);
+
+            if ("game".equalsIgnoreCase(regionType)) {
+                String linkedLobbyRegion = regionHelpers.getLinkedRegion(regionName);
+
+                if (linkedLobbyRegion != null) {
+                    World lobbyWorld = regionHelpers.getRegionWorld(linkedLobbyRegion);
+                    Location lobbyTeleportLocation = regionHelpers.getRegionTeleportLocation(linkedLobbyRegion, lobbyWorld);
+
+                    if (lobbyTeleportLocation != null) {
+                        player.teleport(lobbyTeleportLocation);
+                        disconnectedPlayerUUIDs.remove(uuid);
+                        return true;
+                    }
                 }
             }
         }
+
         return false;
     }
 

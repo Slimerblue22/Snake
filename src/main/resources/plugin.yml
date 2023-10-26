@@ -7,18 +7,18 @@ load: POSTWORLD
 depend: [ProtocolLib, WorldGuard]
 softdepend: [NoteBlockAPI]
 commands:
-  snakeadmin:
-    description: Admin command for the Snake game plugin
-    aliases: [sa]
+  snakeregion:
+    description: Command for controlling the region system
+    aliases: [sr]
   snakegame:
-    description: Command for controlling the Snake game
+    description: Command for using general game commands and to play a game of snake
     aliases: [sg]
   snakedebug:
-    description: Toggles a specific debug category.
+    description: Command for controlling the debug system
     aliases: [sd]
 permissions:
   snake.admin:
-    description: Permission for the Snake game admin and debug commands
+    description: Permission for the region and debug commands
     default: op
   snake.play:
     description: Permission for playing the Snake game

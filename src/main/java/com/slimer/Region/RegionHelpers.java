@@ -1,20 +1,25 @@
-package com.slimer.WIP;
+package com.slimer.Region;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * Provides helper methods for managing Snake game regions.
  */
-public class NewRegionHelpers {
-    private static NewRegionHelpers instance;
+public class RegionHelpers {
+    private static RegionHelpers instance;
     private final Connection connection;
     private final Logger logger;
-    private final NewWGHelpers wgHelpers = NewWGHelpers.getInstance();
+    private final WGHelpers wgHelpers = WGHelpers.getInstance();
 
-
-    private NewRegionHelpers(Connection connection, Logger logger) {
+    private RegionHelpers(Connection connection, Logger logger) {
         this.connection = connection;
         this.logger = logger;
     }
@@ -27,19 +32,19 @@ public class NewRegionHelpers {
      */
     public static synchronized void initializeInstance(Connection connection, Logger logger) {
         if (instance == null) {
-            instance = new NewRegionHelpers(connection, logger);
+            instance = new RegionHelpers(connection, logger);
         }
     }
 
     /**
-     * Retrieves the current instance of the NewRegionHelpers.
+     * Retrieves the current instance of the RegionHelpers.
      *
-     * @return The current instance of the NewRegionHelpers.
+     * @return The current instance of the RegionHelpers.
      * @throws IllegalStateException if the helpers have not been initialized.
      */
-    public static synchronized NewRegionHelpers getInstance() {
+    public static synchronized RegionHelpers getInstance() {
         if (instance == null) {
-            throw new IllegalStateException("NewRegionHelpers must be initialized before use.");
+            throw new IllegalStateException("RegionHelpers must be initialized before use.");
         }
         return instance;
     }
@@ -143,6 +148,93 @@ public class NewRegionHelpers {
             logger.log(Level.SEVERE, "An error occurred while fetching the link ID.", e);
         }
         return null;
+    }
+
+    /**
+     * Retrieves the name of the region that is linked to the given region.
+     *
+     * @param regionName The name of the region whose linked region is to be found.
+     * @return The name of the linked region, or null if no linked region is found or an error occurs.
+     */
+    public String getLinkedRegion(String regionName) {
+        try {
+            Integer linkID = getLinkID(regionName);
+            if (linkID == null) {
+                return null;
+            }
+            PreparedStatement statement = connection.prepareStatement("SELECT regionName FROM region_data WHERE linkID = ? AND regionName != ?");
+            statement.setInt(1, linkID);
+            statement.setString(2, regionName.toLowerCase());
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                return resultSet.getString("regionName");
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "An error occurred while fetching the linked region.", e);
+        }
+        return null;
+    }
+
+    /**
+     * Retrieves the teleport location for a given region.
+     *
+     * @param regionName The name of the region.
+     * @return A Location object representing the teleport location, or null if not found.
+     */
+    public Location getRegionTeleportLocation(String regionName, World world) {
+        try {
+            PreparedStatement statement = connection.prepareStatement("SELECT x, y, z FROM region_data WHERE regionName = ?");
+            statement.setString(1, regionName.toLowerCase());
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                int x = resultSet.getInt("x");
+                int y = resultSet.getInt("y");
+                int z = resultSet.getInt("z");
+                return new Location(world, x, y, z);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "An error occurred while fetching the teleport location.", e);
+        }
+        return null;
+    }
+
+    /**
+     * Retrieves the Bukkit World object associated with a given region name.
+     *
+     * <p>This method queries the database to find the world name associated with the
+     * specified region name. It then uses this world name to get the corresponding
+     * Bukkit World object.</p>
+     *
+     * @param regionName The name of the region for which the world is to be retrieved.
+     * @return The Bukkit World object associated with the given region name, or null if the region or world does not exist.
+     */
+    public World getRegionWorld(String regionName) {
+        try {
+            PreparedStatement statement = connection.prepareStatement("SELECT worldName FROM region_data WHERE regionName = ?");
+            statement.setString(1, regionName.toLowerCase());
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                String worldName = resultSet.getString("worldName");
+                return Bukkit.getWorld(worldName);
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "An error occurred while fetching the world information.", e);
+        }
+        return null;
+    }
+
+    public List<String> getAllRegisteredRegionNames() {
+        List<String> regionNames = new ArrayList<>();
+        try {
+            PreparedStatement statement = connection.prepareStatement("SELECT regionName FROM region_data");
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                regionNames.add(resultSet.getString("regionName"));
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "An error occurred while fetching all registered region names.", e);
+        }
+        return regionNames;
     }
 
     /**

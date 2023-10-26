@@ -1,15 +1,12 @@
 package com.slimer.Game;
 
-import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.slimer.GUI.GameCommandGUI;
 import com.slimer.Main.Main;
-import com.slimer.Region.Region;
-import com.slimer.Region.RegionLink;
-import com.slimer.Region.RegionService;
+import com.slimer.Region.RegionHelpers;
+import com.slimer.Region.WGHelpers;
 import com.slimer.Util.PlayerData;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.apache.commons.lang3.tuple.Triple;
 import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
@@ -148,18 +145,68 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      * @return true if the game is successfully started, otherwise false.
      */
     private boolean handleStartGameCommand(Player player) {
-        Triple<Location, Location, String> locations = findGameAndLobbyLocations(player);
-        if (locations == null) {
+        WGHelpers wgHelpers = WGHelpers.getInstance();
+        RegionHelpers regionHelpers = RegionHelpers.getInstance();
+        String currentLobbyRegion = wgHelpers.getPlayerCurrentRegion(player);
+        boolean isRegistered = (currentLobbyRegion != null) && regionHelpers.isRegionRegistered(currentLobbyRegion);
+        String regionType = (isRegistered) ? regionHelpers.getRegionType(currentLobbyRegion) : null;
+
+        if (!"lobby".equals(regionType)) {
             player.sendMessage(Component.text("You must be within a lobby region to start the game.", NamedTextColor.RED));
             return false;
         }
-        locations.getMiddle();
-        Location gameLocation = locations.getLeft();
-        String regionName = locations.getRight();
-        gameLocation.getWorld();
-        RegionService regionService = RegionService.getInstance();
-        regionService.getRegionLink(regionName, Region.RegionType.LOBBY);
-        return handleClassicGameStart(player);
+
+        boolean isLinked = regionHelpers.isRegionLinked(currentLobbyRegion);
+        String currentGameRegion = regionHelpers.getLinkedRegion(currentLobbyRegion);
+
+        if (!isLinked || currentGameRegion == null) {
+            player.sendMessage(Component.text("The lobby you are in is not properly linked to a game region. You cannot start the game.", NamedTextColor.RED));
+            return false;
+        }
+
+        return handleClassicGameStart(player, currentLobbyRegion, currentGameRegion);
+    }
+
+    /**
+     * Handles the initiation of a classic snake game for a player.
+     *
+     * @param player The player for whom to start the game.
+     * @return True if the game was successfully started, false otherwise.
+     */
+    private boolean handleClassicGameStart(Player player, String currentLobbyRegion, String currentGameRegion) {
+        RegionHelpers regionHelpers = RegionHelpers.getInstance();
+        World gameWorld = regionHelpers.getRegionWorld(currentGameRegion);
+        World lobbyWorld = regionHelpers.getRegionWorld(currentLobbyRegion);
+        Location gameTeleportLocation = regionHelpers.getRegionTeleportLocation(currentGameRegion, gameWorld);
+        Location lobbyLocation = regionHelpers.getRegionTeleportLocation(currentLobbyRegion, lobbyWorld);
+        int maxPlayersPerGame = ((Main) plugin).getMaxPlayersPerGame();
+        int playersInGameRegion = 0;
+        WGHelpers wgHelpers = WGHelpers.getInstance();
+
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            Location loc = onlinePlayer.getLocation();
+            int x = loc.getBlockX();
+            int y = loc.getBlockY();
+            int z = loc.getBlockZ();
+            String worldName = loc.getWorld().getName();
+
+            if (wgHelpers.areCoordinatesInWGRegion(worldName, currentGameRegion, x, y, z)) {
+                SnakeCreation snake = gameManager.getSnakeForPlayer(onlinePlayer);
+                if (snake != null) {
+                    playersInGameRegion++;
+                }
+            }
+        }
+
+        if (playersInGameRegion >= maxPlayersPerGame) {
+            player.sendMessage(Component.text("The game region has reached its maximum number of players (" + maxPlayersPerGame + " players).", NamedTextColor.RED));
+            return false;
+        }
+
+        player.teleport(gameTeleportLocation);
+        gameManager.startGame(player, gameTeleportLocation, lobbyLocation);
+        player.sendMessage(Component.text("Starting the snake game...", NamedTextColor.GREEN));
+        return true;
     }
 
     /**
@@ -338,88 +385,6 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
         } else {
             player.sendMessage(Component.text("Music has been disabled for your sessions.", NamedTextColor.RED));
         }
-        return true;
-    }
-
-    // Helper methods
-
-    /**
-     * Finds the game and lobby locations for a given player.
-     *
-     * @param player The player for whom to find locations.
-     * @return A Pair containing the game teleport location and the lobby teleport location,
-     * or null if no suitable locations are found.
-     */
-    private Triple<Location, Location, String> findGameAndLobbyLocations(Player player) {
-        RegionService regionService = RegionService.getInstance();
-
-        for (Region region : regionService.getAllRegions().values()) {
-            if (region.getType() == Region.RegionType.LOBBY) {
-                String worldName = region.getWorldName();
-                World world = Bukkit.getWorld(worldName);
-
-                if (world != null) {
-                    ProtectedRegion worldGuardRegion = regionService.getWorldGuardRegion(region.getName(), world);
-                    if (worldGuardRegion != null && regionService.isLocationInRegion(player.getLocation(), worldGuardRegion)) {
-                        RegionLink regionLink = regionService.getRegionLink(region.getName(), Region.RegionType.LOBBY);
-
-                        if (regionLink != null) {
-                            Location gameTeleportLocation = regionLink.getGameTeleportLocation();
-                            Location lobbyTeleportLocation = regionLink.getLobbyTeleportLocation();
-                            if (gameTeleportLocation != null) {
-                                return Triple.of(gameTeleportLocation, lobbyTeleportLocation, region.getName());
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Handles the initiation of a classic snake game for a player.
-     *
-     * @param player The player for whom to start the game.
-     * @return True if the game was successfully started, false otherwise.
-     */
-    private boolean handleClassicGameStart(Player player) {
-        Triple<Location, Location, String> locations = findGameAndLobbyLocations(player);
-        if (locations == null) {
-            player.sendMessage(Component.text("No linked game region found. Unable to start the game.", NamedTextColor.RED));
-            return false;
-        }
-
-        Location gameTeleportLocation = locations.getLeft();
-        Location lobbyLocation = locations.getMiddle();
-        String regionName = locations.getRight();
-
-        RegionService regionService = RegionService.getInstance();
-
-        // Use the region's name to get the RegionLink
-        RegionLink regionLink = regionService.getRegionLink(regionName, Region.RegionType.LOBBY);
-        ProtectedRegion gameRegion = regionService.getWorldGuardRegion(regionLink.getGameRegionName(), gameTeleportLocation.getWorld());
-
-        int maxPlayersPerGame = ((Main) plugin).getMaxPlayersPerGame();
-        int playersInGameRegion = 0;
-        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-            if (regionService.isLocationInRegion(onlinePlayer.getLocation(), gameRegion)) {
-                SnakeCreation snake = gameManager.getSnakeForPlayer(onlinePlayer); // Checks if the player inside is in a game
-                if (snake != null) {
-                    playersInGameRegion++;
-                }
-            }
-        }
-
-        if (playersInGameRegion >= maxPlayersPerGame) {
-            player.sendMessage(Component.text("The game region has reached its maximum number of players (" + maxPlayersPerGame + " players).", NamedTextColor.RED));
-            return false;
-        }
-
-        // Start the game
-        player.teleport(gameTeleportLocation);
-        gameManager.startGame(player, gameTeleportLocation, lobbyLocation);
-        player.sendMessage(Component.text("Starting the snake game...", NamedTextColor.GREEN));
         return true;
     }
 }

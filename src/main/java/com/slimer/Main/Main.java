@@ -1,15 +1,12 @@
 package com.slimer.Main;
 
 import com.slimer.Game.*;
-import com.slimer.Region.RegionCommandHandler;
-import com.slimer.Region.RegionFileHandler;
 import com.slimer.Region.RegionService;
 import com.slimer.Util.DebugManager;
 import com.slimer.Util.MusicManager;
 import com.slimer.Util.PlayerData;
-import com.slimer.WIP.NewRegionCommandHandler;
-import com.slimer.WIP.NewRegionService;
-import com.slimer.WIP.NewWGHelpers;
+import com.slimer.Region.RegionCommandHandler;
+import com.slimer.Region.WGHelpers;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -17,7 +14,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -58,13 +54,8 @@ public final class Main extends JavaPlugin {
         // Initialize Game Components
         initializeGameComponents();
 
-
         // Initialize Region Services
         initializeRegionServices();
-
-        NewRegionService.initializeInstance(this);
-        NewWGHelpers.getInstance();
-        //NewRegionService.getInstance().migrateRegionsFromYmlToSql(this);
 
         // Initialize Player Data
         initPlayerData();
@@ -155,15 +146,9 @@ public final class Main extends JavaPlugin {
      * and region command handler. It also loads regions from configuration.
      */
     private void initializeRegionServices() {
-        // Initialize region services and handlers
-        RegionService regionService = RegionService.getInstance();
-        File regionsFile = new File(getDataFolder(), "Regions.yml");
-        RegionFileHandler regionFileHandler = new RegionFileHandler(regionsFile, regionService, this);
-        regionService.setRegionFileHandler(regionFileHandler);
-        regionFileHandler.loadRegionsFromConfig();
-
-        // Initialize region command handler
-        new RegionCommandHandler(regionService);
+        RegionService.initializeInstance(this);
+        WGHelpers.getInstance();
+        RegionService.getInstance().migrateRegionsFromYmlToSql(this);
     }
 
     /**
@@ -176,11 +161,8 @@ public final class Main extends JavaPlugin {
         // Register the Game Command
         Objects.requireNonNull(getCommand("snakegame")).setExecutor(new GameCommandHandler(gameManager, this));
 
-        // Register the Admin Command for Regions
-        Objects.requireNonNull(getCommand("snakeadmin")).setExecutor(new RegionCommandHandler(RegionService.getInstance()));
-
-        // Register the new Region Command
-        Objects.requireNonNull(getCommand("snakedev")).setExecutor(new NewRegionCommandHandler());
+        // Register the Region Command
+        Objects.requireNonNull(getCommand("snakeregion")).setExecutor(new RegionCommandHandler());
     }
 
     /**
@@ -192,7 +174,7 @@ public final class Main extends JavaPlugin {
         // Stop all active games
         gameManager.stopAllGames();
         // Close active SQL connections
-        NewRegionService.getInstance().closeDatabase();
+        RegionService.getInstance().closeDatabase();
     }
 
     /**
