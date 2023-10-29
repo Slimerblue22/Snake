@@ -22,10 +22,12 @@ import org.bukkit.util.Vector;
 import java.util.*;
 
 /**
- * Manages the game state, player interactions, and the game logic for the Snake game.
- * Serves as the central hub for coordinating game actions, acting as a gateway between
- * various game components. For instance, it receives segment information from {@code SnakeCreation}
- * and passes it to {@code SnakeMovement} for executing snake movements.
+ * The `GameManager` class manages game-related logic and components for the Minecraft snake game.
+ * It is responsible for handling player initialization, game start and stop, scoring, music, and various game events.
+ * This class is a central component that connects various game-related subsystems and manages the game's lifecycle.
+ * <p>
+ * Last updated: V2.0.3
+ * @author Slimerblue22
  */
 public class GameManager {
 
@@ -54,9 +56,10 @@ public class GameManager {
     /**
      * Constructs a new GameManager.
      *
-     * @param playerSnakes         Map of players to their snakes.
-     * @param playerLobbyLocations Map of players to their lobby locations.
-     * @param plugin               The plugin instance.
+     * @param playerSnakes         A map associating players with their corresponding SnakeCreation objects.
+     * @param playerLobbyLocations A map associating players with their lobby locations.
+     * @param plugin               The JavaPlugin instance representing the game's main plugin.
+     * @param isMusicEnabled       A boolean flag indicating whether music is enabled in the game.
      */
     public GameManager(Map<Player, SnakeCreation> playerSnakes, Map<Player, Location> playerLobbyLocations, JavaPlugin plugin, boolean isMusicEnabled) {
         this.playerSnakes = playerSnakes;
@@ -97,24 +100,26 @@ public class GameManager {
      */
     private SnakeCreation initializeGameAndPlayer(Player player, Location gameLocation, Location lobbyLocation) {
         DebugManager.log(DebugManager.Category.GAME_MANAGER, "Initializing game and player " + player.getName());
-        // Initialize game start with sound
+
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 1.0f);
 
-        // Initialize the snake for the player
         SnakeCreation snake = new SnakeCreation(gameLocation, player, (JavaPlugin) plugin);
         Entity sheepEntity = snake.getSheepEntity();
         if (sheepEntity != null) {
             sheepEntity.addPassenger(player);
         }
+
         Vector initialPosition = new Vector(
                 Math.floor(gameLocation.getX()) + 0.5,
                 gameLocation.getY(),
                 Math.floor(gameLocation.getZ()) + 0.5
         );
         snakeMovement.initializeTargetPositionForPlayer(player, initialPosition);
+
         playerSnakes.put(player, snake);
         playerLobbyLocations.put(player, lobbyLocation);
         playerScores.put(player, 0);
+
         return snake;
     }
 
@@ -125,7 +130,7 @@ public class GameManager {
      */
     private void initializeBossBar(Player player) {
         DebugManager.log(DebugManager.Category.GAME_MANAGER, "Initializing boss bar for player " + player.getName());
-        // Initialization of boss bar
+
         BossBar bossBar = BossBar.bossBar(Component.text("Score: 0"), 1.0f, BossBar.Color.BLUE, BossBar.Overlay.PROGRESS);
         player.showBossBar(bossBar);
         playerScoreBars.put(player, bossBar);
@@ -139,10 +144,8 @@ public class GameManager {
      */
     private void initializeMovement(Player player) {
         DebugManager.log(DebugManager.Category.GAME_MANAGER, "Initializing movement for player " + player.getName());
-        // Initialize input and movement handling
-        playerInputHandler.startMonitoring(player);
 
-        // Movement task for the snake
+        playerInputHandler.startMonitoring(player);
         BukkitRunnable movementTask = new BukkitRunnable() {
             @Override
             public void run() {
@@ -161,38 +164,32 @@ public class GameManager {
      */
     private void initializeGameEndConditions(Player player) {
         DebugManager.log(DebugManager.Category.GAME_MANAGER, "Initializing game end conditions for player " + player.getName());
-        // Initialize GameEndConditionsHandler
+
         GameEndConditionsHandler gameEndConditionsHandler = new GameEndConditionsHandler(this, player, plugin);
-        BukkitRunnable GameEndEvents = new BukkitRunnable() {
+        BukkitRunnable gameEndEvents = new BukkitRunnable() {
             @Override
             public void run() {
                 gameEndConditionsHandler.runGameEndEventsChecks();
             }
         };
-        GameEndEvents.runTaskTimer(plugin, 0L, 0L);
-        this.gameEndConditionsHandler.put(player, GameEndEvents);
+        gameEndEvents.runTaskTimer(plugin, 0L, 0L);
+        this.gameEndConditionsHandler.put(player, gameEndEvents);
     }
 
     /**
      * Initializes the apples in the game world for the given player.
      *
-     * @param player       The player for whom to spawn the apples.
-     * @param gameLocation The location where apples are to be spawned.
-     * @param snake        The SnakeCreation object for the current game.
+     * @param player       The player for whom to spawn the apples
+     * @param gameLocation The location where apples are to be spawned
+     * @param snake        The SnakeCreation object for the current game
      */
     private void initializeApples(Player player, Location gameLocation, SnakeCreation snake) {
         DebugManager.log(DebugManager.Category.GAME_MANAGER, "Initializing apples for player " + player.getName());
-        // Get the maximum number of apples allowed
+
         Main mainPlugin = (Main) plugin;
         int maxApples = mainPlugin.getMaxApplesPerGame();
-
-        // Retrieve the apples list for the player, or create a new list if it doesn't exist
         List<Apple> applesForPlayer = playerApples.computeIfAbsent(player, k -> new ArrayList<>());
-
-        int currentAppleCount = applesForPlayer.size();
-
-        // Calculate the number of apples to spawn
-        int applesToSpawn = maxApples - currentAppleCount;
+        int applesToSpawn = maxApples - applesForPlayer.size();
 
         for (int i = 0; i < applesToSpawn; i++) {
             Apple apple = new Apple((JavaPlugin) plugin, this);
@@ -200,12 +197,10 @@ public class GameManager {
             applesForPlayer.add(apple);
         }
 
-        // Initialize apple collection monitoring
-        final JavaPlugin finalPlugin = (JavaPlugin) plugin;  // Make a final copy of the plugin instance
         BukkitRunnable appleCollectionTask = new BukkitRunnable() {
             @Override
             public void run() {
-                appleCollectionManager.checkAndCollectApple(snake.getSheepEntity(), player, finalPlugin);  // Pass the plugin instance here
+                appleCollectionManager.checkAndCollectApple(snake.getSheepEntity(), player, (JavaPlugin) plugin);
             }
         };
         appleCollectionTask.runTaskTimer(plugin, 0L, 0L);
@@ -218,7 +213,6 @@ public class GameManager {
      * @param player The player for whom to start the music.
      */
     private void initializeMusic(Player player) {
-        // Start music for the player if music is globally enabled and player has toggled music on
         if (isMusicEnabled && isPlayerMusicToggledOn(player)) {
             DebugManager.log(DebugManager.Category.GAME_MANAGER, "Initializing music for player " + player.getName());
             Objects.requireNonNull(musicManager).startMusic(player);
@@ -233,6 +227,7 @@ public class GameManager {
     public void stopGame(Player player, String reason) {
         DebugManager.log(DebugManager.Category.GAME_MANAGER, "Stopping game for player " + player.getName());
         int score = updateAndSavePlayerScore(player);
+
         sendGameOverMessage(player, score, reason);
         hideAndRemoveBossBar(player);
         teleportPlayerToLobby(player);
@@ -249,12 +244,12 @@ public class GameManager {
      */
     private void destroySnakeAndClearData(Player player) {
         DebugManager.log(DebugManager.Category.GAME_MANAGER, "Destroying snake and clearing data for player " + player.getName());
-        // Destroy the snake and remove player's snake entry
+
         SnakeCreation snake = playerSnakes.get(player);
         if (snake != null) {
             snake.destroy();
         }
-        // Clear other game-related data
+
         playerSnakes.remove(player);
         playerLobbyLocations.remove(player);
         playerInputHandler.stopMonitoring(player);
@@ -269,11 +264,11 @@ public class GameManager {
      */
     private int updateAndSavePlayerScore(Player player) {
         DebugManager.log(DebugManager.Category.GAME_MANAGER, "Updating and saving score for player " + player.getName());
-        // Update and save the player's high score
+
         int score = playerScores.getOrDefault(player, 0);
-        PlayerData playerData = PlayerData.getInstance((JavaPlugin) plugin);
-        playerData.setHighScore(player, score);
+        PlayerData.getInstance((JavaPlugin) plugin).setHighScore(player, score);
         playerScores.remove(player);
+
         return score;
     }
 
@@ -286,7 +281,7 @@ public class GameManager {
      */
     private void sendGameOverMessage(Player player, int score, String reason) {
         DebugManager.log(DebugManager.Category.GAME_MANAGER, "Sending game over message to player " + player.getName() + " with score: " + score);
-        // Send the "Game Over" message along with the player's score
+
         Component gameOverMessage = Component.text("Game Over!", NamedTextColor.RED)
                 .append(Component.newline())
                 .append(Component.text("Reason: ", NamedTextColor.RED))
@@ -304,7 +299,7 @@ public class GameManager {
      */
     private void hideAndRemoveBossBar(Player player) {
         DebugManager.log(DebugManager.Category.GAME_MANAGER, "Hiding and removing boss bar for player " + player.getName());
-        // Remove and hide the boss bar
+
         BossBar bossBar = playerScoreBars.get(player);
         if (bossBar != null) {
             player.hideBossBar(bossBar);
@@ -319,12 +314,11 @@ public class GameManager {
      */
     private void teleportPlayerToLobby(Player player) {
         DebugManager.log(DebugManager.Category.GAME_MANAGER, "Teleporting player " + player.getName() + " to lobby");
-        // Teleport the player back to the lobby
+
         Location lobbyLocation = playerLobbyLocations.get(player);
         if (lobbyLocation != null) {
             player.teleport(lobbyLocation);
         }
-        // Play sound effect for game stop directly after teleporting
         player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
     }
 
@@ -335,26 +329,24 @@ public class GameManager {
      */
     private void cancelScheduledTasks(Player player) {
         DebugManager.log(DebugManager.Category.GAME_MANAGER, "Cancelling scheduled tasks for player " + player.getName());
-        // Cancel and remove scheduled movement tasks
+
         BukkitRunnable movementTask = movementTasks.get(player);
         if (movementTask != null) {
             movementTask.cancel();
         }
         movementTasks.remove(player);
 
-        // Cancel and remove GameEndConditionsHandler information
-        BukkitRunnable GameEndEvents = gameEndConditionsHandler.get(player);
-        if (GameEndEvents != null) {
-            GameEndEvents.cancel();
+        BukkitRunnable gameEndEvents = gameEndConditionsHandler.get(player);
+        if (gameEndEvents != null) {
+            gameEndEvents.cancel();
         }
         gameEndConditionsHandler.remove(player);
 
-        // Cancel and remove apple collection task
         BukkitRunnable appleCollectionTask = appleCollectionTasks.get(player);
         if (appleCollectionTask != null) {
             appleCollectionTask.cancel();
-            appleCollectionTasks.remove(player);
         }
+        appleCollectionTasks.remove(player);
     }
 
     /**
@@ -364,7 +356,7 @@ public class GameManager {
      */
     private void clearAppleData(Player player) {
         DebugManager.log(DebugManager.Category.GAME_MANAGER, "Clearing apple data for player " + player.getName());
-        // Clear apple data
+
         List<Apple> apples = playerApples.getOrDefault(player, new ArrayList<>());
         for (Apple apple : apples) {
             apple.clear();
@@ -378,7 +370,6 @@ public class GameManager {
      * @param player The player for whom to stop the music.
      */
     private void stopMusicForPlayer(Player player) {
-        // Stop music for the player if enabled
         if (isMusicEnabled) {
             DebugManager.log(DebugManager.Category.GAME_MANAGER, "Stopping music for player " + player.getName());
             Objects.requireNonNull(musicManager).stopMusic(player);
@@ -390,6 +381,7 @@ public class GameManager {
      */
     public void stopAllGames() {
         DebugManager.log(DebugManager.Category.GAME_MANAGER, "Stopping all ongoing games");
+
         destroyAllSnakesAndTeleportPlayers();
         clearAllLobbyLocations();
         cancelAllMovementTasks();
@@ -409,12 +401,12 @@ public class GameManager {
                 snake.destroy();
             }
 
-            // Teleport the player back to the lobby immediately
             Location lobbyLocation = playerLobbyLocations.get(player);
             if (lobbyLocation != null) {
                 player.teleport(lobbyLocation);
             }
         }
+
         playerSnakes.clear();
     }
 
@@ -432,6 +424,7 @@ public class GameManager {
         for (BukkitRunnable task : movementTasks.values()) {
             task.cancel();
         }
+
         movementTasks.clear();
     }
 
@@ -442,6 +435,7 @@ public class GameManager {
         for (BukkitRunnable task : appleCollectionTasks.values()) {
             task.cancel();
         }
+
         appleCollectionTasks.clear();
     }
 
@@ -454,6 +448,7 @@ public class GameManager {
                 apple.clear();
             }
         }
+
         playerApples.clear();
     }
 
@@ -488,13 +483,13 @@ public class GameManager {
     public void addSnakeSegment(Player player, JavaPlugin plugin) {
         DebugManager.log(DebugManager.Category.GAME_MANAGER, "Adding segment to snake for player " + player.getName());
         SnakeCreation snake = getSnakeForPlayer(player);
+
         if (snake != null) {
             Vector lastPosition = snakeMovement.getLastPositionOfLastSegmentOrHead(player);
+
             if (lastPosition != null) {
                 snake.addSegment(lastPosition, player, plugin);
-
-                // Reset the U-turn flag for this player
-                resetUTurnStatus(player);
+                resetUTurnStatus(player);  // Reset the U-turn flag for this player
             }
         }
     }
@@ -539,7 +534,7 @@ public class GameManager {
      */
     public void handlePlayerDisconnect(Player player) {
         DebugManager.log(DebugManager.Category.GAME_MANAGER, "Handling disconnect for player " + player.getName());
-        // Store the player's UUID
+
         disconnectedPlayerUUIDs.add(player.getUniqueId());
     }
 
@@ -549,9 +544,10 @@ public class GameManager {
      * @param player The player who has reconnected.
      */
     public void handlePlayerReconnect(Player player) {
-        DebugManager.log(DebugManager.Category.GAME_MANAGER, "Handling reconnect for player " + player.getName());
         UUID uuid = player.getUniqueId();
+
         if (disconnectedPlayerUUIDs.contains(uuid)) {
+            DebugManager.log(DebugManager.Category.GAME_MANAGER, "Handling reconnect for player " + player.getName());
             handleTeleportToLobby(player, uuid);
         }
     }
@@ -622,6 +618,7 @@ public class GameManager {
      */
     public void updatePlayerScore(Player player) {
         DebugManager.log(DebugManager.Category.GAME_MANAGER, "Updating score for player " + player.getName());
+
         playerScores.put(player, playerScores.getOrDefault(player, 0) + 1);
         updateBossBarForPlayer(player);
     }
@@ -632,7 +629,6 @@ public class GameManager {
      * @param player The player whose boss bar should be updated.
      */
     private void updateBossBarForPlayer(Player player) {
-        // Retrieve the boss bar for the player
         BossBar bossBar = playerScoreBars.get(player);
 
         // If the boss bar exists, update its name with the player's score
