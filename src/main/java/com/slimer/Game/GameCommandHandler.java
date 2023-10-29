@@ -26,7 +26,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Handles game-related commands.
+ * Handles player commands related to the Snake game, including starting and stopping games, setting snake colors,
+ * displaying the game GUI, and providing game instructions.
+ * <p>
+ * Last updated: V2.0.3
+ * @author Slimerblue22
  */
 public class GameCommandHandler implements CommandExecutor, TabCompleter {
     private final GameManager gameManager;
@@ -57,15 +61,20 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             sender.sendMessage(Component.text("This command can only be run by a player.", NamedTextColor.RED));
             return false;
         }
+
         if (!player.hasPermission("snake.play")) {
             player.sendMessage(Component.text("You don't have permission to run this command.", NamedTextColor.RED));
             return false;
         }
-        if (args.length == 0) { // If the user only types `/snakegame` or `/sg` just open the GUI for them
+
+        // Open the GUI if no arguments provided
+        if (args.length == 0) {
             handleGUICommand(player, plugin);
             return false;
         }
+
         String subCommand = args[0].toLowerCase();
+
         return switch (subCommand) {
             case "start" -> handleStartGameCommand(player);
             case "stop" -> handleStopGameCommand(player);
@@ -76,18 +85,23 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             case "leaderboard" -> handleLeaderboardCommand(player, args);
             case "music" -> handleMusicToggleCommand(player);
             default -> {
-                player.sendMessage(Component.text("Unknown subcommand. Use one of the following:", NamedTextColor.RED));
-                player.sendMessage(Component.text("/snakegame start", NamedTextColor.GRAY));
-                player.sendMessage(Component.text("/snakegame stop", NamedTextColor.GRAY));
-                player.sendMessage(Component.text("/snakegame gui", NamedTextColor.GRAY));
-                player.sendMessage(Component.text("/snakegame help", NamedTextColor.GRAY));
-                player.sendMessage(Component.text("/snakegame color", NamedTextColor.GRAY));
-                player.sendMessage(Component.text("/snakegame highscore", NamedTextColor.GRAY));
-                player.sendMessage(Component.text("/snakegame leaderboard", NamedTextColor.GRAY));
-                player.sendMessage(Component.text("/snakegame music", NamedTextColor.GRAY));
+                handleUnknownCommand(player);
                 yield false;
             }
         };
+    }
+
+    /**
+     * Displays an unknown command message to the specified player.
+     *
+     * @param player The player to whom the message should be displayed.
+     */
+    private void handleUnknownCommand(Player player) {
+        player.sendMessage(Component.text("Unknown subcommand. Use one of the following:", NamedTextColor.RED));
+        String[] commands = {"start", "stop", "gui", "help", "color", "highscore", "leaderboard", "music"};
+        for (String cmd : commands) {
+            player.sendMessage(Component.text("/snakegame " + cmd, NamedTextColor.GRAY));
+        }
     }
 
     /**
@@ -103,31 +117,14 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, String[] args) {
         List<String> completions = new ArrayList<>();
+
         if (args.length == 1) {
-            if ("start".startsWith(args[0].toLowerCase())) {
-                completions.add("start");
+            String[] subCommands = {"start", "stop", "gui", "help", "color", "highscore", "leaderboard", "music"};
+            for (String subCommand : subCommands) {
+                if (subCommand.startsWith(args[0].toLowerCase())) {
+                    completions.add(subCommand);
+                }
             }
-            if ("stop".startsWith(args[0].toLowerCase())) {
-                completions.add("stop");
-            }
-            if ("gui".startsWith(args[0].toLowerCase())) {
-                completions.add("gui");
-            }
-            if ("help".startsWith(args[0].toLowerCase())) {
-                completions.add("help");
-            }
-            if ("color".startsWith(args[0].toLowerCase())) {
-                completions.add("color");
-            }
-            if ("highscore".startsWith(args[0].toLowerCase())) {
-                completions.add("highscore");
-            }
-            if ("music".startsWith(args[0].toLowerCase())) {
-                completions.add("music");
-            }
-            if ("leaderboard".startsWith(args[0].toLowerCase())) {
-                completions.add("leaderboard");
-            } // This bit below adds tab support for the different color options
         } else if (args.length == 2 && "color".equalsIgnoreCase(args[0])) {
             for (DyeColor dyeColor : DyeColor.values()) {
                 if (dyeColor.name().toLowerCase().startsWith(args[1].toLowerCase())) {
@@ -135,6 +132,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
                 }
             }
         }
+
         return completions;
     }
 
@@ -147,9 +145,10 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
     private boolean handleStartGameCommand(Player player) {
         WGHelpers wgHelpers = WGHelpers.getInstance();
         RegionHelpers regionHelpers = RegionHelpers.getInstance();
+
         String currentLobbyRegion = wgHelpers.getPlayerCurrentRegion(player);
         boolean isRegistered = (currentLobbyRegion != null) && regionHelpers.isRegionRegistered(currentLobbyRegion);
-        String regionType = (isRegistered) ? regionHelpers.getRegionType(currentLobbyRegion) : null;
+        String regionType = isRegistered ? regionHelpers.getRegionType(currentLobbyRegion) : null;
 
         if (!"lobby".equals(regionType)) {
             player.sendMessage(Component.text("You must be within a lobby region to start the game.", NamedTextColor.RED));
@@ -175,28 +174,15 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      */
     private boolean handleClassicGameStart(Player player, String currentLobbyRegion, String currentGameRegion) {
         RegionHelpers regionHelpers = RegionHelpers.getInstance();
+
         World gameWorld = regionHelpers.getRegionWorld(currentGameRegion);
         World lobbyWorld = regionHelpers.getRegionWorld(currentLobbyRegion);
+
         Location gameTeleportLocation = regionHelpers.getRegionTeleportLocation(currentGameRegion, gameWorld);
         Location lobbyLocation = regionHelpers.getRegionTeleportLocation(currentLobbyRegion, lobbyWorld);
+
         int maxPlayersPerGame = ((Main) plugin).getMaxPlayersPerGame();
-        int playersInGameRegion = 0;
-        WGHelpers wgHelpers = WGHelpers.getInstance();
-
-        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-            Location loc = onlinePlayer.getLocation();
-            int x = loc.getBlockX();
-            int y = loc.getBlockY();
-            int z = loc.getBlockZ();
-            String worldName = loc.getWorld().getName();
-
-            if (wgHelpers.areCoordinatesInWGRegion(worldName, currentGameRegion, x, y, z)) {
-                SnakeCreation snake = gameManager.getSnakeForPlayer(onlinePlayer);
-                if (snake != null) {
-                    playersInGameRegion++;
-                }
-            }
-        }
+        int playersInGameRegion = countPlayersInGameRegion(currentGameRegion);
 
         if (playersInGameRegion >= maxPlayersPerGame) {
             player.sendMessage(Component.text("The game region has reached its maximum number of players (" + maxPlayersPerGame + " players).", NamedTextColor.RED));
@@ -206,7 +192,27 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
         player.teleport(gameTeleportLocation);
         gameManager.startGame(player, gameTeleportLocation, lobbyLocation);
         player.sendMessage(Component.text("Starting the snake game...", NamedTextColor.GREEN));
+
         return true;
+    }
+
+    /**
+     * Counts the number of players in the specified game region.
+     *
+     * @param currentGameRegion The name of the game region to count players in.
+     * @return The number of players present in the specified game region.
+     */
+    private int countPlayersInGameRegion(String currentGameRegion) {
+        int playersInGameRegion = 0;
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            Location loc = onlinePlayer.getLocation();
+            if (WGHelpers.getInstance().areCoordinatesInWGRegion(loc.getWorld().getName(), currentGameRegion, loc.getBlockX(), loc.getBlockY(), loc.getBlockZ())) {
+                if (gameManager.getSnakeForPlayer(onlinePlayer) != null) {
+                    playersInGameRegion++;
+                }
+            }
+        }
+        return playersInGameRegion;
     }
 
     /**
@@ -272,9 +278,9 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      * Handles the command for setting the snake color for a player.
      * Validates the color input and updates the player's snake color if valid.
      *
-     * @param player    The Player whose snake color is to be set.
-     * @param args The name of the color to be set.
-     * @param plugin    The JavaPlugin instance for accessing plugin-specific features.
+     * @param player The Player whose snake color is to be set.
+     * @param args   The name of the color to be set.
+     * @param plugin The JavaPlugin instance for accessing plugin-specific features.
      * @return True if the color was set successfully, false otherwise.
      */
     private boolean handleSetColorCommand(Player player, String[] args, JavaPlugin plugin) {
@@ -283,7 +289,6 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             player.sendMessage(Component.text("Please specify a color name. Use /snakegame color <color_name>.", NamedTextColor.RED));
             return false;
         }
-
         String colorName = args[1];
 
         // Make sure the player is not in a game
@@ -311,10 +316,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      * @return True, indicating that the command was handled successfully.
      */
     private boolean handleHighScoreCommand(Player player) {
-        // Fetch high score for the player.
         int highScore = PlayerData.getInstance(plugin).getHighScore(player);
-
-        // Send the high score to the player
         player.sendMessage(Component.text("Your high score is: " + highScore, NamedTextColor.GOLD));
         return true;
     }
@@ -328,8 +330,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      * @return True, indicating that the command was handled successfully.
      */
     private boolean handleLeaderboardCommand(Player player, String[] args) {
-        int page = 1; // default page
-
+        int page = 1;  // Default to first page
         if (args.length > 1) {
             try {
                 page = Integer.parseInt(args[1]);
@@ -343,16 +344,16 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             }
         }
 
-        // Fetch leaderboard data
+        // Retrieve leaderboard data for the specified page
         List<Map.Entry<String, Integer>> leaderboard = PlayerData.getInstance(plugin).getPaginatedLeaderboard(page);
 
-        // If there's no data for the given page, inform the player
+        // Inform the player if there's no data for the given page
         if (leaderboard.isEmpty()) {
             player.sendMessage(Component.text("There are no entries for this page.", NamedTextColor.RED));
             return true;
         }
 
-        // Send the leaderboard to the player
+        // Send the leaderboard data to the player
         player.sendMessage(Component.text("---- Leaderboard (Page " + page + ") ----", NamedTextColor.GOLD));
         for (int i = 0; i < leaderboard.size(); i++) {
             Map.Entry<String, Integer> entry = leaderboard.get(i);
@@ -373,18 +374,17 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             return false;
         }
 
-        // Fetch the current music preference for the player
+        // Retrieve the player's current music preference
         boolean currentPreference = PlayerData.getInstance(plugin).getMusicToggleState(player);
 
-        // Toggle the preference
+        // Update the music preference
         PlayerData.getInstance(plugin).setMusicToggleState(player, !currentPreference);
 
-        // Notify the player of the change
-        if (!currentPreference) {
-            player.sendMessage(Component.text("Music has been enabled for your sessions.", NamedTextColor.GREEN));
-        } else {
-            player.sendMessage(Component.text("Music has been disabled for your sessions.", NamedTextColor.RED));
-        }
+        // Notify the player about the change
+        String message = currentPreference ? "Music has been disabled for your sessions." : "Music has been enabled for your sessions.";
+        NamedTextColor color = currentPreference ? NamedTextColor.RED : NamedTextColor.GREEN;
+        player.sendMessage(Component.text(message, color));
+
         return true;
     }
 }
