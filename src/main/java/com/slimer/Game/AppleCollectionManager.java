@@ -11,6 +11,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Manages the apple collection process for the player's snake in the Snake game.
+ * This class monitors and handles apple collection, collision detection, and related actions.
+ * <p>
+ * Last updated: V2.0.3
+ * @author Slimerblue22
+ */
 public class AppleCollectionManager {
     private final GameManager gameManager;
 
@@ -48,6 +55,7 @@ public class AppleCollectionManager {
                 collidedApples.add(apple);
             }
         }
+
         return collidedApples;
     }
 
@@ -61,6 +69,7 @@ public class AppleCollectionManager {
     private boolean isAppleCollisionDetected(Apple apple, Entity sheepEntity) {
         Location appleLocation = apple.getLocation();
         Location sheepLocation = sheepEntity.getLocation();
+
         return appleLocation != null &&
                 appleLocation.getBlockX() == sheepLocation.getBlockX() &&
                 appleLocation.getBlockZ() == sheepLocation.getBlockZ();
@@ -78,24 +87,15 @@ public class AppleCollectionManager {
 
         for (Apple apple : collidedApples) {
             DebugManager.log(DebugManager.Category.APPLE_COLLECTION, "Handling collided apple for player: " + player.getName());
-            // Clear the apple from the game
-            apple.clear();
+            apple.clear();  // Remove apple
+            gameManager.updatePlayerScore(player);  // Update score
+            gameManager.addSnakeSegment(player, plugin);  // Add snake segment
+            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);  // Level-up sound
 
-            // Update the player's score
-            gameManager.updatePlayerScore(player);
-
-            // Add a new segment to the snake
-            gameManager.addSnakeSegment(player, plugin);
-
-            // Play the level-up sound
-            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);
-
-            // Remove the apple from the list
-            apples.remove(apple);
+            apples.remove(apple);  // Remove apple from list
         }
 
-        // Update the playerApples map
-        gameManager.getPlayerApples().put(player, apples);
+        gameManager.getPlayerApples().put(player, apples);  // Update apple list
     }
 
     /**
@@ -108,20 +108,18 @@ public class AppleCollectionManager {
     private void spawnNewApples(Entity sheepEntity, Player player, JavaPlugin plugin) {
         Main mainPlugin = (Main) plugin;
         int maxApples = mainPlugin.getMaxApplesPerGame();
-
         List<Apple> apples = gameManager.getPlayerApples().getOrDefault(player, new ArrayList<>());
 
-        // Calculate the number of apples to spawn based on the current list
         int applesToSpawn = maxApples - apples.size();
 
         for (int i = 0; i < applesToSpawn; i++) {
             DebugManager.log(DebugManager.Category.APPLE_COLLECTION, "Attempting to spawn " + applesToSpawn + " new apples for player: " + player.getName());
             Apple newApple = new Apple(plugin, gameManager);
             newApple.spawnWithName(sheepEntity.getLocation(), sheepEntity.getLocation().getBlockY(), player.getName());
-            apples.add(newApple);
+
+            apples.add(newApple);  // Add new apple to list
         }
 
-        // Update the playerApples map
-        gameManager.getPlayerApples().put(player, apples);
+        gameManager.getPlayerApples().put(player, apples);  // Update apple list
     }
 }
