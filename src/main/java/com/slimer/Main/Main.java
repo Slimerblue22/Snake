@@ -1,12 +1,12 @@
 package com.slimer.Main;
 
 import com.slimer.Game.*;
+import com.slimer.Region.RegionCommandHandler;
 import com.slimer.Region.RegionService;
+import com.slimer.Region.WGHelpers;
 import com.slimer.Util.DebugManager;
 import com.slimer.Util.MusicManager;
 import com.slimer.Util.PlayerData;
-import com.slimer.Region.RegionCommandHandler;
-import com.slimer.Region.WGHelpers;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -19,77 +19,60 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Main entry point for the Snake game plugin.
- * Manages the game's initialization and various settings.
+ * The Main class is the entry point for the Minecraft snake game plugin.
+ * It initializes game components, manages configuration settings, and registers commands.
+ * This class also handles plugin enable and disable events.
+ * <p>
+ * Last updated: V2.0.3
+ * @author Slimerblue22
  */
 public final class Main extends JavaPlugin {
-
-    // Plugin Metadata
     private static String pluginVersion;
-
-    // Configuration Settings
     private String songFilePath;
     private double snakeSpeed;
     private int maxPlayersPerGame;
     private int maxApplesPerGame;
     private double forceTeleportDistance;
     private double targetCloseEnoughDistance;
-
-    // Game Management
     private GameManager gameManager;
     private boolean isMusicEnabled = false;
 
     /**
-     * Called when the plugin is enabled.
-     * Initializes all components and settings necessary for the game.
+     * Called when the plugin is enabled. This method initializes various plugin components
+     * and services.
      */
     @Override
     public void onEnable() {
-        // Initialize Configuration
         initConfig();
-
-        // Initialize Music
         initMusic();
-
-        // Initialize Game Components
-        initializeGameComponents();
-
-        // Initialize Region Services
-        initializeRegionServices();
-
-        // Initialize Player Data
+        initGameComponents();
+        initRegionServices();
         initPlayerData();
-
-        // Initialize Metrics
         initMetrics();
-
-        // Register Commands
         registerCommands();
     }
 
     /**
-     * Initializes the configuration settings from the config file.
-     * Sets default values if the settings are not found.
+     * Initializes the plugin configuration by loading or setting default values.
      */
     private void initConfig() {
         this.saveDefaultConfig();
         FileConfiguration config = this.getConfig();
-        songFilePath = config.getString("song-file-path", "songs/song.nbs"); // Default path of songs/song.nbs
-        snakeSpeed = config.getDouble("snake-speed", 5.0);// Default value of 5
-        maxPlayersPerGame = config.getInt("max-players-per-game", 1);  // Default value of 1
-        maxApplesPerGame = config.getInt("max-apples-per-game", 1);  // Default value of 1
-        forceTeleportDistance = config.getDouble("force-teleport-distance", 1.2); // Default value of 1.2
-        targetCloseEnoughDistance = config.getDouble("target-close-enough-distance", 0.1); // Default value of 0.1
-        pluginVersion = this.getDescription().getVersion(); // Deprecated yet no alternative, still works though
+        songFilePath = config.getString("song-file-path", "songs/song.nbs");
+        snakeSpeed = config.getDouble("snake-speed", 5.0);
+        maxPlayersPerGame = config.getInt("max-players-per-game", 1);
+        maxApplesPerGame = config.getInt("max-apples-per-game", 1);
+        forceTeleportDistance = config.getDouble("force-teleport-distance", 1.2);
+        targetCloseEnoughDistance = config.getDouble("target-close-enough-distance", 0.1);
+        pluginVersion = this.getDescription().getVersion();
     }
 
     /**
-     * Initializes the music settings and checks if NoteBlockAPI is present.
-     * Sets the music state accordingly.
+     * Initializes music functionality, if enabled and NoteBlockAPI is available.
      */
     private void initMusic() {
-        boolean enableMusic = getConfig().getBoolean("enable-music", true);
-        if (Bukkit.getPluginManager().isPluginEnabled("NoteBlockAPI") && enableMusic) {
+        if (Bukkit.getPluginManager().isPluginEnabled("NoteBlockAPI") &&
+                getConfig().getBoolean("enable-music", true)) {
             isMusicEnabled = true;
             new MusicManager(this);
         } else {
@@ -98,82 +81,59 @@ public final class Main extends JavaPlugin {
     }
 
     /**
-     * Initializes the player data and performs migration if necessary.
+     * Initializes player data management and migration.
      */
     private void initPlayerData() {
-        PlayerData.getInstance(this);
-        // Run migration checks
-        PlayerData.getInstance().migrateFromYmlToSql(this);
+        PlayerData.getInstance(this).migrateFromYmlToSql(this);
     }
 
     /**
-     * Initializes the metrics for the plugin.
+     * Initializes the bstats metrics collection for the plugin.
      */
     private void initMetrics() {
-        int pluginId = 19729;
-        new Metrics(this, pluginId);
+        new Metrics(this, 19729);
     }
 
     /**
-     * Initializes the game components including GameManager, SnakeMovement,
-     * PlayerInputHandler, and the game command handler.
+     * Initializes game-related components.
      */
-    private void initializeGameComponents() {
+    private void initGameComponents() {
         Map<Player, SnakeCreation> playerSnakes = new HashMap<>();
         Map<Player, Location> playerLobbyLocations = new HashMap<>();
-
-        // Initialize GameManager first
         gameManager = new GameManager(playerSnakes, playerLobbyLocations, this, isMusicEnabled);
-
-        // Now, pass the GameManager instance to Apple's constructor
         new Apple(this, gameManager);
-
         SnakeMovement snakeMovement = new SnakeMovement(gameManager, null, this);
-
-        // Initialize PlayerInputHandler and pass GameManager to it
         PlayerInputHandler playerInputHandler = new PlayerInputHandler(this, gameManager);
-
         snakeMovement.setPlayerInputHandler(playerInputHandler);
         gameManager.setPlayerInputHandler(playerInputHandler);
         gameManager.setSnakeMovement(snakeMovement);
-
-        // Initialize game command handler
         new GameCommandHandler(gameManager, this);
     }
 
     /**
-     * Initializes the region services including the RegionService, RegionFileHandler,
-     * and region command handler. It also loads regions from configuration.
+     * Initializes region-related services and migration.
      */
-    private void initializeRegionServices() {
+    private void initRegionServices() {
         RegionService.initializeInstance(this);
         WGHelpers.getInstance();
         RegionService.getInstance().migrateRegionsFromYmlToSql(this);
     }
 
     /**
-     * Registers all the commands used in the plugin.
+     * Registers plugin commands for debugging, game management, and region management.
      */
     private void registerCommands() {
-        // Register the Debug Command
         Objects.requireNonNull(getCommand("snakedebug")).setExecutor(new DebugManager.ToggleDebugCommand());
-
-        // Register the Game Command
         Objects.requireNonNull(getCommand("snakegame")).setExecutor(new GameCommandHandler(gameManager, this));
-
-        // Register the Region Command
         Objects.requireNonNull(getCommand("snakeregion")).setExecutor(new RegionCommandHandler());
     }
 
     /**
-     * Called when the plugin is disabled.
-     * This method stops all active games and performs any necessary cleanup logic.
+     * Called when the plugin is disabled. Stops all active games and closes active SQL connections.
      */
     @Override
     public void onDisable() {
-        // Stop all active games
         gameManager.stopAllGames();
-        // Close active SQL connections
         RegionService.getInstance().closeDatabase();
     }
 
@@ -197,9 +157,9 @@ public final class Main extends JavaPlugin {
     }
 
     /**
-     * Gets the speed of the snake.
+     * Gets the speed of the snake in blocks per second.
      *
-     * @return The speed of the snake.
+     * @return The speed of the snake in blocks per second.
      */
     public double getSnakeSpeed() {
         return snakeSpeed;
