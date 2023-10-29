@@ -20,10 +20,12 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Represents an apple entity in the Snake game.
- * Responsible for the spawning and removal of apple instances in the game world.
- * Note: The actual logic for apple collection is managed by the {@code GameManager} class,
- * which serves as the primary control point for coordinating game-related activities.
+ * Represents an apple in the Snake game. This class manages the spawning, naming, and clearing of apple entities.
+ * It ensures that apples spawn at suitable locations, have custom names based on the player who collects them, and
+ * are removed when collected by a player.
+ * <p>
+ * Last updated: V2.0.3
+ * @author Slimerblue22
  */
 public class Apple {
     private final JavaPlugin plugin;
@@ -61,6 +63,7 @@ public class Apple {
         meta.setOwningPlayer(Bukkit.getOfflinePlayer(ownerUUID));
         appleHead.setItemMeta(meta);
         armorStand.getEquipment().setHelmet(appleHead);
+
         DebugManager.log(DebugManager.Category.APPLE, "Apple ArmorStand spawned at " + location);
         return armorStand;
     }
@@ -82,15 +85,20 @@ public class Apple {
         do {
             location = getRandomLocationWithinGameZone(world, snakeYLevel, regionName);
             DebugManager.log(DebugManager.Category.APPLE, "Checking suitability of random location: " + location);
+
             if (location == null || !isLocationValid(location, snakeLocation, aStar)) {
                 location = null;
             }
+
             attempts++;
+
             if (attempts >= maxAttempts) {
                 DebugManager.log(DebugManager.Category.APPLE, "Exceeded maximum apple spawn attempts (" + maxAttempts + "). No suitable location found.");
                 return null;
             }
+
         } while (location == null);
+
         DebugManager.log(DebugManager.Category.APPLE, "Suitable apple spawn location found at " + location);
         return location;
     }
@@ -105,12 +113,14 @@ public class Apple {
      */
     private boolean isLocationValid(Location location, Location snakeLocation, AStar aStar) {
         DebugManager.log(DebugManager.Category.APPLE, "Validating apple spawn location: " + location);
+
         if (aStar.hasSolidNeighbors(location) || aStar.isSameBlock(location, snakeLocation)) {
             return false;
         }
+
         boolean pathExists = aStar.pathExists(snakeLocation, location);
         DebugManager.log(DebugManager.Category.APPLE, "Path from snake to apple exists: " + pathExists);
-        return aStar.pathExists(snakeLocation, location);
+        return pathExists;
     }
 
     /**
@@ -133,23 +143,28 @@ public class Apple {
 
                 if (world != null && wgHelpers.areCoordinatesInWGRegion(world.getName(), regionName, snakeLocation.getBlockX(), snakeLocation.getBlockY(), snakeLocation.getBlockZ())) {
                     CompletableFuture<Location> future = CompletableFuture.supplyAsync(() -> findSuitableLocation(world, snakeYLevel, regionName, snakeLocation));
+
                     future.thenAccept(loc -> Bukkit.getScheduler().runTask(plugin, () -> {
                         if (loc == null) {
                             return;
                         }
+
                         Player playerObj = Bukkit.getPlayer(playerName);
                         if (playerObj != null && gameManager.getSnakeForPlayer(playerObj) == null) {
                             return;
                         }
+
                         loc.setX(loc.getBlockX() + 0.5);
                         loc.setZ(loc.getBlockZ() + 0.5);
                         Location adjustedLocation = loc.clone().subtract(0, 1.4, 0);
                         this.armorStand = spawnArmorStand(adjustedLocation);
+
                         DyeColor sheepColor = PlayerData.getInstance().getSheepColor(Objects.requireNonNull(player));
                         NamedTextColor color = convertDyeColorToTextColor(sheepColor);
                         Component customName = Component.text(playerName + "'s apple").color(color);
                         armorStand.customName(customName);
                         armorStand.setCustomNameVisible(true);
+
                         DebugManager.log(DebugManager.Category.APPLE, "Apple named after player: " + playerName);
                     }));
                 }
