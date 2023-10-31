@@ -21,7 +21,19 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * A class to handle the graphical user interface (GUI) for the Snake game commands.
+ * The GameCommandGUI class represents a graphical user interface for the Snake game.
+ * It provides menus and interfaces for players to interact with various game-related commands and settings.
+ * This class implements the Bukkit Listener interface to handle inventory click events.
+ * <p>
+ * The GameCommandGUI includes the following functionality:
+ * - Main menu with options to start, stop, get help, set colors, view the leaderboard, and toggle music.
+ * - Color selection menu for choosing the snake's color.
+ * - Leaderboard menu for displaying the top players and their scores.
+ * <p>
+ * This class also manages the animation of glass panes on the menu border.
+ * <p>
+ * Last updated: V2.1.0
+ * @author Slimerblue22
  */
 public class GameCommandGUI implements Listener {
     private static GameCommandGUI currentInstance;  // Single instance of GameCommandGUI to prevent multiple event listener registrations
@@ -47,7 +59,7 @@ public class GameCommandGUI implements Listener {
     private int rotationState = 0;
 
     /**
-     * Constructs a new GameCommandGUI object, setting this as the current instance.
+     * Constructs a new GameCommandGUI object and sets it as the current instance.
      * Ensures that only one GUI event listener instance is active at a time.
      *
      * @param plugin The Plugin instance for the Snake game.
@@ -57,7 +69,7 @@ public class GameCommandGUI implements Listener {
         this.plugin = plugin;
         menu = createMenu(player);
         startAnimation(menu, 3);
-        currentInstance = this;  // Set this object as the current active instance
+        currentInstance = this;
     }
 
     /**
@@ -70,13 +82,17 @@ public class GameCommandGUI implements Listener {
     }
 
     /**
-     * Creates the main menu for the Snake game.
+     * Creates the main menu for the Snake game, including options like Start, Stop, Help, etc.
+     * Additionally, it displays the player's high score and allows them to toggle music.
      *
+     * @param player The player for whom the menu is being created.
      * @return An Inventory object representing the main menu.
      */
     private Inventory createMenu(Player player) {
+        // Initialize main menu
         Inventory menu = Bukkit.createInventory(null, 9 * 3, Component.text("Snake Main Menu"));
 
+        // Add regular menu items
         menu.setItem(10, createMenuItem(Material.GREEN_WOOL, "Start"));
         menu.setItem(11, createMenuItem(Material.RED_WOOL, "Stop"));
         menu.setItem(12, createMenuItem(Material.BOOK, "Help"));
@@ -84,15 +100,12 @@ public class GameCommandGUI implements Listener {
         menu.setItem(14, createMenuItem(Material.DIAMOND, "Leaderboard"));
         menu.setItem(16, createMenuItem(Material.JUKEBOX, "Toggle Music"));
 
-        // Create player head with high score for the specific player
+        // Add player-specific item with high score
         ItemStack playerHead = createPlayerHead(player.getName());
         SkullMeta meta = (SkullMeta) playerHead.getItemMeta();
-
-        // Fetch the high score for the player using the PlayerData class
         int highScore = PlayerData.getInstance().getHighScore(player);
         meta.displayName(Component.text("High Score: " + highScore));
         playerHead.setItemMeta(meta);
-
         menu.setItem(15, playerHead);
 
         return menu;
@@ -108,29 +121,39 @@ public class GameCommandGUI implements Listener {
     }
 
     /**
-     * Creates a color selection menu for the Snake game.
+     * Creates a color selection menu for the Snake game, allowing players to choose their snake's color.
      *
      * @return An Inventory object representing the color selection menu.
      */
     public Inventory createColorMenu() {
-        int maxRows = 5; // Including the border rows
-        Inventory colorMenu = Bukkit.createInventory(null, maxRows * 9, Component.text("Select Snake Color"));
+        // Constants
+        final int maxRows = 5;
+        final int slotsPerRow = 9;
 
-        int slot = 10; // Start from the second row and second column to accommodate the border
+        // Initialize color menu
+        Inventory colorMenu = Bukkit.createInventory(null, maxRows * slotsPerRow, Component.text("Select Snake Color"));
 
+        // Initialize slot index; start at second row and second column
+        int slot = 10;
+
+        // Populate the menu with wool color options
         for (Material color : woolColors) {
-            while (slot % 9 == 0 || slot % 9 == 8 || slot / 9 == maxRows - 1) {
-                slot++; // Skip the slots reserved for the border
+            // Skip slots reserved for the border
+            while (slot % slotsPerRow == 0 || slot % slotsPerRow == 8 || slot / slotsPerRow == maxRows - 1) {
+                slot++;
             }
 
+            // Create and set color item
             ItemStack colorItem = new ItemStack(color);
             ItemMeta colorMeta = colorItem.getItemMeta();
             colorMeta.displayName(Component.text(color.name().replace("_WOOL", "").replace("_", " ")));
             colorItem.setItemMeta(colorMeta);
             colorMenu.setItem(slot, colorItem);
+
             slot++;
         }
 
+        // Start border animation
         startAnimation(colorMenu, maxRows);
         return colorMenu;
     }
@@ -138,64 +161,68 @@ public class GameCommandGUI implements Listener {
     /**
      * Creates a leaderboard menu for the Snake game.
      *
+     * @param page The page number for the leaderboard.
      * @return An Inventory object representing the leaderboard menu.
      */
     public Inventory createLeaderboardMenu(int page) {
-        int maxRows = 4;
-        int maxEntries = 10;
-        int startEntry = (page - 1) * maxEntries; // Calculate the starting entry for the current page
-        Inventory leaderboardMenu = Bukkit.createInventory(null, maxRows * 9, Component.text("Leaderboard (Page " + page + ")"));
+        // Constants
+        final int maxRows = 4;
+        final int maxEntries = 10;
+        final int slotsPerRow = 9;
 
-        List<Map.Entry<String, Integer>> allLeaderboardEntries = PlayerData.getInstance((JavaPlugin) plugin).getLeaderboard();
-        List<Map.Entry<String, Integer>> pageLeaderboardEntries = allLeaderboardEntries.subList(startEntry, Math.min(startEntry + maxEntries, allLeaderboardEntries.size()));
+        // Initialize leaderboard menu and get leaderboard entries
+        Inventory leaderboardMenu = Bukkit.createInventory(null, maxRows * slotsPerRow,
+                Component.text("Leaderboard (Page " + page + ")"));
+        List<Map.Entry<String, Integer>> allEntries = PlayerData.getInstance((JavaPlugin) plugin).getLeaderboard();
 
-        int slot = 10; // Start from the second row and second column to accommodate the border
+        // Calculate page-specific details
+        int startEntry = (page - 1) * maxEntries;
+        int endEntry = Math.min(startEntry + maxEntries, allEntries.size());
+        List<Map.Entry<String, Integer>> pageEntries = allEntries.subList(startEntry, endEntry);
 
-        for (int i = 0; i < Math.min(maxEntries, pageLeaderboardEntries.size()); i++) {
-            Map.Entry<String, Integer> entry = pageLeaderboardEntries.get(i);
+        // Initialize slot index; start at second row and second column
+        int slot = 10;
 
-            // Special case to center the last 3 entries on the third row
-            if (i == 7) {
-                slot = 2 * 9 + 3; // Start at the third row and fourth column
+        // Populate leaderboard entries into the menu
+        for (int i = 0; i < pageEntries.size(); i++) {
+            Map.Entry<String, Integer> entry = pageEntries.get(i);
+
+            // Special cases for last 3 entries
+            if (i >= 7) {
+                slot = 2 * slotsPerRow + 3 + (i - 7);
             }
-            if (i == 8) {
-                slot = 2 * 9 + 4; // Start at the third row and fifth column
-            }
-            if (i == 9) {
-                slot = 2 * 9 + 5; // Start at the third row and sixth column
+
+            // Skip border slots
+            while (slot % slotsPerRow == 0 || slot % slotsPerRow == 8 || slot / slotsPerRow == maxRows - 1) {
+                slot++;
             }
 
-            while (slot % 9 == 0 || slot % 9 == 8 || slot / 9 == maxRows - 1) {
-                slot++; // Skip the slots reserved for the border
-            }
-
+            // Create and set player head
             ItemStack playerHead = createPlayerHead(entry.getKey());
             ItemMeta meta = playerHead.getItemMeta();
             meta.displayName(Component.text(entry.getKey() + ": " + entry.getValue()));
             playerHead.setItemMeta(meta);
             leaderboardMenu.setItem(slot, playerHead);
 
-            // Only increment slot if not one of the last 3 special cases
+            // Increment slot index
             if (i < 7) {
                 slot++;
             }
         }
 
-        // Calculate slot positions for the 3rd row
-        int previousPageSlot = 1 + 9 * 2; // Slot 2 of the 3rd row
-        int nextPageSlot = 7 + 9 * 2; // Slot 8 of the 3rd row
-
-        // Add next and previous page buttons
+        // Add navigation buttons
+        int prevPageSlot = 1 + slotsPerRow * 2;
+        int nextPageSlot = 7 + slotsPerRow * 2;
         if (page > 1) {
-            // Add "Previous Page" button
-            leaderboardMenu.setItem(previousPageSlot, createMenuItem(Material.ARROW, "Previous Page"));
+            leaderboardMenu.setItem(prevPageSlot, createMenuItem(Material.ARROW, "Previous Page"));
         }
-        if (allLeaderboardEntries.size() > page * maxEntries) {
-            // Add "Next Page" button
+        if (allEntries.size() > page * maxEntries) {
             leaderboardMenu.setItem(nextPageSlot, createMenuItem(Material.ARROW, "Next Page"));
         }
 
+        // Start the border animation
         startAnimation(leaderboardMenu, maxRows);
+
         return leaderboardMenu;
     }
 
@@ -204,7 +231,7 @@ public class GameCommandGUI implements Listener {
      * The inventory title should contain a section like "(Page x)", where x is the page number.
      *
      * @param title The Component representing the inventory title.
-     * @return The extracted page number. Returns -1 if the page number cannot be extracted.
+     * @return The extracted page number, or -1 if the page number cannot be extracted.
      */
     private int getCurrentPage(Component title) {
         String titleString = title.toString();
@@ -280,11 +307,15 @@ public class GameCommandGUI implements Listener {
                     continue;
                 }
 
+                // Determine the next color based on the rotation state and index
                 Material color = colors[(rotationState + index) % colors.length];
+
+                // Set the new color for the slot
                 menu.setItem(index, new ItemStack(color));
             }
         }
 
+        // Update rotation state for the next cycle
         rotationState = (rotationState + 1) % colors.length;
     }
 
@@ -299,54 +330,80 @@ public class GameCommandGUI implements Listener {
         Inventory clickedInventory = event.getClickedInventory();
         ItemStack clickedItem = event.getCurrentItem();
 
+        // Basic null checks
         if (clickedInventory == null || clickedItem == null) return;
 
         Component title = event.getView().title();
+        event.setCancelled(true);  // Cancel the event by default
+
+        // Route to the specific handler based on the title
         if (title.equals(Component.text("Snake Main Menu"))) {
-            switch (clickedItem.getType()) {
-                case GREEN_WOOL -> player.performCommand("snakegame start");
-                case RED_WOOL -> player.performCommand("snakegame stop");
-                case BOOK -> player.performCommand("snakegame help");
-                case JUKEBOX -> player.performCommand("snakegame music");
-                case PAINTING -> {
-                    player.openInventory(createColorMenu()); // Open the color submenu
-                    event.setCancelled(true);
-                    return; // Return without closing the main menu
-                }
-                case DIAMOND -> {
-                    player.openInventory(createLeaderboardMenu(1)); // Open the leaderboard submenu
-                    event.setCancelled(true);
-                    return; // Return without closing the main menu
-                }
-            }
-            player.closeInventory();  // Close the main menu
-            event.setCancelled(true);  // Cancel the event to prevent taking items
-
+            handleMainMenuClick(player, clickedItem);
         } else if (title.equals(Component.text("Select Snake Color"))) {
-            // Cancel the event to prevent taking items, including the glass panes
-            event.setCancelled(true);
-
-            Material clickedMaterial = clickedItem.getType();
-
-            // Execute the color change command only if the clicked item is wool
-            if (clickedMaterial.toString().endsWith("_WOOL")) {
-                String color = clickedMaterial.name().replace("_WOOL", "").toLowerCase();
-                player.performCommand("snakegame color " + color);
-                player.closeInventory();
-            }
+            handleColorMenuClick(player, clickedItem);
         } else if (title.toString().contains("Leaderboard")) {
-            event.setCancelled(true); // Prevent taking items from the GUI
-            ItemMeta meta = clickedItem.getItemMeta();
-            if (meta != null && meta.displayName() != null) {
-                if (Objects.equals(meta.displayName(), Component.text("Next Page"))) {
-                    // Increment the page number and open the next page
-                    int nextPage = getCurrentPage(title) + 1;
-                    player.openInventory(createLeaderboardMenu(nextPage));
-                } else if (Objects.equals(meta.displayName(), Component.text("Previous Page"))) {
-                    // Decrement the page number and open the previous page
-                    int prevPage = getCurrentPage(title) - 1;
-                    player.openInventory(createLeaderboardMenu(prevPage));
-                }
+            handleLeaderboardMenuClick(player, clickedItem, title);
+        } else {
+            // If none of the conditions are met, un-cancel the event
+            event.setCancelled(false);
+        }
+    }
+
+    /**
+     * Handles click events in the Snake Main Menu.
+     *
+     * @param player      The player who clicked.
+     * @param clickedItem The ItemStack that was clicked.
+     */
+    private void handleMainMenuClick(Player player, ItemStack clickedItem) {
+        switch (clickedItem.getType()) {
+            case GREEN_WOOL -> player.performCommand("snakegame start");
+            case RED_WOOL -> player.performCommand("snakegame stop");
+            case BOOK -> player.performCommand("snakegame help");
+            case JUKEBOX -> player.performCommand("snakegame music");
+            case PAINTING -> {
+                player.openInventory(createColorMenu());
+                return;
+            }
+            case DIAMOND -> {
+                player.openInventory(createLeaderboardMenu(1));
+                return;
+            }
+        }
+        player.closeInventory();
+    }
+
+    /**
+     * Handles click events in the Snake Color Menu.
+     *
+     * @param player       The player who clicked.
+     * @param clickedItem  The ItemStack that was clicked.
+     */
+    private void handleColorMenuClick(Player player, ItemStack clickedItem) {
+        Material clickedMaterial = clickedItem.getType();
+        if (clickedMaterial.toString().endsWith("_WOOL")) {
+            String color = clickedMaterial.name().replace("_WOOL", "").toLowerCase();
+            player.performCommand("snakegame color " + color);
+            player.closeInventory();
+        }
+    }
+
+    /**
+     * Handles click events in the Snake Leaderboard Menu.
+     *
+     * @param player      The player who clicked.
+     * @param clickedItem The ItemStack that was clicked.
+     * @param title       The title of the leaderboard menu.
+     */
+    private void handleLeaderboardMenuClick(Player player, ItemStack clickedItem, Component title) {
+        ItemMeta meta = clickedItem.getItemMeta();
+        if (meta != null && meta.displayName() != null) {
+            if (Objects.equals(meta.displayName(), Component.text("Next Page"))) {
+                int nextPage = getCurrentPage(title) + 1;
+                player.openInventory(createLeaderboardMenu(nextPage));
+            } else if (Objects.equals(meta.displayName(), Component.text("Previous Page"))) {
+                int prevPage = getCurrentPage(title) - 1;
+                player.openInventory(createLeaderboardMenu(prevPage));
             }
         }
     }
