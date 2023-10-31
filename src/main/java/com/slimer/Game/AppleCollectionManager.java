@@ -15,7 +15,7 @@ import java.util.List;
  * Manages the apple collection process for the player's snake in the Snake game.
  * This class monitors and handles apple collection, collision detection, and related actions.
  * <p>
- * Last updated: V2.0.3
+ * Last updated: V2.1.0
  * @author Slimerblue22
  */
 public class AppleCollectionManager {

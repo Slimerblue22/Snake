@@ -23,7 +23,7 @@ import java.util.Objects;
  * It initializes game components, manages configuration settings, and registers commands.
  * This class also handles plugin enable and disable events.
  * <p>
- * Last updated: V2.0.3
+ * Last updated: V2.1.0
  * @author Slimerblue22
  */
 public final class Main extends JavaPlugin {

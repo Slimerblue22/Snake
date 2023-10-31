@@ -26,7 +26,7 @@ import java.util.*;
  * It is responsible for handling player initialization, game start and stop, scoring, music, and various game events.
  * This class is a central component that connects various game-related subsystems and manages the game's lifecycle.
  * <p>
- * Last updated: V2.0.3
+ * Last updated: V2.1.0
  * @author Slimerblue22
  */
 public class GameManager {

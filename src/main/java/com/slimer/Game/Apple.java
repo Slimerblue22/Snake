@@ -24,7 +24,7 @@ import java.util.concurrent.CompletableFuture;
  * It ensures that apples spawn at suitable locations, have custom names based on the player who collects them, and
  * are removed when collected by a player.
  * <p>
- * Last updated: V2.0.3
+ * Last updated: V2.1.0
  * @author Slimerblue22
  */
 public class Apple {

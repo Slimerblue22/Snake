@@ -29,7 +29,7 @@ import java.util.Map;
  * Handles player commands related to the Snake game, including starting and stopping games, setting snake colors,
  * displaying the game GUI, and providing game instructions.
  * <p>
- * Last updated: V2.0.3
+ * Last updated: V2.1.0
  * @author Slimerblue22
  */
 public class GameCommandHandler implements CommandExecutor, TabCompleter {
