@@ -20,6 +20,9 @@ import java.util.List;
  * Handles conditions that may result in the end of the snake game for a player.
  * This includes wall collisions, snake self-collisions, and player dismounting the snake's head.
  * The class also manages events related to the game-ending conditions.
+ * <p>
+ * Last updated: V2.1.0
+ * @author Slimerblue22
  */
 public class GameEndConditionsHandler implements Listener {
     private final GameManager gameManager;
@@ -45,10 +48,10 @@ public class GameEndConditionsHandler implements Listener {
      * If a collision is detected, the game for the player is stopped.
      */
     public void runGameEndEventsChecks() {
-        String gameEndReason = getGameEndReason(); // Get the game end reason
-
+        String gameEndReason = getGameEndReason();  // Retrieve the reason for the game's end
         if (gameEndReason != null) {
-            gameManager.stopGame(player, gameEndReason);  // End the game for the player with the reason
+            // If an end condition is met, stop the game for the player and provide the reason
+            gameManager.stopGame(player, gameEndReason);
         }
     }
 
@@ -58,17 +61,20 @@ public class GameEndConditionsHandler implements Listener {
      *
      * @return A string describing the reason for the game's end. If no conditions are met, it returns null.
      */
-    public String getGameEndReason() {
+    private String getGameEndReason() {
         if (checkWallCollision()) {
             return "Hit a wall!";
-        } else if (checkSolidBlockBelow()) {
+        }
+        if (checkSolidBlockBelow()) {
             return "No solid block below!";
-        } else if (checkSelfCollision()) {
+        }
+        if (checkSelfCollision()) {
             return "Self-collision detected!";
-        } else if (checkPlayerDismounted()) {
+        }
+        if (checkPlayerDismounted()) {
             return "Dismounted from the snake!";
         }
-        return null; // No end conditions met
+        return null;  // Return null if no game-ending conditions are met
     }
 
     /**
@@ -81,21 +87,19 @@ public class GameEndConditionsHandler implements Listener {
         if (snake == null) {
             return false;
         }
-
-        Entity sheepEntity = snake.getSheepEntity();  // This is the head of the snake
+        Entity sheepEntity = snake.getSheepEntity();  // The head of the snake
         Location currentLocation = sheepEntity.getLocation();
-
-        double roundTo = 1e-3; // Consider up to the third decimal place
-        double x = Math.round(currentLocation.getX() / roundTo) * roundTo;
-        double y = Math.round(currentLocation.getY() / roundTo) * roundTo;
-        double z = Math.round(currentLocation.getZ() / roundTo) * roundTo;
-        Location roundedLocation = new Location(currentLocation.getWorld(), x, y, z);
+        double roundTo = 1e-3;  // Round to the third decimal place for comparison
+        Location roundedLocation = roundLocation(currentLocation, roundTo);
 
         if (lastKnownLocation != null && lastKnownLocation.equals(roundedLocation)) {
-            DebugManager.log(DebugManager.Category.GAME_END_CONDITIONS, "Wall collision detected for player: " + player.getName() + ". Last known location: " + lastKnownLocation + ", Current location: " + currentLocation);
-            return true; // Collision detected
+
+            DebugManager.log(DebugManager.Category.GAME_END_CONDITIONS,
+                    String.format("Wall collision detected for player: %s. Last known location: %s, Current location: %s",
+                            player.getName(), lastKnownLocation, currentLocation));
+            return true;  // Collision detected
         } else {
-            lastKnownLocation = roundedLocation; // No collision detected
+            lastKnownLocation = roundedLocation;  // Update the last known location
             return false;
         }
     }
@@ -110,13 +114,15 @@ public class GameEndConditionsHandler implements Listener {
         if (snake == null) {
             return false;
         }
-
-        Entity sheepEntity = snake.getSheepEntity();  // This is the head of the snake
+        Entity sheepEntity = snake.getSheepEntity();  // The head of the snake
         Location currentLocation = sheepEntity.getLocation();
         Block blockBelow = currentLocation.getWorld().getBlockAt(currentLocation.add(0, -1, 0));
 
+        // Log and return true if the block below is not solid
         if (!blockBelow.getType().isSolid()) {
-            DebugManager.log(DebugManager.Category.GAME_END_CONDITIONS, "Solid block check failed for player: " + player.getName() + ". Block below is: " + blockBelow.getType());
+            DebugManager.log(DebugManager.Category.GAME_END_CONDITIONS,
+                    String.format("Solid block check failed for player: %s. Block below is: %s",
+                            player.getName(), blockBelow.getType()));
             return true;
         }
         return false;
@@ -143,31 +149,33 @@ public class GameEndConditionsHandler implements Listener {
         if (snake == null) {
             return false;
         }
-
-        Entity sheepEntity = snake.getSheepEntity();  // This is the head of the snake
+        Entity sheepEntity = snake.getSheepEntity();  // The head of the snake
         Vector headLocation = sheepEntity.getLocation().toVector();
 
         // Get all the segments of the snake
         List<Entity> segments = gameManager.getSegmentsForPlayer(player);
 
-        // If there are no segments, ignore collision checks
+        // Skip collision checks if there are no segments
         if (segments.isEmpty()) {
             return false;
         }
 
-        // Special case: check for U-turn if there is one or more segments
+        // Check for U-turns if the snake has one or more segments
         if (gameManager.isUTurnDetected(player)) {
-            DebugManager.log(DebugManager.Category.GAME_END_CONDITIONS, "U-turn detected for player: " + player.getName());
-            gameManager.resetUTurnStatus(player);  // Reset the U-turn status
+            DebugManager.log(DebugManager.Category.GAME_END_CONDITIONS,
+                    String.format("U-turn detected for player: %s", player.getName()));
+            gameManager.resetUTurnStatus(player);  // Reset U-turn status
             return true;  // U-turn detected
         }
 
-        // Iterate through the segments, skipping the first one
+        // Check for collisions between the head and the other segments (skipping the first one)
         for (int i = 1; i < segments.size(); i++) {
             Entity segment = segments.get(i);
             Vector segmentLocation = segment.getLocation().toVector();
             if (headLocation.distance(segmentLocation) < 0.1) {  // Tolerance of 0.1 blocks
-                DebugManager.log(DebugManager.Category.GAME_END_CONDITIONS, "Self-collision detected for player: " + player.getName() + " with segment at location: " + segment.getLocation());
+                DebugManager.log(DebugManager.Category.GAME_END_CONDITIONS,
+                        String.format("Self-collision detected for player: %s with segment at location: %s",
+                                player.getName(), segment.getLocation()));
                 return true;  // Self-collision detected
             }
         }
@@ -184,13 +192,13 @@ public class GameEndConditionsHandler implements Listener {
         if (snake == null) {
             return false;
         }
-
-        Entity sheepEntity = snake.getSheepEntity();  // This is the head of the snake
-
-        // Check if the list of passengers is empty or not containing the player
+        Entity sheepEntity = snake.getSheepEntity();  // The head of the snake
         List<Entity> passengers = sheepEntity.getPassengers();
+
+        // Log and return true if the player is not a passenger of the snake's head
         if (passengers.isEmpty() || !passengers.contains(player)) {
-            DebugManager.log(DebugManager.Category.GAME_END_CONDITIONS, "Player " + player.getName() + " dismounted from snake.");
+            DebugManager.log(DebugManager.Category.GAME_END_CONDITIONS,
+                    String.format("Player %s dismounted from snake.", player.getName()));
             return true;
         }
         return false;
@@ -240,5 +248,19 @@ public class GameEndConditionsHandler implements Listener {
     private boolean isSnakeEntity(Entity entity) {
         // Check if the entity is a sheep
         return entity.getType() == EntityType.SHEEP;
+    }
+
+    /**
+     * Rounds the coordinates of a given Location object to the specified granularity.
+     *
+     * @param location The Location object whose coordinates need to be rounded.
+     * @param roundTo The granularity to which the coordinates should be rounded.
+     * @return A new Location object with rounded coordinates.
+     */
+    private Location roundLocation(Location location, double roundTo) {
+        double x = Math.round(location.getX() / roundTo) * roundTo;
+        double y = Math.round(location.getY() / roundTo) * roundTo;
+        double z = Math.round(location.getZ() / roundTo) * roundTo;
+        return new Location(location.getWorld(), x, y, z);
     }
 }
