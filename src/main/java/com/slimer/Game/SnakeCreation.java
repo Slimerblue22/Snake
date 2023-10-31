@@ -19,10 +19,14 @@ import java.util.List;
 /**
  * This class is responsible for creating and managing a snake in the game.
  * The snake is represented by a lead sheep entity followed by zero or more segment entities.
+ * <p>
+ * Last updated: V2.1.0
+ * @author Slimerblue22
  */
 public class SnakeCreation {
-    private final Sheep sheep;  // The lead entity of the snake
-    private final List<Entity> segments;  // The segment entities that follow the sheep
+    private final Sheep sheep;
+    private final List<Entity> segments;
+    private static final DyeColor DEFAULT_SHEEP_COLOR = DyeColor.WHITE;
 
     /**
      * Constructs a SnakeCreation object and spawns the initial sheep entity at the given location.
@@ -30,15 +34,8 @@ public class SnakeCreation {
      * @param location The spawn location for the lead sheep entity.
      */
     public SnakeCreation(Location location, Player player, JavaPlugin plugin) {
-        this.sheep = (Sheep) location.getWorld().spawnEntity(location, EntityType.SHEEP, CreatureSpawnEvent.SpawnReason.CUSTOM);
-        this.sheep.setSilent(true);
-        this.sheep.setAware(false);
-        this.sheep.setCollidable(false);
+        this.sheep = spawnSheep(location, player, plugin);
         this.segments = new ArrayList<>();
-        // Set sheep color
-        DyeColor color = PlayerData.getInstance(plugin).getSheepColor(player);
-        this.sheep.setColor(color == null ? DyeColor.WHITE : color);
-
         DebugManager.log(DebugManager.Category.SNAKE_CREATION, "New snake created for player: " + player.getName() + " at location: " + location);
     }
 
@@ -50,19 +47,27 @@ public class SnakeCreation {
     public void addSegment(Vector lastWaypoint, Player player, JavaPlugin plugin) {
         World world = sheep.getWorld();
         Location newSegmentLocation = new Location(world, lastWaypoint.getX(), lastWaypoint.getY(), lastWaypoint.getZ());
-        Entity segment = world.spawnEntity(newSegmentLocation, EntityType.SHEEP, CreatureSpawnEvent.SpawnReason.CUSTOM);
+        Entity segment = spawnSheep(newSegmentLocation, player, plugin);
         segments.add(segment);
+        DebugManager.log(DebugManager.Category.SNAKE_CREATION, "Segment added for player: " + player.getName() + " at waypoint: " + lastWaypoint);
+    }
 
-        // Set segment properties if it's a Sheep entity
-        if (segment instanceof Sheep) {
-            segment.setSilent(true);
-            ((Sheep) segment).setAware(false);
-            ((Sheep) segment).setCollidable(false);
-            DyeColor color = PlayerData.getInstance(plugin).getSheepColor(player);
-            ((Sheep) segment).setColor(color == null ? DyeColor.WHITE : color);
-
-            DebugManager.log(DebugManager.Category.SNAKE_CREATION, "Segment added for player: " + player.getName() + " at waypoint: " + lastWaypoint);
-        }
+    /**
+     * Spawns a custom Sheep entity at the specified location with specific attributes.
+     *
+     * @param location The Location where the Sheep should be spawned.
+     * @param player The Player associated with the spawned Sheep.
+     * @param plugin The JavaPlugin instance managing the operation.
+     * @return The newly spawned Sheep entity.
+     */
+    private Sheep spawnSheep(Location location, Player player, JavaPlugin plugin) {
+        Sheep newSheep = (Sheep) location.getWorld().spawnEntity(location, EntityType.SHEEP, CreatureSpawnEvent.SpawnReason.CUSTOM);
+        newSheep.setSilent(true);
+        newSheep.setAware(false);
+        newSheep.setCollidable(false);
+        DyeColor color = PlayerData.getInstance(plugin).getSheepColor(player);
+        newSheep.setColor(color == null ? DEFAULT_SHEEP_COLOR : color);
+        return newSheep;
     }
 
     /**
