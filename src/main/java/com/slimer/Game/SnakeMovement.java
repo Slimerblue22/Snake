@@ -7,12 +7,44 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
 import java.util.*;
+/*
+  ==============================================================================
+                               IMPORTANT NOTICE
+  ==============================================================================
+
+  The SnakeMovement class contains complex logic for managing the movement of
+  snakes in the game. While the current implementation works, it's held together
+  with hopes and dreams and is a prime candidate for refactoring.
+
+  Reasons for Refactoring:
+  - Mixed Responsibilities: The class currently manages both waypoints and actual entity movement.
+  - Complex Methods: Some methods contain complex conditions and calculations that could be simplified.
+  - Magic Numbers: The code contains magic numbers that could be replaced with named constants.
+  - Null Checks: There are multiple null checks for list and map values that could be simplified.
+  - Differing Speed Issues: Different speeds often have unexpected results. Some work, some don't.
+
+  Suggestions for Refactoring:
+  - Separate waypoint management from movement logic to improve code clarity.
+  - Simplify complex methods by breaking them into smaller, more focused functions.
+  - Replace magic numbers with named constants for improved readability.
+  - Streamline null checks and error handling for more concise code.
+
+  Before any refactoring efforts:
+  - Review the existing logic to understand the "why" behind each implementation detail.
+  - Consider the fact that this is a core component of the game and edits will likely break other classes.
+  - Thoroughly test the refactored code to avoid regressions.
+
+  ==============================================================================
+ */
 
 /**
  * Manages the movement mechanics of the snakes in the game.
  * This class is responsible for updating and moving both the head entity and the segments of each snake.
  * Movement is determined based on player inputs and target positions.
  * The class uses waypoints to store intermediate positions for smooth and accurate snake movement.
+ * <p>
+ * Last updated: V2.1.0
+ * @author Slimerblue22
  */
 public class SnakeMovement {
     private final GameManager gameManager;
@@ -47,8 +79,11 @@ public class SnakeMovement {
      * @return The Vector representing the last position.
      */
     public Vector getLastPositionOfLastSegmentOrHead(Player player) {
+        // Retrieve the list of segments for the player's snake
         List<Entity> segments = gameManager.getSegmentsForPlayer(player);
+        // Get the last segment, if available
         Entity lastSegment = (segments != null && !segments.isEmpty()) ? segments.get(segments.size() - 1) : null;
+        // Return the last position of either the last segment or the snake's head
         return (lastSegment != null) ? lastPositions.get(lastSegment) : lastPositions.get(gameManager.getSnakeForPlayer(player).getSheepEntity());
     }
 
@@ -67,7 +102,9 @@ public class SnakeMovement {
      * @param player The player whose snake's target position and waypoints should be cleared.
      */
     public void clearTargetPosition(Player player) {
+        // Remove the player's snake target position
         playerTargetPositions.remove(player);
+        // Clear the waypoints for the player's snake
         Deque<Vector> waypoints = playerWaypoints.get(player);
         if (waypoints != null) {
             waypoints.clear();
@@ -75,19 +112,14 @@ public class SnakeMovement {
     }
 
     /**
-     * Initializes the target position for a player's snake based on its initial position.
+     * Initializes the target position for a player's snake based on its initial position and direction.
      *
      * @param player          The player whose snake's target position is to be initialized.
      * @param initialPosition The initial position of the snake.
      */
     public void initializeTargetPositionForPlayer(Player player, Vector initialPosition) {
-        // Get the current direction of the player's snake
-        Vector initialDirection = playerInputHandler.getCurrentDirection(player);
-
-        // Calculate the initial target position by adding the direction to the initial position
-        Vector initialTargetPosition = initialPosition.clone().add(initialDirection);
-
-        // Store the initial target position for the player's snake
+        // Calculate and store the initial target position based on the snake's initial position and direction
+        Vector initialTargetPosition = initialPosition.clone().add(playerInputHandler.getCurrentDirection(player));
         playerTargetPositions.put(player, initialTargetPosition);
     }
 
@@ -99,48 +131,33 @@ public class SnakeMovement {
      * @param direction The direction in which the snake should move.
      */
     public void moveSnake(Player player, Vector direction) {
-        // Get the SnakeCreation object for the given player
         SnakeCreation snake = gameManager.getSnakeForPlayer(player);
-
-        // If the player has a snake
         if (snake != null) {
-            // Get all the segments of the snake
             List<Entity> segments = gameManager.getSegmentsForPlayer(player);
+            int numSegments = (segments != null) ? segments.size() : 0;
 
-            // Count the number of segments
-            int numSegments = segments != null ? segments.size() : 0;
-
-            // Initialize or get the existing waypoints queue for the snake
+            // Ensure waypoints list is initialized for the player
             playerWaypoints.computeIfAbsent(player, k -> new LinkedList<>());
 
-            // Remove extra waypoints if any
+            // Adjust waypoints list size to match segment count
             while (playerWaypoints.get(player).size() > numSegments + 1) {
                 playerWaypoints.get(player).removeFirst();
             }
 
-            // Get the 'head' entity of the snake (a sheep in this case)
+            // Cache current positions
             Entity sheepEntity = snake.getSheepEntity();
-
-            // Update last position of the head.
             lastPositions.put(sheepEntity, sheepEntity.getLocation().toVector());
 
-            // Update last positions of the segments.
             if (segments != null) {
                 for (Entity segment : segments) {
                     lastPositions.put(segment, segment.getLocation().toVector());
                 }
             }
 
-            // Get the current position of the 'head' entity
+            // Update target and move entities
             Vector currentPosition = sheepEntity.getLocation().toVector();
-
-            // Initialize or update the target position for the snake
             initializeOrUpdateTargetPosition(player, currentPosition, direction);
-
-            // Move the 'head' entity
             moveHead(sheepEntity, currentPosition, direction, player);
-
-            // Move all segments of the snake
             moveSegments(player);
         }
     }
@@ -153,13 +170,11 @@ public class SnakeMovement {
      * @param currentDirection The current direction of the snake.
      */
     private void initializeOrUpdateTargetPosition(Player player, Vector currentPosition, Vector currentDirection) {
-        // Fetch the current target position for the player's snake
         Vector targetPosition = playerTargetPositions.get(player);
-
-        // Initialize or get existing waypoints for the player's snake
+        // Initialize waypoints list if not present for the player
         playerWaypoints.computeIfAbsent(player, k -> new LinkedList<>());
 
-        // Initialize the target position if not set
+        // Initialize target position if null
         if (targetPosition == null) {
             targetPosition = new Vector(
                     Math.floor(currentPosition.getX()) + 0.5,
@@ -169,19 +184,24 @@ public class SnakeMovement {
             playerWaypoints.get(player).addLast(targetPosition.clone());
         }
 
-        // Round the current and target positions to one decimal place
+        // Round to one decimal place for precision
         double roundedCurrentX = Math.round(currentPosition.getX() * 10) / 10.0;
         double roundedCurrentZ = Math.round(currentPosition.getZ() * 10) / 10.0;
         double roundedTargetX = Math.round(targetPosition.getX() * 10) / 10.0;
         double roundedTargetZ = Math.round(targetPosition.getZ() * 10) / 10.0;
 
-        // Check if the rounded positions are close enough to the target
-        if (Math.abs(roundedCurrentX - roundedTargetX) <= targetCloseEnoughDistance &&
-                Math.abs(roundedCurrentZ - roundedTargetZ) <= targetCloseEnoughDistance) {
+        // Check if the current position is close enough to the target
+        boolean isCloseToTargetX = Math.abs(roundedCurrentX - roundedTargetX) <= targetCloseEnoughDistance;
+        boolean isCloseToTargetZ = Math.abs(roundedCurrentZ - roundedTargetZ) <= targetCloseEnoughDistance;
+
+        if (isCloseToTargetX && isCloseToTargetZ) {
+            // Update target position
             targetPosition.add(currentDirection);
-            if (playerWaypoints.get(player).isEmpty() ||
-                    !Objects.equals(playerWaypoints.get(player).peekLast(), targetPosition)) {
-                playerWaypoints.get(player).addLast(targetPosition.clone());
+
+            // Update waypoints and target positions only if they are different
+            Deque<Vector> currentWaypoints = playerWaypoints.get(player);
+            if (currentWaypoints.isEmpty() || !Objects.equals(currentWaypoints.peekLast(), targetPosition)) {
+                currentWaypoints.addLast(targetPosition.clone());
                 playerTargetPositions.put(player, targetPosition);
             }
         }
@@ -196,17 +216,14 @@ public class SnakeMovement {
      * @param player           The player controlling the snake.
      */
     private void moveHead(Entity entity, Vector currentPosition, Vector currentDirection, Player player) {
-        // Get the target position for the snake
         Vector targetPosition = playerTargetPositions.get(player);
 
-        // Calculate the velocity needed to reach the target position
+        // Calculate new velocity
         Vector velocity = targetPosition.clone().subtract(currentPosition).normalize()
                 .multiply(desiredSpeedInBlocksPerSecond / 20.0);
-
-        // Set the calculated velocity
         entity.setVelocity(velocity);
 
-        // Calculate and set the yaw rotation for the entity based on direction
+        // Update entity rotation based on current direction
         float yaw = (float) Math.toDegrees(Math.atan2(-currentDirection.getX(), currentDirection.getZ()));
         entity.setRotation(yaw, entity.getLocation().getPitch());
     }
@@ -217,22 +234,16 @@ public class SnakeMovement {
      * @param player The player whose snake's segments are to be moved.
      */
     private void moveSegments(Player player) {
-        // Get all the segments of the snake
         List<Entity> segments = gameManager.getSegmentsForPlayer(player);
-
-        // Exit if there are no segments
         if (segments == null || segments.isEmpty()) {
             return;
         }
 
-        // Get the waypoints for the segments
         Deque<Vector> waypoints = new LinkedList<>(playerWaypoints.get(player));
-
-        // Reverse the waypoints so that the last waypoint comes first
         Collections.reverse((List<?>) waypoints);
-
-        // Start from the second waypoint as the first is for the head
         Iterator<Vector> waypointIterator = waypoints.iterator();
+
+        // Skip the first waypoint as it is for the head
         if (waypointIterator.hasNext()) {
             waypointIterator.next();
         }
@@ -241,26 +252,23 @@ public class SnakeMovement {
             if (!waypointIterator.hasNext()) {
                 break;
             }
+
             Vector waypoint = waypointIterator.next();
             Vector currentPosition = segment.getLocation().toVector();
+
+            // Calculate new velocity
             Vector velocity = waypoint.clone().subtract(currentPosition).normalize()
                     .multiply(desiredSpeedInBlocksPerSecond / 20.0);
 
-            // Check if the segment is too far from its target waypoint
+            // Calculate distance to next waypoint
             double distanceToWaypoint = currentPosition.distance(waypoint);
-            if (distanceToWaypoint > forceTeleportDistance) { // How far away should segments be allowed to get before being forced back into place
-                // Capture the current yaw and pitch
-                float yaw = segment.getLocation().getYaw();
-                float pitch = segment.getLocation().getPitch();
 
-                // Forcefully teleport the segment to its target waypoint while preserving yaw and pitch
-                segment.teleport(waypoint.toLocation(segment.getWorld(), yaw, pitch));
+            // Teleport or move the segment based on the distance to waypoint
+            if (distanceToWaypoint > forceTeleportDistance) {
+                segment.teleport(waypoint.toLocation(segment.getWorld(), segment.getLocation().getYaw(), segment.getLocation().getPitch()));
             } else {
-                // Set the calculated velocity if it's finite
                 if (Double.isFinite(velocity.getX()) && Double.isFinite(velocity.getY()) && Double.isFinite(velocity.getZ())) {
                     segment.setVelocity(velocity);
-
-                    // Calculate and set the yaw rotation for the segment based on the velocity direction
                     float yaw = (float) Math.toDegrees(Math.atan2(-velocity.getX(), velocity.getZ()));
                     segment.setRotation(yaw, segment.getLocation().getPitch());
                 }
