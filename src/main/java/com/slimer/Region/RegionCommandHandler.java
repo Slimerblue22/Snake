@@ -10,7 +10,13 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * Handles the command logic for the Snake game regions.
+ * Handles commands related to managing regions in the Snake game. This class serves as the executor for region-related
+ * commands and directs them to the appropriate sub-command logic. It allows for registering, unregistering, linking,
+ * unlinking, adding teleport coordinates, and viewing data about game regions and their links.
+ * <p>
+ * Last updated: V2.1.0
+ *
+ * @author Slimerblue22
  */
 public class RegionCommandHandler implements CommandExecutor {
     private final WGHelpers wgHelpers = WGHelpers.getInstance();
@@ -32,15 +38,19 @@ public class RegionCommandHandler implements CommandExecutor {
             sender.sendMessage(Component.text("This command can only be run by a player.", NamedTextColor.RED));
             return false;
         }
+
         if (!player.hasPermission("snake.admin")) {
             player.sendMessage(Component.text("You don't have permission to run this command.", NamedTextColor.RED));
             return false;
         }
+
         if (args.length == 0) {
-            sender.sendMessage("Please enter a sub command.");
+            handleUnknownCommand(player);
             return false;
         }
+
         String subCommand = args[0].toLowerCase();
+
         return switch (subCommand) {
             case "register" -> registerRegion(player, args);
             case "unregister" -> unregisterRegion(player, args);
@@ -49,10 +59,23 @@ public class RegionCommandHandler implements CommandExecutor {
             case "addtp" -> addTP(player, args);
             case "view" -> viewData(player, args);
             default -> {
-                player.sendMessage(Component.text("Unknown subcommand.", NamedTextColor.RED));
+                handleUnknownCommand(player);
                 yield false;
             }
         };
+    }
+
+    /**
+     * Displays an unknown command message to the specified player.
+     *
+     * @param player The player to whom the message should be displayed.
+     */
+    private void handleUnknownCommand(Player player) {
+        player.sendMessage(Component.text("Unknown subcommand. Use one of the following:", NamedTextColor.RED));
+        String[] commands = {"register", "unregister", "link", "unlink", "addtp", "view"};
+        for (String cmd : commands) {
+            player.sendMessage(Component.text("/snakeregion " + cmd, NamedTextColor.GRAY));
+        }
     }
 
     /**
@@ -67,21 +90,26 @@ public class RegionCommandHandler implements CommandExecutor {
             player.sendMessage("Incorrect usage. Example: /snakeregion register [region type; game or lobby] [region name] [world region is in]");
             return false;
         }
+
         String regionType = args[1].toLowerCase();
         String regionName = args[2].toLowerCase();
         String worldName = args[3].toLowerCase();
+
         if (!"lobby".equals(regionType) && !"game".equals(regionType)) {
             player.sendMessage("Region type must be either 'lobby' or 'game'.");
             return false;
         }
+
         if (!wgHelpers.doesWGRegionExist(worldName, regionName)) {
             player.sendMessage(String.format("Region %s is not registered in WorldGuard for world %s.", regionName, worldName));
             return false;
         }
+
         if (regionHelpers.isRegionRegistered(regionName)) {
             player.sendMessage("Region is already registered.");
             return false;
         }
+
         if (service.registerNewRegion(regionType, regionName, worldName)) {
             player.sendMessage("Region registered successfully.");
             return true;
@@ -103,15 +131,19 @@ public class RegionCommandHandler implements CommandExecutor {
             player.sendMessage("Incorrect usage. Example: /snakeregion unregister [region name].");
             return false;
         }
+
         String regionName = args[1].toLowerCase();
+
         if (!regionHelpers.isRegionRegistered(regionName)) {
             player.sendMessage("Region is not registered.");
             return false;
         }
+
         if (regionHelpers.getLinkID(regionName) != null) {
             player.sendMessage("The region is linked to another region. Unlink it first before unregistering.");
             return false;
         }
+
         if (service.unregisterRegion(regionName)) {
             player.sendMessage("Region unregistered successfully.");
             return true;
@@ -133,22 +165,28 @@ public class RegionCommandHandler implements CommandExecutor {
             player.sendMessage("Incorrect usage. Example: /snakeregion link [region1 name] [region2 name].");
             return false;
         }
+
         String regionName1 = args[1].toLowerCase();
         String regionName2 = args[2].toLowerCase();
+
         if (!regionHelpers.isRegionRegistered(regionName1) || !regionHelpers.isRegionRegistered(regionName2)) {
             player.sendMessage("One or both regions are not registered.");
             return false;
         }
+
         String type1 = regionHelpers.getRegionType(regionName1);
         String type2 = regionHelpers.getRegionType(regionName2);
+
         if (!((type1.equals("game") && type2.equals("lobby")) || (type1.equals("lobby") && type2.equals("game")))) {
             player.sendMessage("You must link a game region with a lobby region.");
             return false;
         }
+
         if (regionHelpers.isRegionLinked(regionName1) || regionHelpers.isRegionLinked(regionName2)) {
             player.sendMessage("One or both regions are already linked to another region.");
             return false;
         }
+
         if (service.linkRegions(regionName1, regionName2)) {
             player.sendMessage("Regions linked successfully.");
             return true;
@@ -170,26 +208,33 @@ public class RegionCommandHandler implements CommandExecutor {
             player.sendMessage("Incorrect usage. Example: /snakeregion unlink [region1 name] [region2 name].");
             return false;
         }
+
         String regionName1 = args[1].toLowerCase();
         String regionName2 = args[2].toLowerCase();
+
         if (regionName1.equals(regionName2)) {
             player.sendMessage("Cannot unlink the same region.");
             return false;
         }
+
         if (!regionHelpers.isRegionRegistered(regionName1) || !regionHelpers.isRegionRegistered(regionName2)) {
             player.sendMessage("One or both regions are not registered.");
             return false;
         }
+
         Integer linkID1 = regionHelpers.getLinkID(regionName1);
         Integer linkID2 = regionHelpers.getLinkID(regionName2);
+
         if (linkID1 == null || linkID2 == null) {
             player.sendMessage("One or both regions are not linked.");
             return false;
         }
+
         if (!linkID1.equals(linkID2)) {
             player.sendMessage("The provided regions are not linked together.");
             return false;
         }
+
         if (service.unlinkRegions(regionName1, regionName2)) {
             player.sendMessage("Regions unlinked successfully.");
             return true;
@@ -208,11 +253,13 @@ public class RegionCommandHandler implements CommandExecutor {
      */
     private boolean addTP(Player player, String[] args) {
         if (args.length != 2 && args.length != 5) {
-            player.sendMessage("Incorrect usage. Example: /snakeregion addtp [region name] or /snakedev addtp [region name] [x] [y] [z].");
+            player.sendMessage("Incorrect usage. Example: /snakeregion addtp [region name] or /snakeregion addtp [region name] [x] [y] [z].");
             return false;
         }
+
         String regionName = args[1].toLowerCase();
         int x, y, z;
+
         if (args.length == 5) {
             try {
                 x = Math.round(Float.parseFloat(args[2]));
@@ -228,10 +275,12 @@ public class RegionCommandHandler implements CommandExecutor {
             y = loc.getBlockY();
             z = loc.getBlockZ();
         }
+
         if (!wgHelpers.areCoordinatesInWGRegion(player.getWorld().getName(), regionName, x, y, z)) {
             player.sendMessage("The coordinates are not within the specified WorldGuard region.");
             return false;
         }
+
         if (service.setRegionCoordinates(regionName, x, y, z)) {
             player.sendMessage(String.format("Coordinates set successfully for the region at (%d, %d, %d).", x, y, z));
             return true;
@@ -253,6 +302,7 @@ public class RegionCommandHandler implements CommandExecutor {
             player.sendMessage("Incorrect usage. Example: /snakeregion view [game | lobby | links | search].");
             return false;
         }
+
         String option = args[1].toLowerCase();
         String message = (option.equals("search") && args.length > 2) ?
                 regionHelpers.fetchFormattedData(option, args[2]) :
