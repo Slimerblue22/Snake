@@ -11,7 +11,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Provides helper methods for managing Snake game regions.
+ * Provides helper methods for managing regions in the Snake game.
+ * This class interacts with the database for operations such as checking if a region is registered,
+ * retrieving region types, managing region links, generating link IDs, and fetching region data.
+ * <p>
+ * Last updated: V2.1.0
+ *
+ * @author Slimerblue22
  */
 public class RegionHelpers {
     private static RegionHelpers instance;
@@ -57,12 +63,13 @@ public class RegionHelpers {
      */
     public boolean isRegionRegistered(String regionName) {
         try {
-            PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM region_data WHERE regionName = ?");
+            PreparedStatement statement = connection.prepareStatement(
+                    "SELECT COUNT(*) FROM region_data WHERE regionName = ?");
             statement.setString(1, regionName.toLowerCase());
+
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
-                int count = resultSet.getInt(1);
-                return count > 0;
+                return resultSet.getInt(1) > 0;
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "An error occurred while checking if the region is registered.", e);
@@ -78,8 +85,10 @@ public class RegionHelpers {
      */
     public String getRegionType(String regionName) {
         try {
-            PreparedStatement statement = connection.prepareStatement("SELECT regionType FROM region_data WHERE regionName = ?");
+            PreparedStatement statement = connection.prepareStatement(
+                    "SELECT regionType FROM region_data WHERE regionName = ?");
             statement.setString(1, regionName.toLowerCase());
+
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
                 return resultSet.getString("regionType");
@@ -98,8 +107,10 @@ public class RegionHelpers {
      */
     public boolean isRegionLinked(String regionName) {
         try {
-            PreparedStatement statement = connection.prepareStatement("SELECT linkID FROM region_data WHERE regionName = ?");
+            PreparedStatement statement = connection.prepareStatement(
+                    "SELECT linkID FROM region_data WHERE regionName = ?");
             statement.setString(1, regionName.toLowerCase());
+
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
                 return resultSet.getObject("linkID") != null;
@@ -134,8 +145,10 @@ public class RegionHelpers {
      */
     public Integer getLinkID(String regionName) {
         try {
-            PreparedStatement statement = connection.prepareStatement("SELECT linkID FROM region_data WHERE regionName = ?");
+            PreparedStatement statement = connection.prepareStatement(
+                    "SELECT linkID FROM region_data WHERE regionName = ?");
             statement.setString(1, regionName.toLowerCase());
+
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
                 int linkID = resultSet.getInt("linkID");
@@ -162,9 +175,12 @@ public class RegionHelpers {
             if (linkID == null) {
                 return null;
             }
-            PreparedStatement statement = connection.prepareStatement("SELECT regionName FROM region_data WHERE linkID = ? AND regionName != ?");
+
+            PreparedStatement statement = connection.prepareStatement(
+                    "SELECT regionName FROM region_data WHERE linkID = ? AND regionName != ?");
             statement.setInt(1, linkID);
             statement.setString(2, regionName.toLowerCase());
+
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
                 return resultSet.getString("regionName");
@@ -179,12 +195,15 @@ public class RegionHelpers {
      * Retrieves the teleport location for a given region.
      *
      * @param regionName The name of the region.
+     * @param world      The Bukkit world where the region is located.
      * @return A Location object representing the teleport location, or null if not found.
      */
     public Location getRegionTeleportLocation(String regionName, World world) {
         try {
-            PreparedStatement statement = connection.prepareStatement("SELECT x, y, z FROM region_data WHERE regionName = ?");
+            PreparedStatement statement = connection.prepareStatement(
+                    "SELECT x, y, z FROM region_data WHERE regionName = ?");
             statement.setString(1, regionName.toLowerCase());
+
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
                 int x = resultSet.getInt("x");
@@ -210,8 +229,10 @@ public class RegionHelpers {
      */
     public World getRegionWorld(String regionName) {
         try {
-            PreparedStatement statement = connection.prepareStatement("SELECT worldName FROM region_data WHERE regionName = ?");
+            PreparedStatement statement = connection.prepareStatement(
+                    "SELECT worldName FROM region_data WHERE regionName = ?");
             statement.setString(1, regionName.toLowerCase());
+
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
                 String worldName = resultSet.getString("worldName");
@@ -228,6 +249,7 @@ public class RegionHelpers {
         try {
             PreparedStatement statement = connection.prepareStatement("SELECT regionName FROM region_data");
             ResultSet resultSet = statement.executeQuery();
+
             while (resultSet.next()) {
                 regionNames.add(resultSet.getString("regionName"));
             }
@@ -246,6 +268,7 @@ public class RegionHelpers {
      */
     public String fetchFormattedData(String option, String... searchTerm) {
         StringBuilder builder = new StringBuilder();
+
         switch (option) {
             case "game":
                 builder.append(fetchRegionData("game"));
@@ -267,6 +290,7 @@ public class RegionHelpers {
                 builder.append("Invalid option.");
                 break;
         }
+
         return builder.toString();
     }
 
@@ -280,14 +304,20 @@ public class RegionHelpers {
         StringBuilder builder = new StringBuilder();
         builder.append("Search results for '").append(searchTerm).append("':\n");
         builder.append("-------------------\n");
+
         try {
-            PreparedStatement statement = connection.prepareStatement("SELECT * FROM region_data WHERE regionName = ?");
-            statement.setString(1, searchTerm);
+            PreparedStatement statement = connection.prepareStatement(
+                    "SELECT * FROM region_data WHERE regionName = ?");
+            statement.setString(1, searchTerm.toLowerCase());
             ResultSet resultSet = statement.executeQuery();
+
             if (!resultSet.isBeforeFirst()) {
-                builder.append("No regions found with the name '").append(searchTerm).append("'.");
-                return builder.toString();
+                return builder.append("No regions found with the name '")
+                        .append(searchTerm)
+                        .append("'.")
+                        .toString();
             }
+
             while (resultSet.next()) {
                 String regionName = resultSet.getString("regionName");
                 String regionType = resultSet.getString("regionType");
@@ -296,26 +326,23 @@ public class RegionHelpers {
                 int y = resultSet.getInt("y");
                 int z = resultSet.getInt("z");
                 int linkID = resultSet.getInt("linkID");
-                builder.append("Name: ").append(regionName).append("\n");
-                builder.append("Type: ").append(regionType).append("\n");
-                builder.append("World: ").append(worldName).append("\n");
-                if (resultSet.wasNull()) {
-                    builder.append("TP Location: Not set\n");
-                } else {
-                    builder.append("TP Location: ").append(String.format("(%d, %d, %d)", x, y, z)).append("\n");
-                }
-                if (resultSet.wasNull()) {
-                    builder.append("Link ID: Not linked\n");
-                } else {
-                    builder.append("Link ID: ").append(linkID).append("\n");
-                }
-                String boundaries = fetchBoundariesFromWG(worldName, regionName);
-                builder.append(boundaries).append("\n");
-                builder.append("-------------------\n");
+
+                builder.append("Name: ").append(regionName).append("\n")
+                        .append("Type: ").append(regionType).append("\n")
+                        .append("World: ").append(worldName).append("\n")
+                        .append("TP Location: ")
+                        .append(resultSet.wasNull() ? "Not set" : String.format("(%d, %d, %d)", x, y, z))
+                        .append("\n")
+                        .append("Link ID: ")
+                        .append(resultSet.wasNull() ? "Not linked" : String.valueOf(linkID))
+                        .append("\n")
+                        .append(fetchBoundariesFromWG(worldName, regionName))
+                        .append("\n-------------------\n");
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "An error occurred while fetching the search data.", e);
         }
+
         return builder.toString();
     }
 
@@ -329,38 +356,37 @@ public class RegionHelpers {
         StringBuilder builder = new StringBuilder();
         builder.append("Data for '").append(regionType).append("' option:\n");
         builder.append("-------------------\n");
+
         try {
-            PreparedStatement statement = connection.prepareStatement("SELECT * FROM region_data WHERE regionType = ?");
+            PreparedStatement statement = connection.prepareStatement(
+                    "SELECT * FROM region_data WHERE regionType = ?");
             statement.setString(1, regionType);
             ResultSet resultSet = statement.executeQuery();
+
             while (resultSet.next()) {
                 String regionName = resultSet.getString("regionName");
-                String retrievedRegionType = resultSet.getString("regionType");
                 String worldName = resultSet.getString("worldName");
                 int x = resultSet.getInt("x");
                 int y = resultSet.getInt("y");
                 int z = resultSet.getInt("z");
                 int linkID = resultSet.getInt("linkID");
-                builder.append("Name: ").append(regionName).append("\n");
-                builder.append("Type: ").append(retrievedRegionType).append("\n");
-                builder.append("World: ").append(worldName).append("\n");
-                if (resultSet.wasNull()) {
-                    builder.append("TP Location: Not set\n");
-                } else {
-                    builder.append("TP Location: ").append(String.format("(%d, %d, %d)", x, y, z)).append("\n");
-                }
-                if (resultSet.wasNull()) {
-                    builder.append("Link ID: Not linked\n");
-                } else {
-                    builder.append("Link ID: ").append(linkID).append("\n");
-                }
-                String boundaries = fetchBoundariesFromWG(worldName, regionName);
-                builder.append(boundaries).append("\n");
-                builder.append("-------------------\n");
+
+                builder.append("Name: ").append(regionName).append("\n")
+                        .append("Type: ").append(regionType).append("\n")
+                        .append("World: ").append(worldName).append("\n")
+                        .append("TP Location: ")
+                        .append(resultSet.wasNull() ? "Not set" : String.format("(%d, %d, %d)", x, y, z))
+                        .append("\n")
+                        .append("Link ID: ")
+                        .append(resultSet.wasNull() ? "Not linked" : String.valueOf(linkID))
+                        .append("\n")
+                        .append(fetchBoundariesFromWG(worldName, regionName))
+                        .append("\n-------------------\n");
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "An error occurred while fetching the " + regionType + " data.", e);
         }
+
         return builder.toString();
     }
 
@@ -373,15 +399,15 @@ public class RegionHelpers {
      */
     private String fetchBoundariesFromWG(String worldName, String regionName) {
         String boundaries = wgHelpers.getBoundariesOfRegion(worldName, regionName);
-        if (boundaries == null) {
-            return "Boundaries: Not available";
-        } else {
-            return "Boundaries: " + boundaries;
-        }
+        return boundaries != null ? "Boundaries: " + boundaries : "Boundaries: Not available";
     }
 
     /**
      * Fetches and formats data for linked regions.
+     *
+     * <p>This method processes regions with non-null link IDs and identifies which regions are linked together.
+     * It also includes a check to handle scenarios where the last region in the result set has an unpaired link ID,
+     * reporting it as a warning. This is essential for catching data inconsistencies, especially for the last processed region.</p>
      *
      * @return Formatted data string showing which regions are linked together.
      */
@@ -389,34 +415,47 @@ public class RegionHelpers {
         StringBuilder builder = new StringBuilder();
         builder.append("Data for 'links' option:\n");
         builder.append("-------------------\n");
+
         try {
-            PreparedStatement statement = connection.prepareStatement("SELECT * FROM region_data WHERE linkID IS NOT NULL ORDER BY linkID");
+            PreparedStatement statement = connection.prepareStatement(
+                    "SELECT * FROM region_data WHERE linkID IS NOT NULL ORDER BY linkID");
             ResultSet resultSet = statement.executeQuery();
+
             Integer currentLinkID = null;
             String firstRegion = null;
+
             while (resultSet.next()) {
                 int linkID = resultSet.getInt("linkID");
                 String regionName = resultSet.getString("regionName");
-                if (currentLinkID == null || currentLinkID != linkID) {
+
+                if (currentLinkID == null || !currentLinkID.equals(linkID)) {
                     if (firstRegion != null) {
-                        builder.append("Warning: Region '").append(firstRegion).append("' with Link ID: ").append(currentLinkID).append(" is not linked to any other region.\n");
-                        builder.append("-------------------\n");
+                        builder.append("Warning: Region '").append(firstRegion)
+                                .append("' with Link ID: ").append(currentLinkID)
+                                .append(" is not linked to any other region.\n")
+                                .append("-------------------\n");
                     }
                     currentLinkID = linkID;
                     firstRegion = regionName;
                 } else {
-                    builder.append("Regions '").append(firstRegion).append("' and '").append(regionName).append("' are linked with Link ID: ").append(linkID).append("\n");
-                    builder.append("-------------------\n");
+                    builder.append("Regions '").append(firstRegion).append("' and '")
+                            .append(regionName).append("' are linked with Link ID: ")
+                            .append(linkID).append("\n")
+                            .append("-------------------\n");
                     firstRegion = null;
                 }
             }
+            // Not redundant code, see javadoc for more info
             if (firstRegion != null) {
-                builder.append("Warning: Region '").append(firstRegion).append("' with Link ID: ").append(currentLinkID).append(" is not linked to any other region.\n");
-                builder.append("-------------------\n");
+                builder.append("Warning: Region '").append(firstRegion)
+                        .append("' with Link ID: ").append(currentLinkID)
+                        .append(" is not linked to any other region.\n")
+                        .append("-------------------\n");
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "An error occurred while fetching the links data.", e);
         }
+
         return builder.toString();
     }
 }
