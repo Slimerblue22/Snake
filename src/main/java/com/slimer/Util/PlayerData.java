@@ -16,8 +16,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Singleton class responsible for managing player-specific data such as high scores.
- * This class uses an SQLite database for data storage.
+ * The PlayerData class provides functionality for managing player data, including high scores, sheep colors,
+ * and music toggle states, using an SQLite database. It follows the Singleton pattern to ensure a single
+ * instance is used throughout the plugin.
+ * <p>
+ * Last updated: V2.1.0
+ *
+ * @author Slimerblue22
  */
 public class PlayerData {
     private static PlayerData instance;
@@ -28,7 +33,7 @@ public class PlayerData {
      * Private constructor for the singleton pattern.
      * Initializes file and configuration for player data.
      *
-     * @param plugin The JavaPlugin instance
+     * @param plugin The JavaPlugin instance.
      */
     private PlayerData(JavaPlugin plugin) {
         initializeDatabase(plugin);
@@ -226,7 +231,7 @@ public class PlayerData {
      * Fetches the sheep color of the given player from the SQLite database.
      *
      * @param player The player whose sheep color is to be fetched.
-     * @return The DyeColor value representing the sheep color.
+     * @return The DyeColor value representing the sheep color. Returns DyeColor.WHITE if the color is not found or is null.
      */
     public DyeColor getSheepColor(Player player) {
         try {
@@ -264,7 +269,7 @@ public class PlayerData {
      * Retrieves the music toggle state of the given player from the SQLite database.
      *
      * @param player The player whose music toggle state is to be fetched.
-     * @return The music toggle state. True means music is enabled for the player, and false means it's disabled.
+     * @return The music toggle state. Returns true if music is enabled for the player, and false if it's disabled or not found.
      */
     public boolean getMusicToggleState(Player player) {
         try {
