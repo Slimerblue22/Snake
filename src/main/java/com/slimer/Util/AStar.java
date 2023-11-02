@@ -4,33 +4,43 @@ import org.bukkit.Location;
 
 import java.util.*;
 
+/**
+ * The AStar class provides pathfinding functionality using the A* algorithm.
+ * It calculates heuristic costs, finds valid neighbors, and determines the existence
+ * of a path between locations. This class is useful for pathfinding in a grid-based environment,
+ * considering block solidity and block location characteristics.
+ * <p>
+ * Last updated: V2.1.0
+ * @author Slimerblue22
+ */
 public class AStar {
+
     /**
-     * Calculates the heuristic cost between two locations using the Manhattan distance.
+     * Calculates the Manhattan distance heuristic between two locations.
      *
-     * @param a The starting location.
-     * @param b The ending location.
-     * @return The Manhattan distance between the two locations.
+     * @param startLocation The starting location.
+     * @param endLocation The ending location.
+     * @return The Manhattan distance heuristic between the two locations.
      */
-    public double heuristic(Location a, Location b) {
-        double hValue = Math.abs(a.getX() - b.getX()) + Math.abs(a.getZ() - b.getZ());
-        DebugManager.log(DebugManager.Category.ASTAR, "Heuristic value calculated as: " + hValue);
+    private double calculateManhattanHeuristic(Location startLocation, Location endLocation) {
+        double hValue = Math.abs(startLocation.getX() - endLocation.getX()) +
+                Math.abs(startLocation.getZ() - endLocation.getZ());
+
+        DebugManager.log(DebugManager.Category.ASTAR, "Manhattan Heuristic value calculated as: " + hValue);
         return hValue;
     }
 
     /**
-     * Returns the valid neighbors of a location, considering those not blocked by solid blocks.
+     * Returns the valid neighboring locations of a given starting location, excluding those blocked by solid blocks.
      *
-     * @param location The location to find neighbors for.
-     * @return A list of valid neighbor locations.
+     * @param startLocation The starting location to find neighboring locations for.
+     * @return A list of valid neighboring locations.
      */
-    public List<Location> getNeighbors(Location location) {
+    private List<Location> getValidNeighbors(Location startLocation) {
         List<Location> neighbors = new ArrayList<>();
         int[][] directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
-
         for (int[] direction : directions) {
-            Location neighbor = location.clone().add(direction[0], 0, direction[1]);
-
+            Location neighbor = startLocation.clone().add(direction[0], 0, direction[1]);
             if (!neighbor.getBlock().getType().isSolid() && isSolid3x3Below(neighbor)) {
                 DebugManager.log(DebugManager.Category.ASTAR, "Valid neighbor found at " + neighbor);
                 neighbors.add(neighbor);
@@ -45,13 +55,12 @@ public class AStar {
      * @param center The central location above which the 3x3 grid is checked.
      * @return True if the 3x3 area below the center consists of solid blocks, false otherwise.
      */
-    public boolean isSolid3x3Below(Location center) {
+    private boolean isSolid3x3Below(Location center) {
         int[][] offset = {
                 {-1, -1}, {0, -1}, {1, -1},
                 {-1, 0}, {0, 0}, {1, 0},
                 {-1, 1}, {0, 1}, {1, 1}
         };
-
         for (int[] os : offset) {
             Location loc = center.clone().add(os[0], -1, os[1]); // Check 1 block below the center
             if (!loc.getBlock().getType().isSolid()) {
@@ -74,7 +83,6 @@ public class AStar {
                 {1, 0}, {-1, 0}, {0, 1}, {0, -1},  // Cardinal directions
                 {1, 1}, {-1, -1}, {1, -1}, {-1, 1} // Diagonal directions
         };
-
         for (int[] direction : directions) {
             Location neighbor = location.clone().add(direction[0], 0, direction[1]);
             if (neighbor.getBlock().getType().isSolid()) {
@@ -89,7 +97,7 @@ public class AStar {
      *
      * @param start The starting location.
      * @param goal  The goal location.
-     * @return True if a path exists, false otherwise.
+     * @return True if a path exists, false otherwise. It internally calls the "findPath" method.
      */
     public boolean pathExists(Location start, Location goal) {
         List<Location> path = findPath(start, goal);
@@ -103,62 +111,69 @@ public class AStar {
      * @param goal  The goal location.
      * @return A list representing the path, or null if no path is found.
      */
-    public List<Location> findPath(Location start, Location goal) {
+    private List<Location> findPath(Location start, Location goal) {
         DebugManager.log(DebugManager.Category.ASTAR, "Starting pathfinding from " + start + " to " + goal);
+
         Set<Location> openSet = new HashSet<>();
         Set<Location> closedSet = new HashSet<>();
         openSet.add(start);
+
         Map<Location, Location> cameFrom = new HashMap<>();
         Map<Location, Double> gScore = new HashMap<>();
         gScore.put(start, 0.0);
-        Map<Location, Double> fScore = new HashMap<>();
-        fScore.put(start, heuristic(start, goal));
 
-        int iterationCount = 0;
+        Map<Location, Double> fScore = new HashMap<>();
+        fScore.put(start, calculateManhattanHeuristic(start, goal));
+
+        int iterationCount = 0; // Used to limit the number of iterations
         while (!openSet.isEmpty()) {
             if (iterationCount++ > 1000) {
                 DebugManager.log(DebugManager.Category.ASTAR, "Iteration count exceeded 1000. Breaking out of loop.");
                 break;
             }
+
             Location current = getLowestFScoreNode(openSet, fScore);
             if (isSameBlock(current, goal)) {
-                DebugManager.log(DebugManager.Category.ASTAR, "Path found with length: " + reconstructPath(cameFrom, current).size());
-                return reconstructPath(cameFrom, current);
+                List<Location> path = reconstructPath(cameFrom, current);
+                DebugManager.log(DebugManager.Category.ASTAR, "Path found with length: " + path.size());
+                return path;
             }
 
             openSet.remove(current);
             closedSet.add(current);
-            List<Location> neighbors = getNeighbors(current);
 
+            List<Location> neighbors = getValidNeighbors(current);
             for (Location neighbor : neighbors) {
                 if (closedSet.contains(neighbor)) {
                     continue;
                 }
+
                 double tentativeGScore = gScore.getOrDefault(current, Double.MAX_VALUE) + 1;
                 if (tentativeGScore < gScore.getOrDefault(neighbor, Double.MAX_VALUE)) {
                     DebugManager.log(DebugManager.Category.ASTAR, "Updating gScore for neighbor " + neighbor + " with value: " + tentativeGScore);
                     cameFrom.put(neighbor, current);
                     gScore.put(neighbor, tentativeGScore);
-                    fScore.put(neighbor, tentativeGScore + heuristic(neighbor, goal));
+                    fScore.put(neighbor, tentativeGScore + calculateManhattanHeuristic(neighbor, goal));
                     openSet.add(neighbor);
                 }
             }
         }
+
         DebugManager.log(DebugManager.Category.ASTAR, "No path found from " + start + " to " + goal);
-        return null; // Return the path or null if not found
+        return null; // Return null if no path is found
     }
 
     /**
      * Compares two locations to determine if they represent the same block.
      *
-     * @param loc1 The first location.
-     * @param loc2 The second location.
+     * @param location1 The first location.
+     * @param location2 The second location.
      * @return True if the locations represent the same block, false otherwise.
      */
-    public boolean isSameBlock(Location loc1, Location loc2) {
-        return loc1.getBlockX() == loc2.getBlockX() &&
-                loc1.getBlockY() == loc2.getBlockY() &&
-                loc1.getBlockZ() == loc2.getBlockZ();
+    public boolean isSameBlock(Location location1, Location location2) {
+        return location1.getBlockX() == location2.getBlockX() &&
+                location1.getBlockY() == location2.getBlockY() &&
+                location1.getBlockZ() == location2.getBlockZ();
     }
 
     /**
