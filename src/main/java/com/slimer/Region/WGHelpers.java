@@ -11,7 +11,10 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 /**
- * Provides utility methods for WorldGuard related operations.
+ * Provides helper methods for interacting with WorldGuard regions in the Snake game.
+ * <p>
+ * Last updated: V2.1.0
+ * @author Slimerblue22
  */
 public class WGHelpers {
     private static WGHelpers instance;
