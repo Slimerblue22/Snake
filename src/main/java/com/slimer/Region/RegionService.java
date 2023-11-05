@@ -7,12 +7,17 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.sql.*;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Provides services for managing Snake game regions.
+ * Provides services for managing regions in the Snake game, including database initialization, region migration,
+ * region registration, linking/unlinking regions, and setting region coordinates.
+ * <p>
+ * Last updated: V2.1.0
+ * @author Slimerblue22
  */
 public class RegionService {
     private static RegionService instance;
@@ -65,55 +70,142 @@ public class RegionService {
     }
 
     /**
-     * Migrates region data from a YML file to an SQLite database. The function reads from a 'Regions.yml' file and
-     * populates the SQLite database with this data. After successful migration, the YML file is renamed to indicate
-     * that migration has been completed. The function reports the status of each part of the migration through logging.
+     * Initiates the migration of region data from a YML file to an SQLite database.
+     * The process includes verifying the existence of the YML file to ensure migration is necessary.
+     * On successful verification, it triggers the migration of individual sections and linked regions,
+     * and concludes by renaming the original YML file to indicate completion.
      *
      * @param main The main plugin instance, used to access the plugin's data folder.
      */
     public void migrateRegionsFromYmlToSql(Main main) {
         File dataFolder = main.getDataFolder();
         File ymlFile = new File(dataFolder, "Regions.yml");
-        String absolutePath = ymlFile.getAbsolutePath();
-        logger.log(Level.INFO, "[RegionService.java] Starting Region YML to SQL migration. Looking for YML file in: " + absolutePath);
-        if (!ymlFile.exists()) {
-            logger.log(Level.INFO, "[RegionService.java] No Region YML file found at " + absolutePath + ". Migration skipped.");
+
+        if (!initializeMigration(ymlFile)) {
             return;
         }
+
         YamlConfiguration ymlConfig = YamlConfiguration.loadConfiguration(ymlFile);
-        logger.log(Level.INFO, "[RegionService.java] YML file loaded. Starting lobby zones migration.");
-        ConfigurationSection lobbySection = ymlConfig.getConfigurationSection("lobbyzones");
-        for (String regionName : Objects.requireNonNull(lobbySection).getKeys(false)) {
-            String worldName = lobbySection.getString(regionName + ".world");
-            registerNewRegion("lobby", regionName, Objects.requireNonNull(worldName));
-            logger.log(Level.INFO, "[RegionService.java] Migrated lobby zone: " + regionName);
+
+        migrateSection(ymlConfig, "lobbyzones", "lobby");
+        migrateSection(ymlConfig, "gamezones", "game");
+        migrateLinkedRegions(ymlConfig);
+
+        finalizeMigration(ymlFile, dataFolder);
+    }
+
+    /**
+     * Checks for the necessary conditions before beginning the migration process.
+     * Verifies the existence of the YML file to avoid unnecessary migration actions.
+     * Logs the process and returns a boolean indicating whether the migration should proceed.
+     *
+     * @param ymlFile The YML file containing region data.
+     * @return true if the conditions are right for migration, false otherwise.
+     */
+    private boolean initializeMigration(File ymlFile) {
+        String absolutePath = ymlFile.getAbsolutePath();
+        logger.log(Level.INFO, "[Regions] Starting Region YML to SQL migration. Looking for YML file in: " + absolutePath);
+
+        if (!ymlFile.exists()) {
+            logger.log(Level.INFO, "[Regions] No Region YML file found at " + absolutePath + ". Migration skipped.");
+            return false;
         }
-        logger.log(Level.INFO, "[RegionService.java] Starting game zones migration.");
-        ConfigurationSection gameSection = ymlConfig.getConfigurationSection("gamezones");
-        for (String regionName : Objects.requireNonNull(gameSection).getKeys(false)) {
-            String worldName = gameSection.getString(regionName + ".world");
-            registerNewRegion("game", regionName, Objects.requireNonNull(worldName));
-            logger.log(Level.INFO, "[RegionService.java] Migrated game zone: " + regionName);
+
+        logger.log(Level.INFO, "[Regions] YML file detected. Proceeding with migration.");
+        return true;
+    }
+
+    /**
+     * Handles the migration of a specific section from the YML configuration to the database.
+     * Iterates over each entry in the given section and performs the data transfer,
+     * logging each migrated zone.
+     *
+     * @param ymlConfig   The loaded YML configuration object.
+     * @param sectionName The section of the YML file to migrate ('lobbyzones' or 'gamezones').
+     * @param regionType  The type of region to be registered during the migration ('lobby' or 'game').
+     */
+    private void migrateSection(YamlConfiguration ymlConfig, String sectionName, String regionType) {
+        ConfigurationSection section = ymlConfig.getConfigurationSection(sectionName);
+        if (section == null) {
+            logger.log(Level.INFO, "[Regions] No " + sectionName + " section found. Skipping this section.");
+            return;
         }
-        logger.log(Level.INFO, "[RegionService.java] Starting linked regions migration.");
+
+        for (String regionName : section.getKeys(false)) {
+            String worldName = section.getString(regionName + ".world");
+            registerNewRegion(regionType, regionName, Objects.requireNonNull(worldName));
+            logger.log(Level.INFO, "[Regions] Migrated " + regionType + " zone: " + regionName);
+        }
+    }
+
+    /**
+     * Migrates linked region pairs and their associated teleportation coordinates from the YML configuration.
+     * Processes each linked region set by creating or updating entries in the database to reflect the links.
+     *
+     * @param ymlConfig The loaded YML configuration object.
+     */
+    private void migrateLinkedRegions(YamlConfiguration ymlConfig) {
         ConfigurationSection linkedSection = ymlConfig.getConfigurationSection("Linked");
-        for (String linkID : Objects.requireNonNull(linkedSection).getKeys(false)) {
-            String lobbyRegion = linkedSection.getString(linkID + ".LobbyRegion");
-            String gameRegion = linkedSection.getString(linkID + ".GameRegion");
-            linkRegions(Objects.requireNonNull(lobbyRegion), Objects.requireNonNull(gameRegion));
-            logger.log(Level.INFO, "[RegionService.java] Linked regions: " + lobbyRegion + " and " + gameRegion);
-            String[] lobbyTP = Objects.requireNonNull(linkedSection.getString(linkID + ".lobbyTP")).split(",");
-            String[] gameTP = Objects.requireNonNull(linkedSection.getString(linkID + ".gameTP")).split(",");
-            setRegionCoordinates(lobbyRegion, Integer.parseInt(lobbyTP[0]), Integer.parseInt(lobbyTP[1]), Integer.parseInt(lobbyTP[2]));
-            setRegionCoordinates(gameRegion, Integer.parseInt(gameTP[0]), Integer.parseInt(gameTP[1]), Integer.parseInt(gameTP[2]));
-            logger.log(Level.INFO, "[RegionService.java] Migrated TP coordinates for linked regions: " + lobbyRegion + " and " + gameRegion);
+        if (linkedSection == null) {
+            logger.log(Level.INFO, "[Regions] No Linked section found. Skipping linked regions migration.");
+            return;
         }
+
+        for (String linkID : linkedSection.getKeys(false)) {
+            migrateLinkedRegion(linkedSection, linkID);
+        }
+    }
+
+    /**
+     * Migrates a single pair of linked regions based on a unique identifier from the YML configuration.
+     * Updates the link between the specified lobby and game regions and migrates their teleportation coordinates.
+     *
+     * @param linkedSection The configuration section containing linked regions.
+     * @param linkID        The identifier for the linked region set.
+     */
+    private void migrateLinkedRegion(ConfigurationSection linkedSection, String linkID) {
+        String lobbyRegion = linkedSection.getString(linkID + ".LobbyRegion");
+        String gameRegion = linkedSection.getString(linkID + ".GameRegion");
+        linkRegions(Objects.requireNonNull(lobbyRegion), Objects.requireNonNull(gameRegion));
+        logger.log(Level.INFO, "[Regions] Linked regions: " + lobbyRegion + " and " + gameRegion);
+
+        migrateRegionCoordinates(linkedSection, lobbyRegion, linkID, "lobbyTP");
+        migrateRegionCoordinates(linkedSection, gameRegion, linkID, "gameTP");
+    }
+
+    /**
+     * Migrates the teleportation coordinates for a specified region.
+     * Parses and transfers the X, Y, and Z coordinates from the YML format to the database.
+     *
+     * @param linkedSection The configuration section containing region coordinates.
+     * @param region        The name of the region whose coordinates are being migrated.
+     * @param linkID        The identifier for the linked region set.
+     * @param coordinateKey The key used to retrieve the coordinate string from the configuration.
+     */
+    private void migrateRegionCoordinates(ConfigurationSection linkedSection, String region, String linkID, String coordinateKey) {
+        String coordinates = linkedSection.getString(linkID + "." + coordinateKey);
+        if (coordinates != null) {
+            String[] tpCoordinates = coordinates.split(",");
+            setRegionCoordinates(region, Integer.parseInt(tpCoordinates[0]), Integer.parseInt(tpCoordinates[1]), Integer.parseInt(tpCoordinates[2]));
+            logger.log(Level.INFO, "[Regions] Migrated TP coordinates for " + region + ": " + Arrays.toString(tpCoordinates));
+        }
+    }
+
+    /**
+     * Finalizes the migration process by renaming the original YML file.
+     * This prevents the migration from being run multiple times on the same data.
+     * Logs the outcome of the file renaming operation.
+     *
+     * @param ymlFile    The original YML file that has been migrated.
+     * @param dataFolder The folder containing the YML file, where the backup will be stored.
+     */
+    private void finalizeMigration(File ymlFile, File dataFolder) {
         File backupFile = new File(dataFolder, "MIGRATED_Regions.yml.bak");
-        if (!ymlFile.renameTo(backupFile)) {
-            logger.log(Level.WARNING, "[RegionService.java] Failed to rename Regions.yml to MIGRATED_Regions.yml.bak in folder: " + dataFolder.getAbsolutePath());
-        } else {
-            logger.log(Level.INFO, "[RegionService.java] Successfully renamed Regions.yml to MIGRATED_Regions.yml.bak in folder: " + dataFolder.getAbsolutePath());
-        }
+        boolean isRenamed = ymlFile.renameTo(backupFile);
+        String renameMessage = isRenamed ?
+                "Successfully renamed Regions.yml to MIGRATED_Regions.yml.bak in folder: " :
+                "Failed to rename Regions.yml to MIGRATED_Regions.yml.bak in folder: ";
+        logger.log(isRenamed ? Level.INFO : Level.WARNING, "[Regions] " + renameMessage + dataFolder.getAbsolutePath());
     }
 
     /**
