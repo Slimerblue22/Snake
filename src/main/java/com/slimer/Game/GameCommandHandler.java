@@ -163,7 +163,18 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             return false;
         }
 
-        return handleClassicGameStart(player, currentLobbyRegion, currentGameRegion);
+        World gameWorld = regionHelpers.getRegionWorld(currentGameRegion);
+        World lobbyWorld = regionHelpers.getRegionWorld(currentLobbyRegion);
+
+        Location gameTeleportLocation = regionHelpers.getRegionTeleportLocation(currentGameRegion, gameWorld);
+        Location lobbyTeleportLocation = regionHelpers.getRegionTeleportLocation(currentLobbyRegion, lobbyWorld);
+
+        if (gameTeleportLocation == null || lobbyTeleportLocation == null) {
+            player.sendMessage(Component.text("Could not find the teleport location for the game or lobby region.", NamedTextColor.RED));
+            return false;
+        }
+
+        return handleClassicGameStart(player, currentGameRegion, gameTeleportLocation, lobbyTeleportLocation);
     }
 
     /**
@@ -172,15 +183,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      * @param player The player for whom to start the game.
      * @return True if the game was successfully started, false otherwise.
      */
-    private boolean handleClassicGameStart(Player player, String currentLobbyRegion, String currentGameRegion) {
-        RegionHelpers regionHelpers = RegionHelpers.getInstance();
-
-        World gameWorld = regionHelpers.getRegionWorld(currentGameRegion);
-        World lobbyWorld = regionHelpers.getRegionWorld(currentLobbyRegion);
-
-        Location gameTeleportLocation = regionHelpers.getRegionTeleportLocation(currentGameRegion, gameWorld);
-        Location lobbyLocation = regionHelpers.getRegionTeleportLocation(currentLobbyRegion, lobbyWorld);
-
+    private boolean handleClassicGameStart(Player player, String currentGameRegion, Location gameTeleportLocation, Location lobbyTeleportLocation) {
         int maxPlayersPerGame = ((Main) plugin).getMaxPlayersPerGame();
         int playersInGameRegion = countPlayersInGameRegion(currentGameRegion);
 
@@ -190,7 +193,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
         }
 
         player.teleport(gameTeleportLocation);
-        gameManager.startGame(player, gameTeleportLocation, lobbyLocation);
+        gameManager.startGame(player, gameTeleportLocation, lobbyTeleportLocation);
         player.sendMessage(Component.text("Starting the snake game...", NamedTextColor.GREEN));
 
         return true;

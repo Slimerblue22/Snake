@@ -207,12 +207,26 @@ public class RegionHelpers {
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
                 int x = resultSet.getInt("x");
+                if (resultSet.wasNull()) {
+                    x = Integer.MIN_VALUE;
+                }
                 int y = resultSet.getInt("y");
+                if (resultSet.wasNull()) {
+                    y = Integer.MIN_VALUE;
+                }
                 int z = resultSet.getInt("z");
-                return new Location(world, x, y, z);
+                if (resultSet.wasNull()) {
+                    z = Integer.MIN_VALUE;
+                }
+                if (x == Integer.MIN_VALUE || y == Integer.MIN_VALUE || z == Integer.MIN_VALUE) {
+                    logger.log(Level.WARNING, "At least one coordinate value was null for region '" + regionName + "'.");
+                    return null;
+                } else {
+                    return new Location(world, x, y, z);
+                }
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "An error occurred while fetching the teleport location.", e);
+            logger.log(Level.SEVERE, "An error occurred while fetching the teleport location for region '" + regionName + "'.", e);
         }
         return null;
     }
