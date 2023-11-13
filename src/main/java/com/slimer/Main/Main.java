@@ -108,13 +108,11 @@ public final class Main extends JavaPlugin {
         Map<Player, SnakeCreation> playerSnakes = new HashMap<>();
         Map<Player, Location> playerLobbyLocations = new HashMap<>();
         gameManager = new GameManager(playerSnakes, playerLobbyLocations, this, isMusicEnabled);
-        new Apple(this, gameManager);
         SnakeMovement snakeMovement = new SnakeMovement(gameManager, null, this);
         PlayerInputHandler playerInputHandler = new PlayerInputHandler(this, gameManager);
         snakeMovement.setPlayerInputHandler(playerInputHandler);
         gameManager.setPlayerInputHandler(playerInputHandler);
         gameManager.setSnakeMovement(snakeMovement);
-        new GameCommandHandler(gameManager, this);
     }
 
     /**
