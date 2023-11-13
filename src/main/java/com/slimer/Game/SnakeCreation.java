@@ -10,7 +10,6 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Sheep;
 import org.bukkit.event.entity.CreatureSpawnEvent;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
@@ -33,8 +32,8 @@ public class SnakeCreation {
      *
      * @param location The spawn location for the lead sheep entity.
      */
-    public SnakeCreation(Location location, Player player, JavaPlugin plugin) {
-        this.sheep = spawnSheep(location, player, plugin);
+    public SnakeCreation(Location location, Player player) {
+        this.sheep = spawnSheep(location, player);
         this.segments = new ArrayList<>();
         DebugManager.log(DebugManager.Category.SNAKE_CREATION, "New snake created for player: " + player.getName() + " at location: " + location);
     }
@@ -44,10 +43,10 @@ public class SnakeCreation {
      *
      * @param lastWaypoint The location for the new segment.
      */
-    public void addSegment(Vector lastWaypoint, Player player, JavaPlugin plugin) {
+    public void addSegment(Vector lastWaypoint, Player player) {
         World world = sheep.getWorld();
         Location newSegmentLocation = new Location(world, lastWaypoint.getX(), lastWaypoint.getY(), lastWaypoint.getZ());
-        Entity segment = spawnSheep(newSegmentLocation, player, plugin);
+        Entity segment = spawnSheep(newSegmentLocation, player);
         segments.add(segment);
         DebugManager.log(DebugManager.Category.SNAKE_CREATION, "Segment added for player: " + player.getName() + " at waypoint: " + lastWaypoint);
     }
@@ -57,15 +56,14 @@ public class SnakeCreation {
      *
      * @param location The Location where the Sheep should be spawned.
      * @param player The Player associated with the spawned Sheep.
-     * @param plugin The JavaPlugin instance managing the operation.
      * @return The newly spawned Sheep entity.
      */
-    private Sheep spawnSheep(Location location, Player player, JavaPlugin plugin) {
+    private Sheep spawnSheep(Location location, Player player) {
         Sheep newSheep = (Sheep) location.getWorld().spawnEntity(location, EntityType.SHEEP, CreatureSpawnEvent.SpawnReason.CUSTOM);
         newSheep.setSilent(true);
         newSheep.setAware(false);
         newSheep.setCollidable(false);
-        DyeColor color = PlayerData.getInstance(plugin).getSheepColor(player);
+        DyeColor color = PlayerData.getInstance().getSheepColor(player);
         newSheep.setColor(color == null ? DEFAULT_SHEEP_COLOR : color);
         return newSheep;
     }

@@ -34,7 +34,7 @@ public class AppleCollectionManager {
      */
     public void checkAndCollectApple(Entity sheepEntity, Player player, JavaPlugin plugin) {
         List<Apple> applesToHandle = detectAppleCollision(sheepEntity, player);
-        handleCollidedApplesAndActions(applesToHandle, player, plugin);
+        handleCollidedApplesAndActions(applesToHandle, player);
         spawnNewApples(sheepEntity, player, plugin);
     }
 
@@ -80,16 +80,15 @@ public class AppleCollectionManager {
      *
      * @param collidedApples List of apples that have collided.
      * @param player         The player controlling the snake.
-     * @param plugin         The JavaPlugin instance for accessing game configurations.
      */
-    private void handleCollidedApplesAndActions(List<Apple> collidedApples, Player player, JavaPlugin plugin) {
+    private void handleCollidedApplesAndActions(List<Apple> collidedApples, Player player) {
         List<Apple> apples = gameManager.getPlayerApples().getOrDefault(player, new ArrayList<>());
 
         for (Apple apple : collidedApples) {
             DebugManager.log(DebugManager.Category.APPLE_COLLECTION, "Handling collided apple for player: " + player.getName());
             apple.clear();  // Remove apple
             gameManager.updatePlayerScore(player);  // Update score
-            gameManager.addSnakeSegment(player, plugin);  // Add snake segment
+            gameManager.addSnakeSegment(player);  // Add snake segment
             player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);  // Level-up sound
 
             apples.remove(apple);  // Remove apple from list

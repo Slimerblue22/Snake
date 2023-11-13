@@ -80,7 +80,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             case "stop" -> handleStopGameCommand(player);
             case "gui" -> handleGUICommand(player, plugin);
             case "help" -> handleHelpCommand(player);
-            case "color" -> handleSetColorCommand(player, args, plugin);
+            case "color" -> handleSetColorCommand(player, args);
             case "highscore" -> handleHighScoreCommand(player);
             case "leaderboard" -> handleLeaderboardCommand(player, args);
             case "music" -> handleMusicToggleCommand(player);
@@ -292,10 +292,9 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      *
      * @param player The Player whose snake color is to be set.
      * @param args   The name of the color to be set.
-     * @param plugin The JavaPlugin instance for accessing plugin-specific features.
      * @return True if the color was set successfully, false otherwise.
      */
-    private boolean handleSetColorCommand(Player player, String[] args, JavaPlugin plugin) {
+    private boolean handleSetColorCommand(Player player, String[] args) {
         // Validate the number of arguments and correct usage
         if (args.length != 2) {
             player.sendMessage(Component.text("Please specify a color name. Use /snakegame color <color_name>.", NamedTextColor.RED));
@@ -312,7 +311,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
         // Validate and set the color
         try {
             DyeColor dyeColor = DyeColor.valueOf(colorName.toUpperCase());
-            PlayerData.getInstance(plugin).setSheepColor(player, dyeColor);
+            PlayerData.getInstance().setSheepColor(player, dyeColor);
             player.sendMessage(Component.text("Successfully changed sheep color to " + colorName, NamedTextColor.GREEN));
             return true;
         } catch (IllegalArgumentException e) {
@@ -328,7 +327,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      * @return True, indicating that the command was handled successfully.
      */
     private boolean handleHighScoreCommand(Player player) {
-        int highScore = PlayerData.getInstance(plugin).getHighScore(player);
+        int highScore = PlayerData.getInstance().getHighScore(player);
         player.sendMessage(Component.text("Your high score is: " + highScore, NamedTextColor.GOLD));
         return true;
     }
@@ -357,7 +356,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
         }
 
         // Retrieve leaderboard data for the specified page
-        List<Map.Entry<String, Integer>> leaderboard = PlayerData.getInstance(plugin).getPaginatedLeaderboard(page);
+        List<Map.Entry<String, Integer>> leaderboard = PlayerData.getInstance().getPaginatedLeaderboard(page);
 
         // Inform the player if there's no data for the given page
         if (leaderboard.isEmpty()) {
@@ -387,10 +386,10 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
         }
 
         // Retrieve the player's current music preference
-        boolean currentPreference = PlayerData.getInstance(plugin).getMusicToggleState(player);
+        boolean currentPreference = PlayerData.getInstance().getMusicToggleState(player);
 
         // Update the music preference
-        PlayerData.getInstance(plugin).setMusicToggleState(player, !currentPreference);
+        PlayerData.getInstance().setMusicToggleState(player, !currentPreference);
 
         // Notify the player about the change
         String message = currentPreference ? "Music has been disabled for your sessions." : "Music has been enabled for your sessions.";

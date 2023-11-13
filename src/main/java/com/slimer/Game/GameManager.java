@@ -103,7 +103,7 @@ public class GameManager {
 
         player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 1.0f);
 
-        SnakeCreation snake = new SnakeCreation(gameLocation, player, (JavaPlugin) plugin);
+        SnakeCreation snake = new SnakeCreation(gameLocation, player);
         Entity sheepEntity = snake.getSheepEntity();
         if (sheepEntity != null) {
             sheepEntity.addPassenger(player);
@@ -266,7 +266,7 @@ public class GameManager {
         DebugManager.log(DebugManager.Category.GAME_MANAGER, "Updating and saving score for player " + player.getName());
 
         int score = playerScores.getOrDefault(player, 0);
-        PlayerData.getInstance((JavaPlugin) plugin).setHighScore(player, score);
+        PlayerData.getInstance().setHighScore(player, score);
         playerScores.remove(player);
 
         return score;
@@ -480,7 +480,7 @@ public class GameManager {
      *
      * @param player The player controlling the snake.
      */
-    public void addSnakeSegment(Player player, JavaPlugin plugin) {
+    public void addSnakeSegment(Player player) {
         DebugManager.log(DebugManager.Category.GAME_MANAGER, "Adding segment to snake for player " + player.getName());
         SnakeCreation snake = getSnakeForPlayer(player);
 
@@ -488,7 +488,7 @@ public class GameManager {
             Vector lastPosition = snakeMovement.getLastPositionOfLastSegmentOrHead(player);
 
             if (lastPosition != null) {
-                snake.addSegment(lastPosition, player, plugin);
+                snake.addSegment(lastPosition, player);
                 resetUTurnStatus(player);  // Reset the U-turn flag for this player
             }
         }
@@ -646,7 +646,7 @@ public class GameManager {
      * @return true if the player has toggled music on, otherwise false.
      */
     private boolean isPlayerMusicToggledOn(Player player) {
-        return PlayerData.getInstance((JavaPlugin) plugin).getMusicToggleState(player);
+        return PlayerData.getInstance().getMusicToggleState(player);
     }
 
     /**

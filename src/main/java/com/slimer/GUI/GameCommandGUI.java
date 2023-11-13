@@ -13,7 +13,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.List;
@@ -173,7 +172,7 @@ public class GameCommandGUI implements Listener {
         // Initialize leaderboard menu and get leaderboard entries
         Inventory leaderboardMenu = Bukkit.createInventory(null, maxRows * slotsPerRow,
                 Component.text("Leaderboard (Page " + page + ")"));
-        List<Map.Entry<String, Integer>> allEntries = PlayerData.getInstance((JavaPlugin) plugin).getLeaderboard();
+        List<Map.Entry<String, Integer>> allEntries = PlayerData.getInstance().getLeaderboard();
 
         // Calculate page-specific details
         int startEntry = (page - 1) * maxEntries;

@@ -40,21 +40,16 @@ public class PlayerData {
     }
 
     /**
-     * Returns the singleton instance of PlayerData, creating it if necessary.
+     * Initializes the PlayerData instance with a given JavaPlugin.
      * This method should be called the first time to initialize the instance with a JavaPlugin object.
      *
      * @param plugin The JavaPlugin instance used for initialization.
-     * @return The singleton instance of PlayerData.
      * @throws IllegalStateException If the method is called before initialization with a JavaPlugin instance.
      */
-    public static synchronized PlayerData getInstance(JavaPlugin plugin) {
-        if (instance == null && plugin != null) {
+    public static synchronized void initializeInstance(JavaPlugin plugin) {
+        if (instance == null) {
             instance = new PlayerData(plugin);
         }
-        if (instance == null) {
-            throw new IllegalStateException("PlayerData must be initialized with a JavaPlugin instance before use.");
-        }
-        return instance;
     }
 
     /**

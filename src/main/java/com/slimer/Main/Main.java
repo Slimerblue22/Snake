@@ -91,7 +91,8 @@ public final class Main extends JavaPlugin {
      * Initializes player data management and migration.
      */
     private void initPlayerData() {
-        PlayerData.getInstance(this).migrateFromYmlToSql(this);
+        PlayerData.initializeInstance(this);
+        PlayerData.getInstance().migrateFromYmlToSql(this);
     }
 
     /**
