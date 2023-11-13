@@ -140,6 +140,21 @@ public class PlayerData {
     }
 
     /**
+     * Closes the SQLite database connection.
+     * Only used during server shutdown or reloads and is invoked in the `onDisable` method of the main class.
+     * Should not be used during any other processes.
+     */
+    public void closeDatabase() {
+        try {
+            if (connection != null && !connection.isClosed()) {
+                connection.close();
+            }
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "An error occurred while closing the SQLite database connection.", e);
+        }
+    }
+
+    /**
      * Fetches the high score of the given player from the SQLite database.
      *
      * @param player The player whose high score is to be fetched.

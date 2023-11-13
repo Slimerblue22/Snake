@@ -195,6 +195,7 @@ public final class Main extends JavaPlugin {
     public void onDisable() {
         gameManager.stopAllGames();
         RegionService.getInstance().closeDatabase();
+        PlayerData.getInstance().closeDatabase();
     }
 
     /**
