@@ -268,12 +268,21 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      * @return True, indicating that the command was handled successfully.
      */
     private boolean handleHelpCommand(Player player) {
-        player.sendMessage(Component.text("------ Snake Game Instructions ------", NamedTextColor.GOLD));
-        player.sendMessage(Component.text("- The objective is to eat as many apples as possible without running into yourself or the walls.", NamedTextColor.WHITE));
-        player.sendMessage(Component.text("- Hold forward to move in the direction you are looking.", NamedTextColor.WHITE));
-        player.sendMessage(Component.text("- Eating an apple will make your snake longer.", NamedTextColor.WHITE));
-        player.sendMessage(Component.text("- The game ends if you run into yourself or the game boundaries.", NamedTextColor.WHITE));
-        player.sendMessage(Component.text("- Your score increases with each apple you eat.", NamedTextColor.WHITE));
+        Component instructions = Component.text()
+                .append(Component.text("------ Snake Game Instructions ------", NamedTextColor.GOLD))
+                .append(Component.newline())
+                .append(Component.text("- The objective is to eat as many apples as possible without running into yourself or the walls.", NamedTextColor.WHITE))
+                .append(Component.newline())
+                .append(Component.text("- Hold forward to move in the direction you are looking.", NamedTextColor.WHITE))
+                .append(Component.newline())
+                .append(Component.text("- Eating an apple will make your snake longer.", NamedTextColor.WHITE))
+                .append(Component.newline())
+                .append(Component.text("- The game ends if you run into yourself or the game boundaries.", NamedTextColor.WHITE))
+                .append(Component.newline())
+                .append(Component.text("- Your score increases with each apple you eat.", NamedTextColor.WHITE))
+                .build();
+
+        player.sendMessage(instructions);
         return true;
     }
 
