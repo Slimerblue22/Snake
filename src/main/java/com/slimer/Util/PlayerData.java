@@ -9,7 +9,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -203,7 +203,7 @@ public class PlayerData {
      * @return A list of Map.Entry objects containing player names and their corresponding scores.
      */
     public List<Map.Entry<String, Integer>> getLeaderboard() {
-        Map<String, Integer> scores = new HashMap<>();
+        Map<String, Integer> scores = new LinkedHashMap<>();
         try {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT name, score FROM player_data ORDER BY score DESC");
