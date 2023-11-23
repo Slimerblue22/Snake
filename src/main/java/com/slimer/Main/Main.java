@@ -1,5 +1,6 @@
 package com.slimer.Main;
 
+import com.slimer.GUI.InventoryClickListener;
 import com.slimer.Game.*;
 import com.slimer.Region.RegionCommandHandler;
 import com.slimer.Region.RegionService;
@@ -57,6 +58,7 @@ public final class Main extends JavaPlugin {
         initMetrics();
         registerCommands();
         checkForUpdates();
+        registerEvents();
     }
 
     /**
@@ -186,6 +188,13 @@ public final class Main extends JavaPlugin {
                 }
             }
         });
+    }
+
+    /**
+     * Registers event listeners.
+     */
+    private void registerEvents() {
+        getServer().getPluginManager().registerEvents(new InventoryClickListener(), this);
     }
 
     /**

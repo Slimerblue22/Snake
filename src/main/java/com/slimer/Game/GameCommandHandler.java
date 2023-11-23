@@ -1,6 +1,6 @@
 package com.slimer.Game;
 
-import com.slimer.GUI.GameCommandGUI;
+import com.slimer.GUI.GuiManager;
 import com.slimer.Main.Main;
 import com.slimer.Region.RegionHelpers;
 import com.slimer.Region.WGHelpers;
@@ -16,8 +16,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -69,7 +67,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
 
         // Open the GUI if no arguments provided
         if (args.length == 0) {
-            handleGUICommand(player, plugin);
+            handleGUICommand(player);
             return false;
         }
 
@@ -78,7 +76,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
         return switch (subCommand) {
             case "start" -> handleStartGameCommand(player);
             case "stop" -> handleStopGameCommand(player);
-            case "gui" -> handleGUICommand(player, plugin);
+            case "gui" -> handleGUICommand(player);
             case "help" -> handleHelpCommand(player);
             case "color" -> handleSetColorCommand(player, args);
             case "highscore" -> handleHighScoreCommand(player);
@@ -237,27 +235,12 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
 
     /**
      * Handles the "gui" command by displaying the main menu GUI for the Snake game to the player.
-     * If there's an existing GUI instance (and associated event listener), it's unregistered to ensure
-     * only the latest instance is active. This method then creates a new instance of the GUI,
-     * registers the associated event listener, and opens the GUI for the player.
      *
      * @param player The player executing the "gui" command.
-     * @param plugin The current plugin instance.
      * @return Always returns true, indicating the command's successful execution.
      */
-    private boolean handleGUICommand(Player player, Plugin plugin) {
-        // Unregister the old listener if it exists to avoid multiple GUI instances
-        GameCommandGUI oldInstance = GameCommandGUI.getCurrentInstance();
-        if (oldInstance != null) {
-            InventoryClickEvent.getHandlerList().unregister(oldInstance);
-        }
-
-        // Create a new GUI instance and register its event listener
-        GameCommandGUI gameCommandGUI = new GameCommandGUI(plugin, player);
-        Bukkit.getPluginManager().registerEvents(gameCommandGUI, plugin);
-
-        // Open the GUI for the player
-        player.openInventory(gameCommandGUI.getMenu());
+    private boolean handleGUICommand(Player player) {
+        GuiManager.getInstance().openMainMenu(player);
         return true;
     }
 
