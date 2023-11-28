@@ -6,8 +6,12 @@ import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Handles commands related to managing regions in the Snake game. This class serves as the executor for region-related
@@ -18,7 +22,7 @@ import org.jetbrains.annotations.NotNull;
  *
  * @author Slimerblue22
  */
-public class RegionCommandHandler implements CommandExecutor {
+public class RegionCommandHandler implements CommandExecutor, TabCompleter {
     private final WGHelpers wgHelpers = WGHelpers.getInstance();
     private final RegionService service = RegionService.getInstance();
     private final RegionHelpers regionHelpers = RegionHelpers.getInstance();
@@ -76,6 +80,32 @@ public class RegionCommandHandler implements CommandExecutor {
         for (String cmd : commands) {
             player.sendMessage(Component.text("/snakeregion " + cmd, NamedTextColor.GRAY));
         }
+    }
+
+    /**
+     * Handles the tab completion for the Snake region system's commands.
+     * This method provides auto-complete suggestions for the region commands.
+     *
+     * @param sender  The sender of the command, can be a player or the console.
+     * @param command The command that was executed.
+     * @param alias   The alias that the sender used to trigger the command.
+     * @param args    The arguments that were provided with the command.
+     * @return A list of possible completions for a command argument.
+     */
+    @Override
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, String[] args) {
+        List<String> completions = new ArrayList<>();
+
+        if (args.length == 1) {
+            String[] subCommands = {"register", "unregister", "link", "unlink", "addtp", "view"};
+            for (String subCommand : subCommands) {
+                if (subCommand.startsWith(args[0].toLowerCase())) {
+                    completions.add(subCommand);
+                }
+            }
+        }
+
+        return completions;
     }
 
     /**
