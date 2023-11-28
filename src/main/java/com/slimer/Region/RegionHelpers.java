@@ -1,5 +1,7 @@
 package com.slimer.Region;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -280,32 +282,32 @@ public class RegionHelpers {
      * @param searchTerm The search term for the "search" option.
      * @return Formatted data string based on the given option.
      */
-    public String fetchFormattedData(String option, String... searchTerm) {
-        StringBuilder builder = new StringBuilder();
+    public Component fetchFormattedData(String option, String... searchTerm) {
+        Component message;
 
         switch (option) {
             case "game":
-                builder.append(fetchRegionData("game"));
+                message = (fetchRegionData("game"));
                 break;
             case "lobby":
-                builder.append(fetchRegionData("lobby"));
+                message = (fetchRegionData("lobby"));
                 break;
             case "links":
-                builder.append(fetchLinksData());
+                message = (fetchLinksData());
                 break;
             case "search":
                 if (searchTerm.length > 0) {
-                    builder.append(fetchSearchData(searchTerm[0]));
+                    message = fetchSearchData(searchTerm[0]);
                 } else {
-                    builder.append("Please provide a region name to search.");
+                    message = Component.text("Please provide a region name to search.", NamedTextColor.RED);
                 }
                 break;
             default:
-                builder.append("Invalid option.");
+                message = Component.text("Invalid option.", NamedTextColor.RED);
                 break;
         }
 
-        return builder.toString();
+        return message;
     }
 
     /**
@@ -314,10 +316,11 @@ public class RegionHelpers {
      * @param searchTerm The term to search for in the region names.
      * @return Formatted data string for regions matching the search term.
      */
-    private String fetchSearchData(String searchTerm) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("Search results for '").append(searchTerm).append("':\n");
-        builder.append("-------------------\n");
+    private Component fetchSearchData(String searchTerm) {
+        Component message = Component.text("Search results for '", NamedTextColor.GRAY)
+                .append(Component.text(searchTerm, NamedTextColor.GRAY))
+                .append(Component.text("':\n", NamedTextColor.GRAY))
+                .append(Component.text("-------------------\n", NamedTextColor.GOLD));
 
         try {
             PreparedStatement statement = connection.prepareStatement(
@@ -326,10 +329,9 @@ public class RegionHelpers {
             ResultSet resultSet = statement.executeQuery();
 
             if (!resultSet.isBeforeFirst()) {
-                return builder.append("No regions found with the name '")
-                        .append(searchTerm)
-                        .append("'.")
-                        .toString();
+                return message.append(Component.text("No regions found with the name '", NamedTextColor.GRAY)
+                        .append(Component.text(searchTerm, NamedTextColor.GRAY))
+                        .append(Component.text("'.", NamedTextColor.GRAY)));
             }
 
             while (resultSet.next()) {
@@ -341,23 +343,19 @@ public class RegionHelpers {
                 int z = resultSet.getInt("z");
                 int linkID = resultSet.getInt("linkID");
 
-                builder.append("Name: ").append(regionName).append("\n")
-                        .append("Type: ").append(regionType).append("\n")
-                        .append("World: ").append(worldName).append("\n")
-                        .append("TP Location: ")
-                        .append(resultSet.wasNull() ? "Not set" : String.format("(%d, %d, %d)", x, y, z))
-                        .append("\n")
-                        .append("Link ID: ")
-                        .append(resultSet.wasNull() ? "Not linked" : String.valueOf(linkID))
-                        .append("\n")
-                        .append(fetchBoundariesFromWG(worldName, regionName))
-                        .append("\n-------------------\n");
+                message = message.append(Component.text("Name: " + regionName + "\n", NamedTextColor.GRAY))
+                        .append(Component.text("Type: " + regionType + "\n", NamedTextColor.GRAY))
+                        .append(Component.text("World: " + worldName + "\n", NamedTextColor.GRAY))
+                        .append(Component.text("TP Location: " + (resultSet.wasNull() ? "Not set" : String.format("(%d, %d, %d)", x, y, z)) + "\n", NamedTextColor.GRAY))
+                        .append(Component.text("Link ID: " + (resultSet.wasNull() ? "Not linked" : String.valueOf(linkID)) + "\n", NamedTextColor.GRAY))
+                        .append(Component.text(fetchBoundariesFromWG(worldName, regionName), NamedTextColor.GRAY))
+                        .append(Component.text("\n-------------------\n", NamedTextColor.GOLD));
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "An error occurred while fetching the search data.", e);
         }
 
-        return builder.toString();
+        return message;
     }
 
     /**
@@ -366,10 +364,11 @@ public class RegionHelpers {
      * @param regionType The type of regions to fetch data for ("game" or "lobby").
      * @return Formatted data string for regions of the given type.
      */
-    private String fetchRegionData(String regionType) {
-        StringBuilder builder = new StringBuilder();
-        builder.append("Data for '").append(regionType).append("' option:\n");
-        builder.append("-------------------\n");
+    private Component fetchRegionData(String regionType) {
+        Component message = Component.text("Data for '", NamedTextColor.GRAY)
+                .append(Component.text(regionType, NamedTextColor.GRAY))
+                .append(Component.text("' option:\n", NamedTextColor.GRAY))
+                .append(Component.text("-------------------\n", NamedTextColor.GOLD));
 
         try {
             PreparedStatement statement = connection.prepareStatement(
@@ -385,23 +384,19 @@ public class RegionHelpers {
                 int z = resultSet.getInt("z");
                 int linkID = resultSet.getInt("linkID");
 
-                builder.append("Name: ").append(regionName).append("\n")
-                        .append("Type: ").append(regionType).append("\n")
-                        .append("World: ").append(worldName).append("\n")
-                        .append("TP Location: ")
-                        .append(resultSet.wasNull() ? "Not set" : String.format("(%d, %d, %d)", x, y, z))
-                        .append("\n")
-                        .append("Link ID: ")
-                        .append(resultSet.wasNull() ? "Not linked" : String.valueOf(linkID))
-                        .append("\n")
-                        .append(fetchBoundariesFromWG(worldName, regionName))
-                        .append("\n-------------------\n");
+                message = message.append(Component.text("Name: " + regionName + "\n", NamedTextColor.GRAY))
+                        .append(Component.text("Type: " + regionType + "\n", NamedTextColor.GRAY))
+                        .append(Component.text("World: " + worldName + "\n", NamedTextColor.GRAY))
+                        .append(Component.text("TP Location: " + (resultSet.wasNull() ? "Not set" : String.format("(%d, %d, %d)", x, y, z)) + "\n", NamedTextColor.GRAY))
+                        .append(Component.text("Link ID: " + (resultSet.wasNull() ? "Not linked" : String.valueOf(linkID)) + "\n", NamedTextColor.GRAY))
+                        .append(Component.text(fetchBoundariesFromWG(worldName, regionName), NamedTextColor.GRAY))
+                        .append(Component.text("\n-------------------\n", NamedTextColor.GOLD));
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "An error occurred while fetching the " + regionType + " data.", e);
         }
 
-        return builder.toString();
+        return message;
     }
 
     /**
@@ -425,10 +420,9 @@ public class RegionHelpers {
      *
      * @return Formatted data string showing which regions are linked together.
      */
-    private String fetchLinksData() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("Data for 'links' option:\n");
-        builder.append("-------------------\n");
+    private Component fetchLinksData() {
+        Component message = Component.text("Data for 'links' option:\n", NamedTextColor.GRAY)
+                .append(Component.text("-------------------\n", NamedTextColor.GOLD));
 
         try {
             PreparedStatement statement = connection.prepareStatement(
@@ -444,32 +438,42 @@ public class RegionHelpers {
 
                 if (currentLinkID == null || !currentLinkID.equals(linkID)) {
                     if (firstRegion != null) {
-                        builder.append("Warning: Region '").append(firstRegion)
-                                .append("' with Link ID: ").append(currentLinkID)
-                                .append(" is not linked to any other region.\n")
-                                .append("-------------------\n");
+                        message = message.append(Component.text("Warning: Region '", NamedTextColor.RED)
+                                .append(Component.text(firstRegion, NamedTextColor.GRAY))
+                                .append(Component.text("' with Link ID: ", NamedTextColor.RED))
+                                .append(Component.text(currentLinkID, NamedTextColor.GRAY))
+                                .append(Component.text(" is not linked to any other region.\n", NamedTextColor.RED))
+                                .append(Component.text("-------------------\n", NamedTextColor.GOLD)));
                     }
                     currentLinkID = linkID;
                     firstRegion = regionName;
                 } else {
-                    builder.append("Regions '").append(firstRegion).append("' and '")
-                            .append(regionName).append("' are linked with Link ID: ")
-                            .append(linkID).append("\n")
-                            .append("-------------------\n");
+                    if (firstRegion != null) {
+                        message = message.append(Component.text("Regions '", NamedTextColor.GRAY)
+                                .append(Component.text(firstRegion, NamedTextColor.GRAY))
+                                .append(Component.text("' and '", NamedTextColor.GRAY))
+                                .append(Component.text(regionName, NamedTextColor.GRAY))
+                                .append(Component.text("' are linked with Link ID: ", NamedTextColor.GRAY))
+                                .append(Component.text(linkID, NamedTextColor.GRAY))
+                                .append(Component.text("\n", NamedTextColor.GRAY))
+                                .append(Component.text("-------------------\n", NamedTextColor.GOLD)));
+                    }
                     firstRegion = null;
                 }
             }
             // Not redundant code, see javadoc for more info
             if (firstRegion != null) {
-                builder.append("Warning: Region '").append(firstRegion)
-                        .append("' with Link ID: ").append(currentLinkID)
-                        .append(" is not linked to any other region.\n")
-                        .append("-------------------\n");
+                message = message.append(Component.text("Warning: Region '", NamedTextColor.RED)
+                        .append(Component.text(firstRegion, NamedTextColor.GRAY))
+                        .append(Component.text("' with Link ID: ", NamedTextColor.RED))
+                        .append(Component.text(currentLinkID, NamedTextColor.GRAY))
+                        .append(Component.text(" is not linked to any other region.\n", NamedTextColor.RED))
+                        .append(Component.text("-------------------\n", NamedTextColor.GOLD)));
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "An error occurred while fetching the links data.", e);
         }
 
-        return builder.toString();
+        return message;
     }
 }

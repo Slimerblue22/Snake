@@ -87,7 +87,7 @@ public class RegionCommandHandler implements CommandExecutor {
      */
     private boolean registerRegion(Player player, String[] args) {
         if (args.length != 4) {
-            player.sendMessage("Incorrect usage. Example: /snakeregion register [region type; game or lobby] [region name] [world region is in]");
+            player.sendMessage(Component.text("Incorrect usage. Example: /snakeregion register [region type; game or lobby] [region name] [world region is in]", NamedTextColor.RED));
             return false;
         }
 
@@ -96,25 +96,25 @@ public class RegionCommandHandler implements CommandExecutor {
         String worldName = args[3].toLowerCase();
 
         if (!"lobby".equals(regionType) && !"game".equals(regionType)) {
-            player.sendMessage("Region type must be either 'lobby' or 'game'.");
+            player.sendMessage(Component.text("Region type must be either 'lobby' or 'game'.", NamedTextColor.RED));
             return false;
         }
 
         if (!wgHelpers.doesWGRegionExist(worldName, regionName)) {
-            player.sendMessage(String.format("Region %s is not registered in WorldGuard for world %s.", regionName, worldName));
+            player.sendMessage(Component.text(String.format("Region %s is not registered in WorldGuard for world %s.", regionName, worldName), NamedTextColor.RED));
             return false;
         }
 
         if (regionHelpers.isRegionRegistered(regionName)) {
-            player.sendMessage("Region is already registered.");
+            player.sendMessage(Component.text("Region is already registered.", NamedTextColor.RED));
             return false;
         }
 
         if (service.registerNewRegion(regionType, regionName, worldName)) {
-            player.sendMessage("Region registered successfully.");
+            player.sendMessage(Component.text("Region registered successfully.", NamedTextColor.GREEN));
             return true;
         } else {
-            player.sendMessage("Failed to register region.");
+            player.sendMessage(Component.text("Failed to register region.", NamedTextColor.RED));
             return false;
         }
     }
@@ -128,27 +128,27 @@ public class RegionCommandHandler implements CommandExecutor {
      */
     private boolean unregisterRegion(Player player, String[] args) {
         if (args.length != 2) {
-            player.sendMessage("Incorrect usage. Example: /snakeregion unregister [region name].");
+            player.sendMessage(Component.text("Incorrect usage. Example: /snakeregion unregister [region name].", NamedTextColor.RED));
             return false;
         }
 
         String regionName = args[1].toLowerCase();
 
         if (!regionHelpers.isRegionRegistered(regionName)) {
-            player.sendMessage("Region is not registered.");
+            player.sendMessage(Component.text("Region is not registered.", NamedTextColor.RED));
             return false;
         }
 
         if (regionHelpers.getLinkID(regionName) != null) {
-            player.sendMessage("The region is linked to another region. Unlink it first before unregistering.");
+            player.sendMessage(Component.text("The region is linked to another region. Unlink it first before unregistering.", NamedTextColor.RED));
             return false;
         }
 
         if (service.unregisterRegion(regionName)) {
-            player.sendMessage("Region unregistered successfully.");
+            player.sendMessage(Component.text("Region unregistered successfully.", NamedTextColor.GREEN));
             return true;
         } else {
-            player.sendMessage("Failed to unregister region.");
+            player.sendMessage(Component.text("Failed to unregister region.", NamedTextColor.RED));
             return false;
         }
     }
@@ -162,7 +162,7 @@ public class RegionCommandHandler implements CommandExecutor {
      */
     private boolean linkRegions(Player player, String[] args) {
         if (args.length != 3) {
-            player.sendMessage("Incorrect usage. Example: /snakeregion link [region1 name] [region2 name].");
+            player.sendMessage(Component.text("Incorrect usage. Example: /snakeregion link [region1 name] [region2 name].", NamedTextColor.RED));
             return false;
         }
 
@@ -170,7 +170,7 @@ public class RegionCommandHandler implements CommandExecutor {
         String regionName2 = args[2].toLowerCase();
 
         if (!regionHelpers.isRegionRegistered(regionName1) || !regionHelpers.isRegionRegistered(regionName2)) {
-            player.sendMessage("One or both regions are not registered.");
+            player.sendMessage(Component.text("One or both regions are not registered.", NamedTextColor.RED));
             return false;
         }
 
@@ -178,20 +178,20 @@ public class RegionCommandHandler implements CommandExecutor {
         String type2 = regionHelpers.getRegionType(regionName2);
 
         if (!((type1.equals("game") && type2.equals("lobby")) || (type1.equals("lobby") && type2.equals("game")))) {
-            player.sendMessage("You must link a game region with a lobby region.");
+            player.sendMessage(Component.text("You must link a game region with a lobby region.", NamedTextColor.RED));
             return false;
         }
 
         if (regionHelpers.isRegionLinked(regionName1) || regionHelpers.isRegionLinked(regionName2)) {
-            player.sendMessage("One or both regions are already linked to another region.");
+            player.sendMessage(Component.text("One or both regions are already linked to another region.", NamedTextColor.RED));
             return false;
         }
 
         if (service.linkRegions(regionName1, regionName2)) {
-            player.sendMessage("Regions linked successfully.");
+            player.sendMessage(Component.text("Regions linked successfully.", NamedTextColor.GREEN));
             return true;
         } else {
-            player.sendMessage("Failed to link regions.");
+            player.sendMessage(Component.text("Failed to link regions.", NamedTextColor.RED));
             return false;
         }
     }
@@ -205,7 +205,7 @@ public class RegionCommandHandler implements CommandExecutor {
      */
     private boolean unlinkRegions(Player player, String[] args) {
         if (args.length != 3) {
-            player.sendMessage("Incorrect usage. Example: /snakeregion unlink [region1 name] [region2 name].");
+            player.sendMessage(Component.text("Incorrect usage. Example: /snakeregion unlink [region1 name] [region2 name].", NamedTextColor.RED));
             return false;
         }
 
@@ -213,12 +213,12 @@ public class RegionCommandHandler implements CommandExecutor {
         String regionName2 = args[2].toLowerCase();
 
         if (regionName1.equals(regionName2)) {
-            player.sendMessage("Cannot unlink the same region.");
+            player.sendMessage(Component.text("Cannot unlink the same region.", NamedTextColor.RED));
             return false;
         }
 
         if (!regionHelpers.isRegionRegistered(regionName1) || !regionHelpers.isRegionRegistered(regionName2)) {
-            player.sendMessage("One or both regions are not registered.");
+            player.sendMessage(Component.text("One or both regions are not registered.", NamedTextColor.RED));
             return false;
         }
 
@@ -226,20 +226,20 @@ public class RegionCommandHandler implements CommandExecutor {
         Integer linkID2 = regionHelpers.getLinkID(regionName2);
 
         if (linkID1 == null || linkID2 == null) {
-            player.sendMessage("One or both regions are not linked.");
+            player.sendMessage(Component.text("One or both regions are not linked.", NamedTextColor.RED));
             return false;
         }
 
         if (!linkID1.equals(linkID2)) {
-            player.sendMessage("The provided regions are not linked together.");
+            player.sendMessage(Component.text("The provided regions are not linked together.", NamedTextColor.RED));
             return false;
         }
 
         if (service.unlinkRegions(regionName1, regionName2)) {
-            player.sendMessage("Regions unlinked successfully.");
+            player.sendMessage(Component.text("Regions unlinked successfully.", NamedTextColor.GREEN));
             return true;
         } else {
-            player.sendMessage("Failed to unlink regions.");
+            player.sendMessage(Component.text("Failed to unlink regions.", NamedTextColor.RED));
             return false;
         }
     }
@@ -253,7 +253,7 @@ public class RegionCommandHandler implements CommandExecutor {
      */
     private boolean addTP(Player player, String[] args) {
         if (args.length != 2 && args.length != 5) {
-            player.sendMessage("Incorrect usage. Example: /snakeregion addtp [region name] or /snakeregion addtp [region name] [x] [y] [z].");
+            player.sendMessage(Component.text("Incorrect usage. Example: /snakeregion addtp [region name] or /snakeregion addtp [region name] [x] [y] [z].", NamedTextColor.RED));
             return false;
         }
 
@@ -266,7 +266,7 @@ public class RegionCommandHandler implements CommandExecutor {
                 y = Math.round(Float.parseFloat(args[3]));
                 z = Math.round(Float.parseFloat(args[4]));
             } catch (NumberFormatException e) {
-                player.sendMessage("Invalid coordinates format. Please ensure x, y, and z are valid numbers.");
+                player.sendMessage(Component.text("Invalid coordinates format. Please ensure x, y, and z are valid numbers.", NamedTextColor.RED));
                 return false;
             }
         } else {
@@ -277,15 +277,15 @@ public class RegionCommandHandler implements CommandExecutor {
         }
 
         if (!wgHelpers.areCoordinatesInWGRegion(player.getWorld().getName(), regionName, x, y, z)) {
-            player.sendMessage("The coordinates are not within the specified WorldGuard region.");
+            player.sendMessage(Component.text("The coordinates are not within the specified WorldGuard region.", NamedTextColor.RED));
             return false;
         }
 
         if (service.setRegionCoordinates(regionName, x, y, z)) {
-            player.sendMessage(String.format("Coordinates set successfully for the region at (%d, %d, %d).", x, y, z));
+            player.sendMessage(Component.text(String.format("Coordinates set successfully for the region at (%d, %d, %d).", x, y, z), NamedTextColor.GREEN));
             return true;
         } else {
-            player.sendMessage("Failed to set coordinates for the region.");
+            player.sendMessage(Component.text("Failed to set coordinates for the region.", NamedTextColor.RED));
             return false;
         }
     }
@@ -299,12 +299,12 @@ public class RegionCommandHandler implements CommandExecutor {
      */
     private boolean viewData(Player player, String[] args) {
         if (args.length < 2) {
-            player.sendMessage("Incorrect usage. Example: /snakeregion view [game | lobby | links | search].");
+            player.sendMessage(Component.text("Incorrect usage. Example: /snakeregion view [game | lobby | links | search].", NamedTextColor.RED));
             return false;
         }
 
         String option = args[1].toLowerCase();
-        String message = (option.equals("search") && args.length > 2) ?
+        Component message = (option.equals("search") && args.length > 2) ?
                 regionHelpers.fetchFormattedData(option, args[2]) :
                 regionHelpers.fetchFormattedData(option);
         player.sendMessage(message);
