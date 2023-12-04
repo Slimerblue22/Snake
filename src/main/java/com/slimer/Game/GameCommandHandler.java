@@ -163,7 +163,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             return false;
         }
 
-        player.sendMessage(Component.text("Starting the snake game...", NamedTextColor.GREEN));
+        GameSessionManager.getInstance().startGame(player);
         return true;
     }
 
@@ -174,8 +174,8 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      * @return true if the game or queue was stopped for the player, false otherwise.
      */
     private boolean handleStopGameCommand(Player player) {
-            player.sendMessage(Component.text("Stopping the snake game...", NamedTextColor.RED));
-            return true;
+        GameSessionManager.getInstance().stopGame(player);
+        return true;
     }
 
     /**

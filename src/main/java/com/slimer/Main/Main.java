@@ -2,6 +2,7 @@ package com.slimer.Main;
 
 import com.slimer.GUI.InventoryClickListener;
 import com.slimer.Game.GameCommandHandler;
+import com.slimer.Game.PlayerDisconnectListener;
 import com.slimer.Region.RegionCommandHandler;
 import com.slimer.Region.RegionService;
 import com.slimer.Region.WGHelpers;
@@ -138,6 +139,7 @@ public final class Main extends JavaPlugin {
      */
     private void registerEvents() {
         getServer().getPluginManager().registerEvents(new InventoryClickListener(), this);
+        getServer().getPluginManager().registerEvents(new PlayerDisconnectListener(), this);
     }
 
     /**
