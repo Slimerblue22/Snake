@@ -1,18 +1,14 @@
 package com.slimer.Main;
 
 import com.slimer.GUI.InventoryClickListener;
-import com.slimer.Game.*;
+import com.slimer.Game.GameCommandHandler;
 import com.slimer.Region.RegionCommandHandler;
 import com.slimer.Region.RegionService;
 import com.slimer.Region.WGHelpers;
 import com.slimer.Util.DebugManager;
-import com.slimer.Util.MusicManager;
 import com.slimer.Util.PlayerData;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -21,8 +17,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -35,14 +29,6 @@ import java.util.Objects;
  */
 public final class Main extends JavaPlugin {
     private static String pluginVersion;
-    private String songFilePath;
-    private double snakeSpeed;
-    private int maxPlayersPerGame;
-    private int maxApplesPerGame;
-    private double forceTeleportDistance;
-    private double targetCloseEnoughDistance;
-    private GameManager gameManager;
-    private boolean isMusicEnabled = false;
 
     /**
      * Called when the plugin is enabled. This method initializes various plugin components
@@ -50,43 +36,14 @@ public final class Main extends JavaPlugin {
      */
     @Override
     public void onEnable() {
-        initConfig();
-        initMusic();
-        initGameComponents();
+        this.saveDefaultConfig();
+        pluginVersion = this.getDescription().getVersion();
         initRegionServices();
         initPlayerData();
-        initMetrics();
+        //initMetrics();
         registerCommands();
         checkForUpdates();
         registerEvents();
-    }
-
-    /**
-     * Initializes the plugin configuration by loading or setting default values.
-     */
-    private void initConfig() {
-        this.saveDefaultConfig();
-        FileConfiguration config = this.getConfig();
-        songFilePath = config.getString("song-file-path", "songs/song.nbs");
-        snakeSpeed = config.getDouble("snake-speed", 5.0);
-        maxPlayersPerGame = config.getInt("max-players-per-game", 1);
-        maxApplesPerGame = config.getInt("max-apples-per-game", 1);
-        forceTeleportDistance = config.getDouble("force-teleport-distance", 1.2);
-        targetCloseEnoughDistance = config.getDouble("target-close-enough-distance", 0.1);
-        pluginVersion = this.getDescription().getVersion();
-    }
-
-    /**
-     * Initializes music functionality, if enabled and NoteBlockAPI is available.
-     */
-    private void initMusic() {
-        if (Bukkit.getPluginManager().isPluginEnabled("NoteBlockAPI") &&
-                getConfig().getBoolean("enable-music", true)) {
-            isMusicEnabled = true;
-            new MusicManager(this);
-        } else {
-            isMusicEnabled = false;
-        }
     }
 
     /**
@@ -105,20 +62,6 @@ public final class Main extends JavaPlugin {
     }
 
     /**
-     * Initializes game-related components.
-     */
-    private void initGameComponents() {
-        Map<Player, SnakeCreation> playerSnakes = new HashMap<>();
-        Map<Player, Location> playerLobbyLocations = new HashMap<>();
-        gameManager = new GameManager(playerSnakes, playerLobbyLocations, this, isMusicEnabled);
-        SnakeMovement snakeMovement = new SnakeMovement(gameManager, null, this);
-        PlayerInputHandler playerInputHandler = new PlayerInputHandler(this, gameManager);
-        snakeMovement.setPlayerInputHandler(playerInputHandler);
-        gameManager.setPlayerInputHandler(playerInputHandler);
-        gameManager.setSnakeMovement(snakeMovement);
-    }
-
-    /**
      * Initializes region-related services and migration.
      */
     private void initRegionServices() {
@@ -132,7 +75,7 @@ public final class Main extends JavaPlugin {
      */
     private void registerCommands() {
         Objects.requireNonNull(getCommand("snakedebug")).setExecutor(new DebugManager.ToggleDebugCommand());
-        Objects.requireNonNull(getCommand("snakegame")).setExecutor(new GameCommandHandler(gameManager, this));
+        Objects.requireNonNull(getCommand("snakegame")).setExecutor(new GameCommandHandler());
         Objects.requireNonNull(getCommand("snakeregion")).setExecutor(new RegionCommandHandler());
     }
 
@@ -202,64 +145,8 @@ public final class Main extends JavaPlugin {
      */
     @Override
     public void onDisable() {
-        gameManager.stopAllGames();
         RegionService.getInstance().closeDatabase();
         PlayerData.getInstance().closeDatabase();
-    }
-
-    /**
-     * Retrieves the file path of the song associated with this instance.
-     * This information is used in {@code MusicManager} to retrieve the music file.
-     *
-     * @return A string representing the file path of the song.
-     */
-    public String getSongFilePath() {
-        return songFilePath;
-    }
-
-    /**
-     * Gets the maximum number of players allowed per game.
-     *
-     * @return The maximum number of players per game.
-     */
-    public int getMaxPlayersPerGame() {
-        return maxPlayersPerGame;
-    }
-
-    /**
-     * Gets the speed of the snake in blocks per second.
-     *
-     * @return The speed of the snake in blocks per second.
-     */
-    public double getSnakeSpeed() {
-        return snakeSpeed;
-    }
-
-    /**
-     * Retrieves the maximum number of apples allowed to be present in the game at any given time.
-     *
-     * @return The maximum number of apples permitted per game.
-     */
-    public int getMaxApplesPerGame() {
-        return maxApplesPerGame;
-    }
-
-    /**
-     * Retrieves the distance before a segment is forcefully teleported back to its waypoint.
-     *
-     * @return The distance before forceful teleportation of a segment, as a double.
-     */
-    public double getForceTeleportDistance() {
-        return forceTeleportDistance;
-    }
-
-    /**
-     * Retrieves the distance threshold for determining if the snake's segment is close enough to its target waypoint.
-     *
-     * @return The distance threshold for target closeness, as a double.
-     */
-    public double getTargetCloseEnoughDistance() {
-        return targetCloseEnoughDistance;
     }
 
     /**

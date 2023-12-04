@@ -1,4 +1,4 @@
-name: Snake
+name: Snake-Experimental
 version: '${version}'
 main: com.slimer.Main.Main
 authors: [Slimerblue22]

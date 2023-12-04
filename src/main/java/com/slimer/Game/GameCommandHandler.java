@@ -1,13 +1,11 @@
 package com.slimer.Game;
 
 import com.slimer.GUI.GuiManager;
-import com.slimer.Main.Main;
 import com.slimer.Region.RegionHelpers;
 import com.slimer.Region.WGHelpers;
 import com.slimer.Util.PlayerData;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -16,7 +14,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -31,17 +28,11 @@ import java.util.Map;
  * @author Slimerblue22
  */
 public class GameCommandHandler implements CommandExecutor, TabCompleter {
-    private final GameManager gameManager;
-    private final JavaPlugin plugin;
 
     /**
      * Constructs a new GameCommandHandler.
-     *
-     * @param gameManager The GameManager instance for managing game states.
      */
-    public GameCommandHandler(GameManager gameManager, JavaPlugin plugin) {
-        this.gameManager = gameManager;
-        this.plugin = plugin;
+    public GameCommandHandler() {
     }
 
     /**
@@ -172,48 +163,8 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             return false;
         }
 
-        return handleClassicGameStart(player, currentGameRegion, gameTeleportLocation, lobbyTeleportLocation);
-    }
-
-    /**
-     * Handles the initiation of a classic snake game for a player.
-     *
-     * @param player The player for whom to start the game.
-     * @return True if the game was successfully started, false otherwise.
-     */
-    private boolean handleClassicGameStart(Player player, String currentGameRegion, Location gameTeleportLocation, Location lobbyTeleportLocation) {
-        int maxPlayersPerGame = ((Main) plugin).getMaxPlayersPerGame();
-        int playersInGameRegion = countPlayersInGameRegion(currentGameRegion);
-
-        if (playersInGameRegion >= maxPlayersPerGame) {
-            player.sendMessage(Component.text("The game region has reached its maximum number of players (" + maxPlayersPerGame + " players).", NamedTextColor.RED));
-            return false;
-        }
-
-        player.teleport(gameTeleportLocation);
-        gameManager.startGame(player, gameTeleportLocation, lobbyTeleportLocation);
         player.sendMessage(Component.text("Starting the snake game...", NamedTextColor.GREEN));
-
         return true;
-    }
-
-    /**
-     * Counts the number of players in the specified game region.
-     *
-     * @param currentGameRegion The name of the game region to count players in.
-     * @return The number of players present in the specified game region.
-     */
-    private int countPlayersInGameRegion(String currentGameRegion) {
-        int playersInGameRegion = 0;
-        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-            Location loc = onlinePlayer.getLocation();
-            if (WGHelpers.getInstance().areCoordinatesInWGRegion(loc.getWorld().getName(), currentGameRegion, loc.getBlockX(), loc.getBlockY(), loc.getBlockZ())) {
-                if (gameManager.getSnakeForPlayer(onlinePlayer) != null) {
-                    playersInGameRegion++;
-                }
-            }
-        }
-        return playersInGameRegion;
     }
 
     /**
@@ -223,14 +174,8 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      * @return true if the game or queue was stopped for the player, false otherwise.
      */
     private boolean handleStopGameCommand(Player player) {
-        if (gameManager.getSnakeForPlayer(player) != null) {  // Check if player is in a game
-            gameManager.stopGame(player, "Manual cancellation!");
             player.sendMessage(Component.text("Stopping the snake game...", NamedTextColor.RED));
             return true;
-        } else {
-            player.sendMessage(Component.text("You are not currently in a game.", NamedTextColor.RED));
-            return false;
-        }
     }
 
     /**
@@ -284,12 +229,6 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             return false;
         }
         String colorName = args[1];
-
-        // Make sure the player is not in a game
-        if (gameManager.getSnakeForPlayer(player) != null) {
-            player.sendMessage(Component.text("You must not be in a game to change your sheep's color.", NamedTextColor.RED));
-            return false;
-        }
 
         // Validate and set the color
         try {
@@ -363,11 +302,6 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      * @return true if the music preference is successfully toggled, otherwise false.
      */
     private boolean handleMusicToggleCommand(Player player) {
-        if (!gameManager.isMusicEnabled()) {
-            player.sendMessage(Component.text("Music is globally disabled on this server.", NamedTextColor.RED));
-            return false;
-        }
-
         // Retrieve the player's current music preference
         boolean currentPreference = PlayerData.getInstance().getMusicToggleState(player);
 
