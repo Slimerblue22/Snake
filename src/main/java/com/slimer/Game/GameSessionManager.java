@@ -10,16 +10,41 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Manages game sessions within the plugin.
+ * This class provides functionality to start, stop, and manage game sessions for players.
+ * It follows the Singleton design pattern to ensure only one instance of this manager exists.
+ * <p>
+ * Usage:
+ * <ul>
+ *   <li>To obtain an instance of this manager: {@code GameSessionManager.getInstance()}.</li>
+ *   <li>To check if a player has an active game: {@code isGameActive(Player player)}.</li>
+ *   <li>To start a new game for a player: {@code startGame(Player player, Location gameTeleportLocation, Location lobbyTeleportLocation)}.</li>
+ *   <li>To stop an active game for a player: {@code stopGame(Player player)}.</li>
+ * </ul>
+ * <p>
+ * Last updated: V2.1.0
+ *
+ * @author Slimerblue22
+ */
 public class GameSessionManager {
     private static GameSessionManager instance;
     private final HashMap<UUID, Map<String, Location>> activeGames;
 
-    // Private constructor for singleton
+    /**
+     * Private constructor to enforce the Singleton pattern.
+     * Initializes the map that holds active game sessions.
+     */
     private GameSessionManager() {
         activeGames = new HashMap<>();
     }
 
-    // Get instance method for singleton
+    /**
+     * Retrieves the singleton instance of the GameSessionManager.
+     * If the instance does not exist, it is created.
+     *
+     * @return The singleton instance of the GameSessionManager.
+     */
     public static GameSessionManager getInstance() {
         if (instance == null) {
             instance = new GameSessionManager();
@@ -27,7 +52,13 @@ public class GameSessionManager {
         return instance;
     }
 
-    // Check if a player has an active game
+    /**
+     * Checks if the specified player has an active game session.
+     *
+     * @param player The player whose game session status is to be checked.
+     * @return {@code true} if the player has an active game, {@code false} otherwise.
+     * Returns {@code false} if the player parameter is null.
+     */
     public boolean isGameActive(Player player) {
         if (player == null) {
             DebugManager.log(DebugManager.Category.SESSION_MANAGER, "Player object is null in isGameActive method.");
@@ -36,7 +67,14 @@ public class GameSessionManager {
         return activeGames.containsKey(player.getUniqueId());
     }
 
-    // Start a game for a player
+    /**
+     * Starts a new game session for the specified player.
+     * If the player already has an active game, a message is sent to them and the game is not started.
+     *
+     * @param player                The player for whom the game session is to be started.
+     * @param gameTeleportLocation  The location to teleport the player for the game.
+     * @param lobbyTeleportLocation The location to teleport the player back to the lobby.
+     */
     public void startGame(Player player, Location gameTeleportLocation, Location lobbyTeleportLocation) {
         if (player == null || gameTeleportLocation == null || lobbyTeleportLocation == null) {
             DebugManager.log(DebugManager.Category.SESSION_MANAGER, "Null parameter(s) provided in startGame method.");
@@ -65,7 +103,12 @@ public class GameSessionManager {
         DebugManager.log(DebugManager.Category.SESSION_MANAGER, "Game started for player: " + player.getName() + " with UUID of " + player.getUniqueId());
     }
 
-    // Stop a player's game
+    /**
+     * Stops the active game session for the specified player.
+     * If the player does not have an active game, a message is sent to them.
+     *
+     * @param player The player whose game session is to be stopped.
+     */
     public void stopGame(Player player) {
         if (player == null) {
             DebugManager.log(DebugManager.Category.SESSION_MANAGER, "Player object is null in stopGame method.");

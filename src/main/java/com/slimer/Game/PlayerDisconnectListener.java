@@ -6,7 +6,23 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+/**
+ * Listens to player disconnect events in a multiplayer game environment.
+ * This class is responsible for handling the actions to be taken when a player disconnects from the server.
+ * It ensures that any active game sessions associated with the disconnecting player are properly terminated.
+ * <p>
+ * Last updated: V2.1.0
+ *
+ * @author Slimerblue22
+ */
 public class PlayerDisconnectListener implements Listener {
+
+    /**
+     * Handles the player quit event.
+     * When a player disconnects, this method checks if they have an active game session and stops it.
+     *
+     * @param event The PlayerQuitEvent triggered when a player leaves the game.
+     */
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
