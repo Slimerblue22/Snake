@@ -163,7 +163,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             return false;
         }
 
-        GameSessionManager.getInstance().startGame(player);
+        GameSessionManager.getInstance().startGame(player, gameTeleportLocation, lobbyTeleportLocation);
         return true;
     }
 
