@@ -95,7 +95,7 @@ public class GameSessionManager {
 
         // Teleporting the player to the game location
         if (!player.teleport(gameTeleportLocation)) {
-            DebugManager.log(DebugManager.Category.SESSION_MANAGER, "Failed to teleport player " + player.getName() + " to game location.");
+            DebugManager.log(DebugManager.Category.SESSION_MANAGER, "Failed to teleport player " + player.getName() + " with UUID of " + player.getUniqueId() + " to game location.");
         }
 
         // Informing the player that the game has started
