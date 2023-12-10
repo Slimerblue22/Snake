@@ -28,11 +28,13 @@ import java.util.Map;
  * @author Slimerblue22
  */
 public class GameCommandHandler implements CommandExecutor, TabCompleter {
+    private final GameManager gameManager;
 
     /**
      * Constructs a new GameCommandHandler.
      */
-    public GameCommandHandler() {
+    public GameCommandHandler(GameManager gameManager) {
+        this.gameManager = gameManager;
     }
 
     /**
@@ -163,7 +165,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
             return false;
         }
 
-        GameSessionManager.getInstance().startGame(player, gameTeleportLocation, lobbyTeleportLocation);
+        gameManager.startGame(player, gameTeleportLocation, lobbyTeleportLocation);
         return true;
     }
 
@@ -174,7 +176,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      * @return true if the game or queue was stopped for the player, false otherwise.
      */
     private boolean handleStopGameCommand(Player player) {
-        GameSessionManager.getInstance().stopGame(player);
+        gameManager.stopGame(player);
         return true;
     }
 

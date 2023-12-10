@@ -2,6 +2,7 @@ package com.slimer.Main;
 
 import com.slimer.GUI.InventoryClickListener;
 import com.slimer.Game.GameCommandHandler;
+import com.slimer.Game.GameManager;
 import com.slimer.Game.PlayerDisconnectListener;
 import com.slimer.Region.RegionCommandHandler;
 import com.slimer.Region.RegionService;
@@ -30,6 +31,7 @@ import java.util.Objects;
  */
 public final class Main extends JavaPlugin {
     private static String pluginVersion;
+    private GameManager gameManager;
 
     /**
      * Called when the plugin is enabled. This method initializes various plugin components
@@ -39,12 +41,17 @@ public final class Main extends JavaPlugin {
     public void onEnable() {
         this.saveDefaultConfig();
         pluginVersion = this.getDescription().getVersion();
+        initGameComponents();
         initRegionServices();
         initPlayerData();
         //initMetrics();
         registerCommands();
         checkForUpdates();
         registerEvents();
+    }
+
+    private void initGameComponents() {
+        gameManager = new GameManager();
     }
 
     /**
@@ -76,7 +83,7 @@ public final class Main extends JavaPlugin {
      */
     private void registerCommands() {
         Objects.requireNonNull(getCommand("snakedebug")).setExecutor(new DebugManager.ToggleDebugCommand());
-        Objects.requireNonNull(getCommand("snakegame")).setExecutor(new GameCommandHandler());
+        Objects.requireNonNull(getCommand("snakegame")).setExecutor(new GameCommandHandler(gameManager));
         Objects.requireNonNull(getCommand("snakeregion")).setExecutor(new RegionCommandHandler());
     }
 
@@ -85,6 +92,7 @@ public final class Main extends JavaPlugin {
      * It compares the current plugin version with the latest available version on GitHub
      * and logs information about the update status.
      */
+    //TODO: Consider moving this into it's own class
     private void checkForUpdates() {
         Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
             HttpURLConnection connection = null;
@@ -139,7 +147,7 @@ public final class Main extends JavaPlugin {
      */
     private void registerEvents() {
         getServer().getPluginManager().registerEvents(new InventoryClickListener(), this);
-        getServer().getPluginManager().registerEvents(new PlayerDisconnectListener(), this);
+        getServer().getPluginManager().registerEvents(new PlayerDisconnectListener(gameManager), this);
     }
 
     /**

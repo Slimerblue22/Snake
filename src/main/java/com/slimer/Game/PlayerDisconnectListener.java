@@ -17,6 +17,12 @@ import org.bukkit.event.player.PlayerQuitEvent;
  */
 public class PlayerDisconnectListener implements Listener {
 
+    private final GameManager gameManager;
+
+    public PlayerDisconnectListener(GameManager gameManager) {
+        this.gameManager = gameManager;
+    }
+
     /**
      * Handles the player quit event.
      * When a player disconnects, this method checks if they have an active game session and stops it.
@@ -31,7 +37,7 @@ public class PlayerDisconnectListener implements Listener {
         if (sessionManager.isGameActive(player)) {
             // If the player is in a game, handle their removal
             DebugManager.log(DebugManager.Category.DISCONNECT_LISTENER, "Game stopped for disconnected player: " + player.getName() + " with UUID of " + player.getUniqueId());
-            sessionManager.stopGame(player);
+            gameManager.stopGame(player);
         }
     }
 }
