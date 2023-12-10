@@ -5,12 +5,14 @@ import com.slimer.Region.WGHelpers;
 import com.slimer.Util.DebugManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Manages the logic for starting and stopping game sessions.
@@ -119,5 +121,25 @@ public class GameManager {
         // Informing the player that their game has been stopped
         player.sendMessage(Component.text("Your game has been stopped!", NamedTextColor.GREEN));
         DebugManager.log(DebugManager.Category.GAME_MANAGER, "Game stopped for player: " + player.getName() + " with UUID of " + player.getUniqueId());
+    }
+
+    /**
+     * Stops all currently active game sessions.
+     * Iterates through all active game sessions managed by the GameSessionManager,
+     * and stops each session. This is typically used during server shutdown to ensure
+     * all games are stopped gracefully.
+     * <p>
+     * This method retrieves each player's UUID from the active games, checks if the
+     * player is currently online, and if so, stops their game session. Additionally,
+     * it logs the action for each stopped game if the `GAME_MANAGER` debug category is enabled.
+     */
+    public void stopAllGames() {
+        for (UUID playerId : sessionManager.getActiveGameIds()) {
+            Player player = Bukkit.getPlayer(playerId);
+            if (player != null) {
+                DebugManager.log(DebugManager.Category.GAME_MANAGER,"Detected active game for player: " + player.getName() + " with UUID of " + player.getUniqueId() + " during shutdown. Stopping game!");
+                stopGame(player);
+            }
+        }
     }
 }

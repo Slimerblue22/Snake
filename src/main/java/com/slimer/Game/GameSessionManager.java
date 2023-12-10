@@ -5,6 +5,7 @@ import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -49,6 +50,20 @@ public class GameSessionManager {
      */
     public boolean isGameActive(Player player) {
         return player != null && activeGames.containsKey(player.getUniqueId());
+    }
+
+    /**
+     * Retrieves a set of UUIDs representing all players with active game sessions.
+     * This method is used to obtain a collection of all players who are currently
+     * participating in a game, typically for purposes of iteration or batch processing.
+     * <p>
+     * The method does not perform any modifications to the active game sessions; it
+     * merely provides a read-only view of the current active session identifiers.
+     *
+     * @return A Set of UUIDs for all players with active game sessions.
+     */
+    public Set<UUID> getActiveGameIds() {
+        return activeGames.keySet();
     }
 
     /**

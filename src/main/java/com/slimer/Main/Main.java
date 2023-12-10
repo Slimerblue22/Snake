@@ -103,6 +103,7 @@ public final class Main extends JavaPlugin {
     public void onDisable() {
         RegionService.getInstance().closeDatabase();
         PlayerData.getInstance().closeDatabase();
+        gameManager.stopAllGames();
     }
 
     /**
