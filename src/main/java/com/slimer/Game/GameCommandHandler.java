@@ -1,14 +1,10 @@
 package com.slimer.Game;
 
 import com.slimer.GUI.GuiManager;
-import com.slimer.Region.RegionHelpers;
-import com.slimer.Region.WGHelpers;
 import com.slimer.Util.PlayerData;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.DyeColor;
-import org.bukkit.Location;
-import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -134,38 +130,7 @@ public class GameCommandHandler implements CommandExecutor, TabCompleter {
      * @return true if the game is successfully started, otherwise false.
      */
     private boolean handleStartGameCommand(Player player) {
-        WGHelpers wgHelpers = WGHelpers.getInstance();
-        RegionHelpers regionHelpers = RegionHelpers.getInstance();
-
-        String currentLobbyRegion = wgHelpers.getPlayerCurrentRegion(player);
-        boolean isRegistered = (currentLobbyRegion != null) && regionHelpers.isRegionRegistered(currentLobbyRegion);
-        String regionType = isRegistered ? regionHelpers.getRegionType(currentLobbyRegion) : null;
-
-        if (!"lobby".equals(regionType)) {
-            player.sendMessage(Component.text("You must be within a lobby region to start the game.", NamedTextColor.RED));
-            return false;
-        }
-
-        boolean isLinked = regionHelpers.isRegionLinked(currentLobbyRegion);
-        String currentGameRegion = regionHelpers.getLinkedRegion(currentLobbyRegion);
-
-        if (!isLinked || currentGameRegion == null) {
-            player.sendMessage(Component.text("The lobby you are in is not properly linked to a game region. You cannot start the game.", NamedTextColor.RED));
-            return false;
-        }
-
-        World gameWorld = regionHelpers.getRegionWorld(currentGameRegion);
-        World lobbyWorld = regionHelpers.getRegionWorld(currentLobbyRegion);
-
-        Location gameTeleportLocation = regionHelpers.getRegionTeleportLocation(currentGameRegion, gameWorld);
-        Location lobbyTeleportLocation = regionHelpers.getRegionTeleportLocation(currentLobbyRegion, lobbyWorld);
-
-        if (gameTeleportLocation == null || lobbyTeleportLocation == null) {
-            player.sendMessage(Component.text("Could not find the teleport location for the game or lobby region.", NamedTextColor.RED));
-            return false;
-        }
-
-        gameManager.startGame(player, gameTeleportLocation, lobbyTeleportLocation);
+        gameManager.startGame(player);
         return true;
     }
 
