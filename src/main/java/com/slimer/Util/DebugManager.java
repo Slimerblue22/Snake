@@ -104,7 +104,7 @@ public class DebugManager {
      * These categories help classify and organize debug messages related to different aspects of the plugin's functionality.
      */
     public enum Category {
-        SESSION_MANAGER,
+        SESSION_MANAGER, DISCONNECT_LISTENER,
     }
 
     /**

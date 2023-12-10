@@ -30,7 +30,7 @@ public class PlayerDisconnectListener implements Listener {
 
         if (sessionManager.isGameActive(player)) {
             // If the player is in a game, handle their removal
-            DebugManager.log(DebugManager.Category.SESSION_MANAGER, "Game stopped for disconnected player: " + player.getName() + " with UUID of " + player.getUniqueId());
+            DebugManager.log(DebugManager.Category.DISCONNECT_LISTENER, "Game stopped for disconnected player: " + player.getName() + " with UUID of " + player.getUniqueId());
             sessionManager.stopGame(player);
         }
     }
