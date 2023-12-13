@@ -128,6 +128,7 @@ public class GameManager {
     public void stopGame(Player player) {
         // Checking if player has a game to stop
         if (!sessionManager.isGameActive(player)) {
+            player.sendMessage(Component.text("You don't have an active game to stop!", NamedTextColor.RED));
             DebugManager.log(DebugManager.Category.GAME_MANAGER, "Attempted to stop a game for " + player.getName() + " with UUID of " + player.getUniqueId() + " but no game was active.");
             return;
         }
