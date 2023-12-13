@@ -112,6 +112,24 @@ public class GameManager {
         // Retrieving lobby location and teleporting player
         Map<String, Location> locations = sessionManager.getActiveGameData(player);
         if (locations != null && locations.get("lobby") != null) {
+            /*
+             * Attempting to teleport an offline player to the lobby location.
+             * Issue: WorldGuard's `exit-override` flag, if set to false, prevents
+             * teleporting offline players into regions.
+             * Possible Solutions:
+             * 1. Modify WorldGuard's `exit-override` flag for the affected region to true.
+             * This approach requires direct modification of WorldGuard regions, which was
+             * previously avoided.
+             * 2. Grant players permissions to bypass this check. This is NOT recommended due
+             * to various other issues that arise because of that.
+             * 3. Implement a system to store players' teleportation data and handle
+             * teleportation upon reconnection. This ensures teleportation even after server
+             * restarts but requires a persistent storage solution (e.g., file-based or
+             * database) to track player locations across sessions.
+             *
+             * Current Implementation: Teleports player if online, but may fail for offline
+             * players due to WorldGuard restrictions.
+             */
             player.teleport(locations.get("lobby"));
         }
 
