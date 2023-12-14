@@ -1,10 +1,10 @@
 plugins {
-    id 'java'
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id "java"
+    id "com.github.johnrengelman.shadow" version "8.1.1"
 }
 
-group = 'com'
-version = '2.0.2'
+group = "com"
+version = "2.0.2"
 jar.enabled = false
 
 repositories {
@@ -29,15 +29,15 @@ repositories {
         url = "https://maven.enginehub.org/repo/"
     }
     maven {
-        url = 'https://repo.codemc.io/repository/maven-public/'
+        url = "https://repo.codemc.io/repository/maven-public/"
     }
 }
 dependencies {
-    compileOnly group: "com.comphenix.protocol", name: "ProtocolLib", version: "5.1.0"
+    compileOnly "com.comphenix.protocol:ProtocolLib:5.1.0"
     compileOnly "io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT"
-    compileOnly 'com.github.koca2000:NoteBlockAPI:1.6.2'
-    compileOnly 'com.sk89q.worldguard:worldguard-bukkit:7.0.9'
-    implementation 'org.bstats:bstats-bukkit:3.0.2'
+    compileOnly "com.github.koca2000:NoteBlockAPI:1.6.2"
+    compileOnly "com.sk89q.worldguard:worldguard-bukkit:7.0.9"
+    implementation "org.bstats:bstats-bukkit:3.0.2"
 }
 
 def targetJavaVersion = 17
@@ -59,8 +59,8 @@ tasks.withType(JavaCompile).configureEach {
 processResources {
     def props = [version: version]
     inputs.properties props
-    filteringCharset 'UTF-8'
-    filesMatching('plugin.yml') {
+    filteringCharset "UTF-8"
+    filesMatching("plugin.yml") {
         expand props
     }
 }
@@ -68,7 +68,7 @@ processResources {
 shadowJar {
     archiveFileName = "${project.name} ${project.version}.jar"
     configurations = [project.configurations.runtimeClasspath]
-    relocate 'org.bstats', 'com.slimer.bstats'
+    relocate "org.bstats", "com.slimer.bstats"
 }
 
 build {
