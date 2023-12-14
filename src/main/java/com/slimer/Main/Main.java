@@ -3,7 +3,7 @@ package com.slimer.Main;
 import com.slimer.GUI.InventoryClickListener;
 import com.slimer.Game.GameCommandHandler;
 import com.slimer.Game.GameManager;
-import com.slimer.Game.PlayerDisconnectListener;
+import com.slimer.Game.Listeners.PlayerConnectionListener;
 import com.slimer.Game.Listeners.PlayerDisconnectListener;
 import com.slimer.Region.RegionCommandHandler;
 import com.slimer.Region.RegionService;
@@ -67,6 +67,7 @@ public final class Main extends JavaPlugin {
         // Registers event listeners
         getServer().getPluginManager().registerEvents(new InventoryClickListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerDisconnectListener(gameManager), this);
+        getServer().getPluginManager().registerEvents(new PlayerConnectionListener(), this);
     }
 
     /**
