@@ -20,6 +20,7 @@ import java.util.Objects;
  * This class also handles plugin enable and disable events.
  * <p>
  * Last updated: V2.1.0
+ *
  * @author Slimerblue22
  */
 public final class Main extends JavaPlugin {

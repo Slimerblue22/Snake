@@ -21,6 +21,7 @@ import java.util.Map;
  * displaying the game GUI, and providing game instructions.
  * <p>
  * Last updated: V2.1.0
+ *
  * @author Slimerblue22
  */
 public class GameCommandHandler implements CommandExecutor, TabCompleter {

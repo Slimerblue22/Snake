@@ -17,6 +17,7 @@ import java.util.logging.Logger;
  * region registration, linking/unlinking regions, and setting region coordinates.
  * <p>
  * Last updated: V2.1.0
+ *
  * @author Slimerblue22
  */
 public class RegionService {

@@ -17,6 +17,7 @@ import java.util.logging.Logger;
  * This operation should only be initiated during startup.
  * <p>
  * Last updated: V2.1.0
+ *
  * @author Slimerblue22
  */
 public class UpdateChecker {

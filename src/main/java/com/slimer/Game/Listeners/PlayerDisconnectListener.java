@@ -17,7 +17,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
  * @author Slimerblue22
  */
 public class PlayerDisconnectListener implements Listener {
-
     private final GameManager gameManager;
 
     public PlayerDisconnectListener(GameManager gameManager) {

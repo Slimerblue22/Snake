@@ -171,7 +171,7 @@ public class GameManager {
         for (UUID playerId : activeGames.keySet()) {
             Player player = Bukkit.getPlayer(playerId);
             if (player != null) {
-                DebugManager.log(DebugManager.Category.DEBUG,"Detected active game for player: " + player.getName() + " with UUID of " + player.getUniqueId() + " during shutdown. Stopping game!");
+                DebugManager.log(DebugManager.Category.DEBUG, "Detected active game for player: " + player.getName() + " with UUID of " + player.getUniqueId() + " during shutdown. Stopping game!");
                 stopGame(player);
             }
         }

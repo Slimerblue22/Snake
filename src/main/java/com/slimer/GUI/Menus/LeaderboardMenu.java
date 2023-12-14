@@ -23,7 +23,6 @@ import static com.slimer.GUI.GuiUtils.createPlayerHead;
  * @author Slimerblue22
  */
 public class LeaderboardMenu {
-
     private static final int INVENTORY_ROWS = 4;
     private static final int INVENTORY_SIZE = INVENTORY_ROWS * 9; // Number of slots in the inventory
     private static final int ITEMS_PER_PAGE = 10; // Number of leaderboard items per page
