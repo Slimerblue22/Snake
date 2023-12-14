@@ -1,6 +1,6 @@
 package com.slimer.Util;
 
-import com.slimer.Main.Main;
+import com.slimer.Main;
 import org.bukkit.DyeColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;

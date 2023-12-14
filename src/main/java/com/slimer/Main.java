@@ -1,4 +1,4 @@
-package com.slimer.Main;
+package com.slimer;
 
 import com.slimer.GUI.InventoryClickListener;
 import com.slimer.Game.GameCommandHandler;

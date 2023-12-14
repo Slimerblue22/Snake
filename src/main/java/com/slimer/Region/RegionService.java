@@ -1,6 +1,6 @@
 package com.slimer.Region;
 
-import com.slimer.Main.Main;
+import com.slimer.Main;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;

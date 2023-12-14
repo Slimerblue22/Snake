@@ -1,6 +1,6 @@
 package com.slimer.Util;
 
-import com.slimer.Main.Main;
+import com.slimer.Main;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;

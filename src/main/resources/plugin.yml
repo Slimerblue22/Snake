@@ -1,6 +1,6 @@
 name: Snake-Experimental
 version: '${version}'
-main: com.slimer.Main.Main
+main: com.slimer.Main
 authors: [Slimerblue22]
 api-version: '1.20'
 load: POSTWORLD
