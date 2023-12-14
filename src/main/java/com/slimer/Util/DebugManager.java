@@ -138,30 +138,25 @@ public class DebugManager {
          */
         @Override
         public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-            if (!(sender instanceof Player player)) {
-                sender.sendMessage(Component.text("This command can only be run by a player.", NamedTextColor.RED));
-                return false;
-            }
-
-            if (!player.hasPermission("snake.admin")) {
-                player.sendMessage(Component.text("You don't have permission to run this command.", NamedTextColor.RED));
+            if (!sender.hasPermission("snake.admin")) {
+                sender.sendMessage(Component.text("You don't have permission to run this command.", NamedTextColor.RED));
                 return false;
             }
 
             if (args.length == 0) {
-                handleHelpCommand(player);
+                handleHelpCommand(sender);
                 return false;
             }
 
             String subCommand = args[0].toLowerCase();
 
             return switch (subCommand) {
-                case "category" -> handleToggleCategoryCommand(player, args);
-                case "destination" -> handleSetDestinationCommand(player, args);
-                case "help" -> handleHelpCommand(player);
-                case "status" -> handleDebugStatusCommand(player);
+                case "category" -> handleToggleCategoryCommand(sender, args);
+                case "destination" -> handleSetDestinationCommand(sender, args);
+                case "help" -> handleHelpCommand(sender);
+                case "status" -> handleDebugStatusCommand(sender);
                 default -> {
-                    handleUnknownCommand(player);
+                    handleUnknownCommand(sender);
                     yield false;
                 }
             };
@@ -172,7 +167,7 @@ public class DebugManager {
          *
          * @param player The player to whom the message should be displayed.
          */
-        private void handleUnknownCommand(Player player) {
+        private void handleUnknownCommand(@NotNull CommandSender player) {
             player.sendMessage(Component.text("Unknown subcommand. Use one of the following:", NamedTextColor.RED));
             String[] commands = {"category", "destination", "help", "status"};
             for (String cmd : commands) {
@@ -227,7 +222,7 @@ public class DebugManager {
          * @param args   The arguments passed to the command.
          * @return True if the command was handled successfully, false otherwise.
          */
-        private boolean handleToggleCategoryCommand(Player player, String[] args) {
+        private boolean handleToggleCategoryCommand(@NotNull CommandSender player, String[] args) {
             if (args.length != 2) {
                 player.sendMessage(Component.text("Usage: /snakedebug category [Category]", NamedTextColor.RED));
                 return false;
@@ -262,7 +257,7 @@ public class DebugManager {
          * @param args   The arguments passed to the command.
          * @return True if the command was handled successfully, false otherwise.
          */
-        private boolean handleSetDestinationCommand(Player player, String[] args) {
+        private boolean handleSetDestinationCommand(@NotNull CommandSender player, String[] args) {
             if (args.length != 2) {
                 player.sendMessage(Component.text("Usage: /snakedebug destination [Destination]", NamedTextColor.RED));
                 return false;
@@ -288,7 +283,7 @@ public class DebugManager {
          * @param player The player to whom the status will be displayed.
          * @return True indicating the command was handled successfully.
          */
-        private boolean handleDebugStatusCommand(Player player) {
+        private boolean handleDebugStatusCommand(@NotNull CommandSender player) {
             TextComponent.Builder messageBuilder = Component.text();
 
             // Constructing header section
@@ -324,7 +319,7 @@ public class DebugManager {
          * @param player The player to whom the help message will be displayed.
          * @return True indicating the command was handled successfully.
          */
-        private boolean handleHelpCommand(Player player) {
+        private boolean handleHelpCommand(@NotNull CommandSender player) {
             TextComponent.Builder messageBuilder = Component.text();
 
             // Constructing the header
