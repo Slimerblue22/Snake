@@ -38,32 +38,27 @@ public class RegionCommandHandler implements CommandExecutor, TabCompleter {
      */
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-        if (!(sender instanceof Player player)) {
-            sender.sendMessage(Component.text("This command can only be run by a player.", NamedTextColor.RED));
-            return false;
-        }
-
-        if (!player.hasPermission("snake.admin")) {
-            player.sendMessage(Component.text("You don't have permission to run this command.", NamedTextColor.RED));
+        if (!sender.hasPermission("snake.admin")) {
+            sender.sendMessage(Component.text("You don't have permission to run this command.", NamedTextColor.RED));
             return false;
         }
 
         if (args.length == 0) {
-            handleUnknownCommand(player);
+            handleUnknownCommand(sender);
             return false;
         }
 
         String subCommand = args[0].toLowerCase();
 
         return switch (subCommand) {
-            case "register" -> registerRegion(player, args);
-            case "unregister" -> unregisterRegion(player, args);
-            case "link" -> linkRegions(player, args);
-            case "unlink" -> unlinkRegions(player, args);
-            case "addtp" -> addTP(player, args);
-            case "view" -> viewData(player, args);
+            case "register" -> registerRegion(sender, args);
+            case "unregister" -> unregisterRegion(sender, args);
+            case "link" -> linkRegions(sender, args);
+            case "unlink" -> unlinkRegions(sender, args);
+            case "addtp" -> addTP(sender, args);
+            case "view" -> viewData(sender, args);
             default -> {
-                handleUnknownCommand(player);
+                handleUnknownCommand(sender);
                 yield false;
             }
         };
@@ -74,7 +69,7 @@ public class RegionCommandHandler implements CommandExecutor, TabCompleter {
      *
      * @param player The player to whom the message should be displayed.
      */
-    private void handleUnknownCommand(Player player) {
+    private void handleUnknownCommand(@NotNull CommandSender player) {
         player.sendMessage(Component.text("Unknown subcommand. Use one of the following:", NamedTextColor.RED));
         String[] commands = {"register", "unregister", "link", "unlink", "addtp", "view"};
         for (String cmd : commands) {
@@ -115,7 +110,7 @@ public class RegionCommandHandler implements CommandExecutor, TabCompleter {
      * @param args   The arguments passed with the command.
      * @return true if the region was registered successfully, false otherwise.
      */
-    private boolean registerRegion(Player player, String[] args) {
+    private boolean registerRegion(@NotNull CommandSender player, String[] args) {
         if (args.length != 4) {
             player.sendMessage(Component.text("Incorrect usage. Example: /snakeregion register [region type; game or lobby] [region name] [world region is in]", NamedTextColor.RED));
             return false;
@@ -156,7 +151,7 @@ public class RegionCommandHandler implements CommandExecutor, TabCompleter {
      * @param args   The arguments passed with the command.
      * @return true if the region was unregistered successfully, false otherwise.
      */
-    private boolean unregisterRegion(Player player, String[] args) {
+    private boolean unregisterRegion(@NotNull CommandSender player, String[] args) {
         if (args.length != 2) {
             player.sendMessage(Component.text("Incorrect usage. Example: /snakeregion unregister [region name].", NamedTextColor.RED));
             return false;
@@ -190,7 +185,7 @@ public class RegionCommandHandler implements CommandExecutor, TabCompleter {
      * @param args   The arguments passed with the command.
      * @return true if the regions were linked successfully, false otherwise.
      */
-    private boolean linkRegions(Player player, String[] args) {
+    private boolean linkRegions(@NotNull CommandSender player, String[] args) {
         if (args.length != 3) {
             player.sendMessage(Component.text("Incorrect usage. Example: /snakeregion link [region1 name] [region2 name].", NamedTextColor.RED));
             return false;
@@ -233,7 +228,7 @@ public class RegionCommandHandler implements CommandExecutor, TabCompleter {
      * @param args   The arguments passed with the command.
      * @return true if the regions were unlinked successfully, false otherwise.
      */
-    private boolean unlinkRegions(Player player, String[] args) {
+    private boolean unlinkRegions(@NotNull CommandSender player, String[] args) {
         if (args.length != 3) {
             player.sendMessage(Component.text("Incorrect usage. Example: /snakeregion unlink [region1 name] [region2 name].", NamedTextColor.RED));
             return false;
@@ -277,11 +272,16 @@ public class RegionCommandHandler implements CommandExecutor, TabCompleter {
     /**
      * Adds or updates the TP (teleport) coordinates of a region.
      *
-     * @param player The player executing the command.
+     * @param sender The player executing the command.
      * @param args   The arguments passed with the command.
      * @return true if the TP coordinates were set successfully, false otherwise.
      */
-    private boolean addTP(Player player, String[] args) {
+    private boolean addTP(CommandSender sender, String[] args) {
+        if (!(sender instanceof Player player)) {
+            sender.sendMessage(Component.text("Because of how the addtp command works, it can only be run by a player.", NamedTextColor.RED));
+            return false;
+        }
+
         if (args.length != 2 && args.length != 5) {
             player.sendMessage(Component.text("Incorrect usage. Example: /snakeregion addtp [region name] or /snakeregion addtp [region name] [x] [y] [z].", NamedTextColor.RED));
             return false;
@@ -327,7 +327,7 @@ public class RegionCommandHandler implements CommandExecutor, TabCompleter {
      * @param args   The arguments passed with the command.
      * @return true if the data was fetched successfully, false otherwise.
      */
-    private boolean viewData(Player player, String[] args) {
+    private boolean viewData(@NotNull CommandSender player, String[] args) {
         if (args.length < 2) {
             player.sendMessage(Component.text("Incorrect usage. Example: /snakeregion view [game | lobby | links | search].", NamedTextColor.RED));
             return false;
