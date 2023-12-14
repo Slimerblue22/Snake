@@ -1,5 +1,6 @@
-package com.slimer.Game;
+package com.slimer.Game.Listeners;
 
+import com.slimer.Game.GameManager;
 import com.slimer.Util.DebugManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

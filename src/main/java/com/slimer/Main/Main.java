@@ -4,6 +4,7 @@ import com.slimer.GUI.InventoryClickListener;
 import com.slimer.Game.GameCommandHandler;
 import com.slimer.Game.GameManager;
 import com.slimer.Game.PlayerDisconnectListener;
+import com.slimer.Game.Listeners.PlayerDisconnectListener;
 import com.slimer.Region.RegionCommandHandler;
 import com.slimer.Region.RegionService;
 import com.slimer.Util.DebugManager;
