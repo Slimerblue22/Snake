@@ -6,11 +6,9 @@ import com.slimer.Game.GameManager;
 import com.slimer.Game.PlayerDisconnectListener;
 import com.slimer.Region.RegionCommandHandler;
 import com.slimer.Region.RegionService;
-import com.slimer.Region.WGHelpers;
 import com.slimer.Util.DebugManager;
 import com.slimer.Util.PlayerData;
 import com.slimer.Util.UpdateChecker;
-import org.bstats.bukkit.Metrics;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Objects;
@@ -33,65 +31,39 @@ public final class Main extends JavaPlugin {
      */
     @Override
     public void onEnable() {
+        // Saves the default configuration
         this.saveDefaultConfig();
+
+        // Retrieves and stores the plugin version
         pluginVersion = this.getDescription().getVersion();
-        initGameComponents();
-        initRegionServices();
-        initPlayerData();
-        //initMetrics();
-        registerCommands();
-        checkForUpdates();
-        registerEvents();
-    }
 
-    private void initGameComponents() {
+        // Initializes the game manager
         gameManager = new GameManager();
-    }
 
-    /**
-     * Initializes player data management and migration.
-     */
-    private void initPlayerData() {
-        PlayerData.initializeInstance(this);
-        PlayerData.getInstance().migrateFromYmlToSql(this);
-    }
-
-    /**
-     * Initializes the bstats metrics collection for the plugin.
-     */
-    private void initMetrics() {
-        new Metrics(this, 19729);
-    }
-
-    /**
-     * Initializes region-related services and migration.
-     */
-    private void initRegionServices() {
+        // Initializes the RegionService singleton instance
         RegionService.initializeInstance(this);
-        WGHelpers.getInstance();
-        RegionService.getInstance().migrateRegionsFromYmlToSql(this);
-    }
 
-    /**
-     * Registers plugin commands for debugging, game management, and region management.
-     */
-    private void registerCommands() {
+        // Migrates regions from YML to SQL
+        RegionService.getInstance().migrateRegionsFromYmlToSql(this);
+
+        // Initializes the PlayerData singleton instance
+        PlayerData.initializeInstance(this);
+
+        // Migrates player data from YML to SQL
+        PlayerData.getInstance().migrateFromYmlToSql(this);
+
+        // Sets up plugin metrics (Disabled during testing)
+        // new Metrics(this, 19729);
+
+        // Configures command executors for the plugin
         Objects.requireNonNull(getCommand("snakedebug")).setExecutor(new DebugManager.ToggleDebugCommand());
         Objects.requireNonNull(getCommand("snakegame")).setExecutor(new GameCommandHandler(gameManager));
         Objects.requireNonNull(getCommand("snakeregion")).setExecutor(new RegionCommandHandler());
-    }
 
-    /**
-     * Runs the update checker.
-     */
-    private void checkForUpdates() {
+        // Checks for plugin updates
         new UpdateChecker().checkForUpdates(this);
-    }
 
-    /**
-     * Registers event listeners.
-     */
-    private void registerEvents() {
+        // Registers event listeners
         getServer().getPluginManager().registerEvents(new InventoryClickListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerDisconnectListener(gameManager), this);
     }
