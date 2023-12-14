@@ -65,7 +65,7 @@ public class RegionService {
             Statement statement = connection.createStatement();
             statement.executeUpdate("CREATE TABLE IF NOT EXISTS region_data (regionType TEXT, regionName TEXT, worldName TEXT, linkID INTEGER DEFAULT NULL, x INTEGER DEFAULT NULL, y INTEGER DEFAULT NULL, z INTEGER DEFAULT NULL)");
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "An error occurred while initializing the SQLite database.", e);
+            logger.log(Level.SEVERE, "[Regions] An error occurred while initializing the SQLite database.", e);
         }
     }
 
@@ -219,7 +219,7 @@ public class RegionService {
                 connection.close();
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "An error occurred while closing the SQLite database connection.", e);
+            logger.log(Level.SEVERE, "[Regions] An error occurred while closing the SQLite database connection.", e);
         }
     }
 
@@ -240,7 +240,7 @@ public class RegionService {
             statement.executeUpdate();
             return true;
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "An error occurred while registering new region.", e);
+            logger.log(Level.SEVERE, "[Regions] An error occurred while registering new region.", e);
             return false;
         }
     }
@@ -258,7 +258,7 @@ public class RegionService {
             int affectedRows = statement.executeUpdate();
             return affectedRows > 0;
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "An error occurred while unregistering the region.", e);
+            logger.log(Level.SEVERE, "[Regions] An error occurred while unregistering the region.", e);
             return false;
         }
     }
@@ -287,15 +287,15 @@ public class RegionService {
             try {
                 connection.rollback();
             } catch (SQLException rollbackEx) {
-                logger.log(Level.SEVERE, "An error occurred during rollback.", rollbackEx);
+                logger.log(Level.SEVERE, "[Regions] An error occurred during rollback.", rollbackEx);
             }
-            logger.log(Level.SEVERE, "An error occurred while linking regions.", e);
+            logger.log(Level.SEVERE, "[Regions] An error occurred while linking regions.", e);
             return false;
         } finally {
             try {
                 connection.setAutoCommit(true);
             } catch (SQLException e) {
-                logger.log(Level.SEVERE, "An error occurred while resetting auto-commit setting.", e);
+                logger.log(Level.SEVERE, "[Regions] An error occurred while resetting auto-commit setting.", e);
             }
         }
     }
@@ -315,7 +315,7 @@ public class RegionService {
             int affectedRows = statement.executeUpdate();
             return affectedRows > 0;
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "An error occurred while unlinking regions.", e);
+            logger.log(Level.SEVERE, "[Regions] An error occurred while unlinking regions.", e);
             return false;
         }
     }
@@ -339,7 +339,7 @@ public class RegionService {
             int affectedRows = statement.executeUpdate();
             return affectedRows > 0;
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "An error occurred while setting the coordinates for the region.", e);
+            logger.log(Level.SEVERE, "[Regions] An error occurred while setting the coordinates for the region.", e);
             return false;
         }
     }

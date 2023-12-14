@@ -78,18 +78,18 @@ public class PlayerData {
         File ymlFile = new File(dataFolder, "PlayerData.yml");
         String absolutePath = ymlFile.getAbsolutePath();
 
-        logger.log(Level.INFO, "[PlayerData.java] Starting YML to SQL migration. Looking for YML file in: " + absolutePath);
+        logger.log(Level.INFO, "[PlayerData] Starting YML to SQL migration. Looking for YML file in: " + absolutePath);
 
         if (!ymlFile.exists()) {
-            logger.log(Level.INFO, "[PlayerData.java] No YML file found at " + absolutePath + ". Migration skipped.");
+            logger.log(Level.INFO, "[PlayerData] No YML file found at " + absolutePath + ". Migration skipped.");
             return; // No YML file to migrate from
         }
 
         YamlConfiguration ymlConfig = YamlConfiguration.loadConfiguration(ymlFile);
-        logger.log(Level.INFO, "[PlayerData.java] YML file loaded.");
+        logger.log(Level.INFO, "[PlayerData] YML file loaded.");
 
         for (String uuid : ymlConfig.getKeys(false)) {
-            logger.log(Level.INFO, "[PlayerData.java] Migrating data for UUID: " + uuid);
+            logger.log(Level.INFO, "[PlayerData] Migrating data for UUID: " + uuid);
 
             String name = ymlConfig.getString(uuid + ".name");
             int score = ymlConfig.getInt(uuid + ".score");
@@ -105,18 +105,18 @@ public class PlayerData {
                 statement.setInt(5, musicToggle ? 1 : 0);
                 statement.executeUpdate();
 
-                logger.log(Level.INFO, "[PlayerData.java] Data migration successful for UUID: " + uuid);
+                logger.log(Level.INFO, "[PlayerData] Data migration successful for UUID: " + uuid);
             } catch (SQLException e) {
-                logger.log(Level.SEVERE, "[PlayerData.java] An error occurred while migrating data for UUID: " + uuid, e);
+                logger.log(Level.SEVERE, "[PlayerData] An error occurred while migrating data for UUID: " + uuid, e);
             }
         }
 
         // Rename YML file to mark it as migrated
         File backupFile = new File(dataFolder, "MIGRATED_PlayerData.yml.bak");
         if (!ymlFile.renameTo(backupFile)) {
-            logger.log(Level.WARNING, "[PlayerData.java] Failed to rename PlayerData.yml to MIGRATED_PlayerData.yml.bak in folder: " + dataFolder.getAbsolutePath());
+            logger.log(Level.WARNING, "[PlayerData] Failed to rename PlayerData.yml to MIGRATED_PlayerData.yml.bak in folder: " + dataFolder.getAbsolutePath());
         } else {
-            logger.log(Level.INFO, "[PlayerData.java] Successfully renamed PlayerData.yml to MIGRATED_PlayerData.yml.bak.in folder: " + dataFolder.getAbsolutePath());
+            logger.log(Level.INFO, "[PlayerData] Successfully renamed PlayerData.yml to MIGRATED_PlayerData.yml.bak.in folder: " + dataFolder.getAbsolutePath());
         }
     }
 
@@ -135,7 +135,7 @@ public class PlayerData {
             Statement statement = connection.createStatement();
             statement.executeUpdate("CREATE TABLE IF NOT EXISTS player_data (uuid TEXT, name TEXT, score INTEGER, sheepColor TEXT, musicToggle INTEGER)");
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "[PlayerData.java] An error occurred while initializing the SQLite database", e);
+            logger.log(Level.SEVERE, "[PlayerData] An error occurred while initializing the SQLite database", e);
         }
     }
 
@@ -150,7 +150,7 @@ public class PlayerData {
                 connection.close();
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "An error occurred while closing the SQLite database connection.", e);
+            logger.log(Level.SEVERE, "[PlayerData] An error occurred while closing the SQLite database connection.", e);
         }
     }
 
@@ -169,7 +169,7 @@ public class PlayerData {
                 return resultSet.getInt("score");
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "[PlayerData.java] An error occurred while fetching the high score", e);
+            logger.log(Level.SEVERE, "[PlayerData] An error occurred while fetching the high score", e);
         }
         return 0;
     }
@@ -192,7 +192,7 @@ public class PlayerData {
                 statement.executeUpdate();
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "[PlayerData.java] An error occurred while setting the high score", e);
+            logger.log(Level.SEVERE, "[PlayerData] An error occurred while setting the high score", e);
         }
     }
 
@@ -211,7 +211,7 @@ public class PlayerData {
                 scores.put(resultSet.getString("name"), resultSet.getInt("score"));
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "[PlayerData.java] An error occurred while fetching the leaderboard", e);
+            logger.log(Level.SEVERE, "[PlayerData] An error occurred while fetching the leaderboard", e);
         }
         return new ArrayList<>(scores.entrySet());
     }
@@ -253,7 +253,7 @@ public class PlayerData {
                 return color != null ? DyeColor.valueOf(color) : DyeColor.WHITE;  // Default to WHITE if NULL
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "[PlayerData.java] An error occurred while fetching the sheep color", e);
+            logger.log(Level.SEVERE, "[PlayerData] An error occurred while fetching the sheep color", e);
         }
         return DyeColor.WHITE; // Default value
     }
@@ -271,7 +271,7 @@ public class PlayerData {
             statement.setString(2, player.getUniqueId().toString());
             statement.executeUpdate();
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "[PlayerData.java] An error occurred while setting the sheep color", e);
+            logger.log(Level.SEVERE, "[PlayerData] An error occurred while setting the sheep color", e);
         }
     }
 
@@ -291,7 +291,7 @@ public class PlayerData {
                 return resultSet.wasNull() || musicState != 0;  // Default to true if NULL
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "[PlayerData.java] An error occurred while fetching the music toggle state", e);
+            logger.log(Level.SEVERE, "[PlayerData] An error occurred while fetching the music toggle state", e);
         }
         return true; // Default value
     }
@@ -309,7 +309,7 @@ public class PlayerData {
             statement.setString(2, player.getUniqueId().toString());
             statement.executeUpdate();
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "[PlayerData.java] An error occurred while setting the music toggle state", e);
+            logger.log(Level.SEVERE, "[PlayerData] An error occurred while setting the music toggle state", e);
         }
     }
 }

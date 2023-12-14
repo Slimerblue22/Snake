@@ -41,7 +41,7 @@ public class UpdateChecker {
 
                 int responseCode = connection.getResponseCode();
                 if (responseCode != HttpURLConnection.HTTP_OK) {
-                    logger.log(Level.WARNING, "Update checker received non-OK response from GitHub: " + responseCode);
+                    logger.log(Level.WARNING, "[UpdateChecker] Update checker received non-OK response from GitHub: " + responseCode);
                     return;
                 }
 
@@ -59,17 +59,17 @@ public class UpdateChecker {
 
                     // TODO: Used during testing, remove before release
                     String version = Main.getPluginVersion();
-                    logger.log(Level.INFO, "Current plugin version: " + version);
-                    logger.log(Level.INFO, "Latest available version: " + latestVersion);
+                    logger.log(Level.INFO, "[UpdateChecker] Current plugin version: " + version);
+                    logger.log(Level.INFO, "[UpdateChecker] Latest available version: " + latestVersion);
 
                     if (!version.equalsIgnoreCase(latestVersion)) {
-                        logger.log(Level.INFO, "An update is available for the plugin. Current: " + version + " Latest: " + latestVersion);
+                        logger.log(Level.INFO, "[UpdateChecker] An update is available for the plugin. Current: " + version + " Latest: " + latestVersion);
                     } else {
-                        logger.log(Level.INFO, "Plugin is up to date.");
+                        logger.log(Level.INFO, "[UpdateChecker] Plugin is up to date.");
                     }
                 }
             } catch (Exception e) {
-                logger.log(Level.SEVERE, "An error occurred while checking for updates: " + e.getMessage());
+                logger.log(Level.SEVERE, "[UpdateChecker] An error occurred while checking for updates: " + e.getMessage());
             } finally {
                 if (connection != null) {
                     connection.disconnect();

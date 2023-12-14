@@ -74,7 +74,7 @@ public class RegionHelpers {
                 return resultSet.getInt(1) > 0;
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "An error occurred while checking if the region is registered.", e);
+            logger.log(Level.SEVERE, "[Regions] An error occurred while checking if the region is registered.", e);
         }
         return false;
     }
@@ -96,7 +96,7 @@ public class RegionHelpers {
                 return resultSet.getString("regionType");
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "An error occurred while getting the region type.", e);
+            logger.log(Level.SEVERE, "[Regions] An error occurred while getting the region type.", e);
         }
         return null;
     }
@@ -118,7 +118,7 @@ public class RegionHelpers {
                 return resultSet.getObject("linkID") != null;
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "An error occurred while checking if the region is linked.", e);
+            logger.log(Level.SEVERE, "[Regions] An error occurred while checking if the region is linked.", e);
         }
         return false;
     }
@@ -160,7 +160,7 @@ public class RegionHelpers {
                 return linkID;
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "An error occurred while fetching the link ID.", e);
+            logger.log(Level.SEVERE, "[Regions] An error occurred while fetching the link ID.", e);
         }
         return null;
     }
@@ -188,7 +188,7 @@ public class RegionHelpers {
                 return resultSet.getString("regionName");
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "An error occurred while fetching the linked region.", e);
+            logger.log(Level.SEVERE, "[Regions] An error occurred while fetching the linked region.", e);
         }
         return null;
     }
@@ -221,14 +221,14 @@ public class RegionHelpers {
                     z = Integer.MIN_VALUE;
                 }
                 if (x == Integer.MIN_VALUE || y == Integer.MIN_VALUE || z == Integer.MIN_VALUE) {
-                    logger.log(Level.WARNING, "At least one coordinate value was null for region '" + regionName + "'.");
+                    logger.log(Level.WARNING, "[Regions] At least one coordinate value was null for region '" + regionName + "'.");
                     return null;
                 } else {
                     return new Location(world, x, y, z);
                 }
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "An error occurred while fetching the teleport location for region '" + regionName + "'.", e);
+            logger.log(Level.SEVERE, "[Regions] An error occurred while fetching the teleport location for region '" + regionName + "'.", e);
         }
         return null;
     }
@@ -255,7 +255,7 @@ public class RegionHelpers {
                 return Bukkit.getWorld(worldName);
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "An error occurred while fetching the world information.", e);
+            logger.log(Level.SEVERE, "[Regions] An error occurred while fetching the world information.", e);
         }
         return null;
     }
@@ -270,7 +270,7 @@ public class RegionHelpers {
                 regionNames.add(resultSet.getString("regionName"));
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "An error occurred while fetching all registered region names.", e);
+            logger.log(Level.SEVERE, "[Regions] An error occurred while fetching all registered region names.", e);
         }
         return regionNames;
     }
@@ -352,7 +352,7 @@ public class RegionHelpers {
                         .append(Component.text("\n-------------------\n", NamedTextColor.GOLD));
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "An error occurred while fetching the search data.", e);
+            logger.log(Level.SEVERE, "[Regions] An error occurred while fetching the search data.", e);
         }
 
         return message;
@@ -393,7 +393,7 @@ public class RegionHelpers {
                         .append(Component.text("\n-------------------\n", NamedTextColor.GOLD));
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "An error occurred while fetching the " + regionType + " data.", e);
+            logger.log(Level.SEVERE, "[Regions] An error occurred while fetching the " + regionType + " data.", e);
         }
 
         return message;
@@ -471,7 +471,7 @@ public class RegionHelpers {
                         .append(Component.text("-------------------\n", NamedTextColor.GOLD)));
             }
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "An error occurred while fetching the links data.", e);
+            logger.log(Level.SEVERE, "[Regions] An error occurred while fetching the links data.", e);
         }
 
         return message;
