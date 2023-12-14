@@ -16,21 +16,31 @@ import java.util.UUID;
 
 /**
  * Manages the logic for starting and stopping game sessions.
- * Utilizes GameSessionManager to store and retrieve session data.
  * <p>
  * Last updated: V2.1.0
  *
  * @author Slimerblue22
  */
 public class GameManager {
-    private final GameSessionManager sessionManager;
+    private final HashMap<UUID, Map<String, Location>> activeGames;
 
     /**
      * Constructor for GameManager.
-     * Initializes a connection to the GameSessionManager singleton.
      */
     public GameManager() {
-        this.sessionManager = GameSessionManager.getInstance();
+        activeGames = new HashMap<>();
+    }
+
+    /**
+     * Checks if the specified player has an active game.
+     * Currently only used by {@code PlayerDisconnectListener}.
+     * Calls from within this class interact with the hashmap directly.
+     *
+     * @param player The player to check for an active game.
+     * @return true if the player has an active game, false otherwise.
+     */
+    public boolean hasActiveGame(Player player) {
+        return player != null && activeGames.containsKey(player.getUniqueId());
     }
 
     /**
@@ -50,7 +60,7 @@ public class GameManager {
         }
 
         // Adding player to the active games list
-        sessionManager.setActiveGame(player, locations);
+        activeGames.put(player.getUniqueId(), locations);
 
         // Teleporting the player to the game
         player.teleport(locations.get("game"));
@@ -74,7 +84,7 @@ public class GameManager {
      */
     private HashMap<String, Location> performPregameChecks(Player player) {
         // Checking if player already has an active game
-        if (sessionManager.isGameActive(player)) {
+        if (activeGames.containsKey(player.getUniqueId())) {
             player.sendMessage(Component.text("You already have an active game!", NamedTextColor.RED));
             return null;
         }
@@ -127,14 +137,14 @@ public class GameManager {
      */
     public void stopGame(Player player) {
         // Checking if player has a game to stop
-        if (!sessionManager.isGameActive(player)) {
+        if (!activeGames.containsKey(player.getUniqueId())) {
             player.sendMessage(Component.text("You don't have an active game to stop!", NamedTextColor.RED));
             DebugManager.log(DebugManager.Category.GAME_MANAGER, "Attempted to stop a game for " + player.getName() + " with UUID of " + player.getUniqueId() + " but no game was active.");
             return;
         }
 
         // Retrieving lobby location and teleporting player
-        Map<String, Location> locations = sessionManager.getActiveGameData(player);
+        Map<String, Location> locations = activeGames.get(player.getUniqueId());
         if (locations != null && locations.get("lobby") != null) {
             /*
              * Attempting to teleport an offline player to the lobby location.
@@ -158,7 +168,7 @@ public class GameManager {
         }
 
         // Removing player from the active games list
-        sessionManager.removeActiveGame(player);
+        activeGames.remove(player.getUniqueId());
 
         // Informing the player that their game has been stopped
         player.sendMessage(Component.text("Your game has been stopped!", NamedTextColor.GREEN));
@@ -167,8 +177,8 @@ public class GameManager {
 
     /**
      * Stops all currently active game sessions.
-     * Iterates through all active game sessions managed by the GameSessionManager,
-     * and stops each session. This is typically used during server shutdown to ensure
+     * Iterates through all active game sessions and stops each session.
+     * This is typically used during server shutdown to ensure
      * all games are stopped gracefully.
      * <p>
      * This method retrieves each player's UUID from the active games, checks if the
@@ -176,7 +186,7 @@ public class GameManager {
      * it logs the action for each stopped game if the `GAME_MANAGER` debug category is enabled.
      */
     public void stopAllGames() {
-        for (UUID playerId : sessionManager.getActiveGameIds()) {
+        for (UUID playerId : activeGames.keySet()) {
             Player player = Bukkit.getPlayer(playerId);
             if (player != null) {
                 DebugManager.log(DebugManager.Category.GAME_MANAGER,"Detected active game for player: " + player.getName() + " with UUID of " + player.getUniqueId() + " during shutdown. Stopping game!");
