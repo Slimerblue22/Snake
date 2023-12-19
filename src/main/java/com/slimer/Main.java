@@ -5,6 +5,7 @@ import com.slimer.Game.GameCommandHandler;
 import com.slimer.Game.GameManager;
 import com.slimer.Game.Listeners.PlayerConnectionListener;
 import com.slimer.Game.Listeners.PlayerDisconnectListener;
+import com.slimer.Game.Listeners.PlayerInputListener;
 import com.slimer.Game.SnakeManager;
 import com.slimer.Region.RegionCommandHandler;
 import com.slimer.Region.RegionService;
@@ -40,11 +41,14 @@ public final class Main extends JavaPlugin {
         // Retrieves and stores the plugin version
         pluginVersion = this.getDescription().getVersion();
 
+        // Initializes the ProtocolLib listener
+        PlayerInputListener playerInputListener = new PlayerInputListener(this);
+
         // Initializes the snake manager
         SnakeManager snakeManager = new SnakeManager();
 
         // Initializes the game manager
-        gameManager = new GameManager(snakeManager);
+        gameManager = new GameManager(snakeManager, playerInputListener);
 
         // Initializes the RegionService singleton instance
         RegionService.initializeInstance(this);
@@ -63,7 +67,7 @@ public final class Main extends JavaPlugin {
         // Checks for plugin updates
         new UpdateChecker().checkForUpdates(this);
 
-        // Registers event listeners
+        // Registers bukkit event listeners
         getServer().getPluginManager().registerEvents(new InventoryClickListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerDisconnectListener(gameManager), this);
         getServer().getPluginManager().registerEvents(new PlayerConnectionListener(), this);

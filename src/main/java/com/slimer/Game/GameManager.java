@@ -1,5 +1,6 @@
 package com.slimer.Game;
 
+import com.slimer.Game.Listeners.PlayerInputListener;
 import com.slimer.Region.RegionService;
 import com.slimer.Region.WGHelpers;
 import com.slimer.Util.DebugManager;
@@ -24,12 +25,14 @@ import java.util.UUID;
 public class GameManager {
     private final HashMap<UUID, Map<String, Location>> activeGames;
     private final SnakeManager snakeManager;
+    private final PlayerInputListener playerInputListener;
 
     /**
      * Constructor for GameManager.
      */
-    public GameManager(SnakeManager snakeManager) {
+    public GameManager(SnakeManager snakeManager, PlayerInputListener playerInputListener) {
         this.snakeManager = snakeManager;
+        this.playerInputListener = playerInputListener;
         activeGames = new HashMap<>();
     }
 
@@ -69,6 +72,9 @@ public class GameManager {
 
         // Spawn snake for player
         snakeManager.spawnSnakeForPlayer(player, locations.get("game"));
+
+        // Start monitoring player inputs
+        playerInputListener.addPlayer(player);
 
         // Informing the player that the game has started
         player.sendMessage(Component.text("Your game has started!", NamedTextColor.GREEN));
@@ -149,6 +155,9 @@ public class GameManager {
 
         // Removing player snake
         snakeManager.removeSnakeForPlayer(player);
+
+        // Stop monitoring player inputs
+        playerInputListener.removePlayer(player);
 
         // Retrieving lobby location and teleporting player
         Map<String, Location> locations = activeGames.get(player.getUniqueId());
