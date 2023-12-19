@@ -24,38 +24,49 @@ public class PlayerConnectionListener implements Listener {
 
     /**
      * Handles the player join event.
-     * Checks if the player is in a game region on join and teleports them to the linked lobby region.
+     * This method serves as an event listener for when a player joins the game.
      *
      * @param event The PlayerJoinEvent triggered when a player joins the game.
      */
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        Player player = event.getPlayer();
+        handlePlayerJoin(event.getPlayer());
+    }
 
+    /**
+     * Checks if the player is in a game region on join and teleports them to the linked lobby region.
+     *
+     * @param player The player who joined the game.
+     */
+    private void handlePlayerJoin(Player player) {
         // Get the region helpers
         WGHelpers wgHelpers = WGHelpers.getInstance();
         RegionHelpers regionHelpers = RegionHelpers.getInstance();
 
         // Check the current region of the player
         String currentRegion = wgHelpers.getPlayerCurrentRegion(player);
-        if (currentRegion != null && regionHelpers.isRegionRegistered(currentRegion)) {
-            String regionType = regionHelpers.getRegionType(currentRegion);
+        if (currentRegion == null || !regionHelpers.isRegionRegistered(currentRegion)) {
+            return; // Early exit if the current region is null or not registered
+        }
 
-            // Check if the player is in a game region
-            if ("game".equals(regionType)) {
-                // Find the linked lobby region
-                String linkedLobbyRegion = regionHelpers.getLinkedRegion(currentRegion);
-                if (linkedLobbyRegion != null) {
-                    World lobbyWorld = regionHelpers.getRegionWorld(linkedLobbyRegion);
-                    Location lobbyTeleportLocation = regionHelpers.getRegionTeleportLocation(linkedLobbyRegion, lobbyWorld);
+        String regionType = regionHelpers.getRegionType(currentRegion);
+        if (!"game".equals(regionType)) {
+            return; // Early exit if the player is not in a game region
+        }
 
-                    // Teleport the player if the location is valid
-                    if (lobbyTeleportLocation != null) {
-                        player.teleport(lobbyTeleportLocation);
-                        DebugManager.log(DebugManager.Category.DEBUG, "Player: " + player.getName() + " with UUID of " + player.getUniqueId() + " logged in inside of a game zone. Teleporting them into the linked lobby.");
-                    }
-                }
-            }
+        // Find the linked lobby region
+        String linkedLobbyRegion = regionHelpers.getLinkedRegion(currentRegion);
+        if (linkedLobbyRegion == null) {
+            return; // Early exit if there's no linked lobby region
+        }
+
+        World lobbyWorld = regionHelpers.getRegionWorld(linkedLobbyRegion);
+        Location lobbyTeleportLocation = regionHelpers.getRegionTeleportLocation(linkedLobbyRegion, lobbyWorld);
+
+        // Teleport the player if the location is valid
+        if (lobbyTeleportLocation != null) {
+            player.teleport(lobbyTeleportLocation);
+            DebugManager.log(DebugManager.Category.DEBUG, "Player: " + player.getName() + " with UUID of " + player.getUniqueId() + " logged in inside of a game zone. Teleporting them into the linked lobby.");
         }
     }
 }

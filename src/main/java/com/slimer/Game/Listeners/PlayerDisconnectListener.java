@@ -25,14 +25,22 @@ public class PlayerDisconnectListener implements Listener {
 
     /**
      * Handles the player quit event.
-     * When a player disconnects, this method checks if they have an active game session and stops it.
+     * This method serves as an event listener for when a player leaves the game.
      *
      * @param event The PlayerQuitEvent triggered when a player leaves the game.
      */
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        Player player = event.getPlayer();
+        handlePlayerQuit(event.getPlayer());
+    }
 
+    /**
+     * Handles the logic when a player quits the game.
+     * When a player disconnects, this method checks if they have an active game session and stops it.
+     *
+     * @param player The player who left the game.
+     */
+    private void handlePlayerQuit(Player player) {
         if (gameManager.hasActiveGame(player)) {
             // If the player is in a game, handle their removal
             DebugManager.log(DebugManager.Category.DEBUG, "Game stopped for disconnected player: " + player.getName() + " with UUID of " + player.getUniqueId());
