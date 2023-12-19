@@ -1,6 +1,6 @@
 package com.slimer.Game.Listeners;
 
-import com.slimer.Region.RegionHelpers;
+import com.slimer.Region.RegionService;
 import com.slimer.Region.WGHelpers;
 import com.slimer.Util.DebugManager;
 import org.bukkit.Location;
@@ -40,27 +40,27 @@ public class PlayerConnectionListener implements Listener {
      */
     private void handlePlayerJoin(Player player) {
         // Get the region helpers
-        RegionHelpers regionHelpers = RegionHelpers.getInstance();
+        RegionService regionService = RegionService.getInstance();
 
         // Check the current region of the player
         String currentRegion = WGHelpers.getPlayerCurrentRegion(player);
-        if (currentRegion == null || !regionHelpers.isRegionRegistered(currentRegion)) {
+        if (currentRegion == null || !regionService.isRegionRegistered(currentRegion)) {
             return; // Early exit if the current region is null or not registered
         }
 
-        String regionType = regionHelpers.getRegionType(currentRegion);
+        String regionType = regionService.getRegionType(currentRegion);
         if (!"game".equals(regionType)) {
             return; // Early exit if the player is not in a game region
         }
 
         // Find the linked lobby region
-        String linkedLobbyRegion = regionHelpers.getLinkedRegion(currentRegion);
+        String linkedLobbyRegion = regionService.getLinkedRegion(currentRegion);
         if (linkedLobbyRegion == null) {
             return; // Early exit if there's no linked lobby region
         }
 
-        World lobbyWorld = regionHelpers.getRegionWorld(linkedLobbyRegion);
-        Location lobbyTeleportLocation = regionHelpers.getRegionTeleportLocation(linkedLobbyRegion, lobbyWorld);
+        World lobbyWorld = regionService.getRegionWorld(linkedLobbyRegion);
+        Location lobbyTeleportLocation = regionService.getRegionTeleportLocation(linkedLobbyRegion, lobbyWorld);
 
         // Teleport the player if the location is valid
         if (lobbyTeleportLocation != null) {

@@ -24,7 +24,6 @@ import java.util.List;
  */
 public class RegionCommandHandler implements CommandExecutor, TabCompleter {
     private final RegionService service = RegionService.getInstance();
-    private final RegionHelpers regionHelpers = RegionHelpers.getInstance();
 
     /**
      * Processes the command input and directs to appropriate sub-command logic.
@@ -129,7 +128,7 @@ public class RegionCommandHandler implements CommandExecutor, TabCompleter {
             return false;
         }
 
-        if (regionHelpers.isRegionRegistered(regionName)) {
+        if (service.isRegionRegistered(regionName)) {
             player.sendMessage(Component.text("Region is already registered.", NamedTextColor.RED));
             return false;
         }
@@ -158,12 +157,12 @@ public class RegionCommandHandler implements CommandExecutor, TabCompleter {
 
         String regionName = args[1].toLowerCase();
 
-        if (!regionHelpers.isRegionRegistered(regionName)) {
+        if (!service.isRegionRegistered(regionName)) {
             player.sendMessage(Component.text("Region is not registered.", NamedTextColor.RED));
             return false;
         }
 
-        if (regionHelpers.getLinkID(regionName) != null) {
+        if (service.getLinkID(regionName) != null) {
             player.sendMessage(Component.text("The region is linked to another region. Unlink it first before unregistering.", NamedTextColor.RED));
             return false;
         }
@@ -193,20 +192,20 @@ public class RegionCommandHandler implements CommandExecutor, TabCompleter {
         String regionName1 = args[1].toLowerCase();
         String regionName2 = args[2].toLowerCase();
 
-        if (!regionHelpers.isRegionRegistered(regionName1) || !regionHelpers.isRegionRegistered(regionName2)) {
+        if (!service.isRegionRegistered(regionName1) || !service.isRegionRegistered(regionName2)) {
             player.sendMessage(Component.text("One or both regions are not registered.", NamedTextColor.RED));
             return false;
         }
 
-        String type1 = regionHelpers.getRegionType(regionName1);
-        String type2 = regionHelpers.getRegionType(regionName2);
+        String type1 = service.getRegionType(regionName1);
+        String type2 = service.getRegionType(regionName2);
 
         if (!((type1.equals("game") && type2.equals("lobby")) || (type1.equals("lobby") && type2.equals("game")))) {
             player.sendMessage(Component.text("You must link a game region with a lobby region.", NamedTextColor.RED));
             return false;
         }
 
-        if (regionHelpers.isRegionLinked(regionName1) || regionHelpers.isRegionLinked(regionName2)) {
+        if (service.isRegionLinked(regionName1) || service.isRegionLinked(regionName2)) {
             player.sendMessage(Component.text("One or both regions are already linked to another region.", NamedTextColor.RED));
             return false;
         }
@@ -241,13 +240,13 @@ public class RegionCommandHandler implements CommandExecutor, TabCompleter {
             return false;
         }
 
-        if (!regionHelpers.isRegionRegistered(regionName1) || !regionHelpers.isRegionRegistered(regionName2)) {
+        if (!service.isRegionRegistered(regionName1) || !service.isRegionRegistered(regionName2)) {
             player.sendMessage(Component.text("One or both regions are not registered.", NamedTextColor.RED));
             return false;
         }
 
-        Integer linkID1 = regionHelpers.getLinkID(regionName1);
-        Integer linkID2 = regionHelpers.getLinkID(regionName2);
+        Integer linkID1 = service.getLinkID(regionName1);
+        Integer linkID2 = service.getLinkID(regionName2);
 
         if (linkID1 == null || linkID2 == null) {
             player.sendMessage(Component.text("One or both regions are not linked.", NamedTextColor.RED));
@@ -334,8 +333,8 @@ public class RegionCommandHandler implements CommandExecutor, TabCompleter {
 
         String option = args[1].toLowerCase();
         Component message = (option.equals("search") && args.length > 2) ?
-                regionHelpers.fetchFormattedData(option, args[2]) :
-                regionHelpers.fetchFormattedData(option);
+                service.fetchFormattedData(option, args[2]) :
+                service.fetchFormattedData(option);
         player.sendMessage(message);
         return true;
     }

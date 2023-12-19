@@ -1,6 +1,6 @@
 package com.slimer.Game;
 
-import com.slimer.Region.RegionHelpers;
+import com.slimer.Region.RegionService;
 import com.slimer.Region.WGHelpers;
 import com.slimer.Util.DebugManager;
 import net.kyori.adventure.text.Component;
@@ -90,11 +90,11 @@ public class GameManager {
         }
 
         // Check if player is inside a lobby region
-        RegionHelpers regionHelpers = RegionHelpers.getInstance();
+        RegionService regionService = RegionService.getInstance();
 
         String currentLobbyRegion = WGHelpers.getPlayerCurrentRegion(player);
-        boolean isRegistered = (currentLobbyRegion != null) && regionHelpers.isRegionRegistered(currentLobbyRegion);
-        String regionType = isRegistered ? regionHelpers.getRegionType(currentLobbyRegion) : null;
+        boolean isRegistered = (currentLobbyRegion != null) && regionService.isRegionRegistered(currentLobbyRegion);
+        String regionType = isRegistered ? regionService.getRegionType(currentLobbyRegion) : null;
 
         if (!"lobby".equals(regionType)) {
             player.sendMessage(Component.text("You must be within a lobby region to start the game.", NamedTextColor.RED));
@@ -102,8 +102,8 @@ public class GameManager {
         }
 
         // Check if lobby region is linked
-        boolean isLinked = regionHelpers.isRegionLinked(currentLobbyRegion);
-        String currentGameRegion = regionHelpers.getLinkedRegion(currentLobbyRegion);
+        boolean isLinked = regionService.isRegionLinked(currentLobbyRegion);
+        String currentGameRegion = regionService.getLinkedRegion(currentLobbyRegion);
 
         if (!isLinked || currentGameRegion == null) {
             player.sendMessage(Component.text("The lobby you are in is not properly linked to a game region. You cannot start the game.", NamedTextColor.RED));
@@ -111,11 +111,11 @@ public class GameManager {
         }
 
         // Check for unexpected null locations
-        World gameWorld = regionHelpers.getRegionWorld(currentGameRegion);
-        World lobbyWorld = regionHelpers.getRegionWorld(currentLobbyRegion);
+        World gameWorld = regionService.getRegionWorld(currentGameRegion);
+        World lobbyWorld = regionService.getRegionWorld(currentLobbyRegion);
 
-        Location gameTeleportLocation = regionHelpers.getRegionTeleportLocation(currentGameRegion, gameWorld);
-        Location lobbyTeleportLocation = regionHelpers.getRegionTeleportLocation(currentLobbyRegion, lobbyWorld);
+        Location gameTeleportLocation = regionService.getRegionTeleportLocation(currentGameRegion, gameWorld);
+        Location lobbyTeleportLocation = regionService.getRegionTeleportLocation(currentLobbyRegion, lobbyWorld);
 
         if (gameTeleportLocation == null || lobbyTeleportLocation == null) {
             player.sendMessage(Component.text("Could not find the teleport location for the game or lobby region.", NamedTextColor.RED));
