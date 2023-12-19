@@ -1,1 +1,6 @@
-# INACTIVE (EXPERIMENTAL BRANCH)
+# Minecraft Snake Game Plugin Configuration
+
+# Gameplay Settings
+# Speed of the snake in blocks per second.
+# Default value: 5.0
+snake-speed: 5.0

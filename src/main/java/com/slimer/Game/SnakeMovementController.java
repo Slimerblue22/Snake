@@ -1,21 +1,25 @@
 package com.slimer.Game;
 
+import com.slimer.Main;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Sheep;
 import org.bukkit.util.Vector;
 
 public class SnakeMovementController {
     private final SnakeLifecycleManager snakeLifecycleManager;
+    private final double SPEED_BPS;
 
-    public SnakeMovementController(SnakeLifecycleManager snakeLifecycleManager) {
+    public SnakeMovementController(SnakeLifecycleManager snakeLifecycleManager, Main main) {
         this.snakeLifecycleManager = snakeLifecycleManager;
+        this.SPEED_BPS = main.getSnakeSpeed();
     }
 
     public void moveSnake(Player player) {
         Sheep snake = snakeLifecycleManager.getSnakeForPlayer(player);
         if (snake != null) {
             Vector direction = getCardinalDirectionVector(player.getLocation().getYaw());
-            snake.setVelocity(direction);
+            Vector velocity = direction.multiply(SPEED_BPS / 20.0); // Convert BPS to blocks per tick
+            snake.setVelocity(velocity);
         }
     }
 

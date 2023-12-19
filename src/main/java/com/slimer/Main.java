@@ -13,6 +13,7 @@ import com.slimer.Region.RegionService;
 import com.slimer.Util.DebugManager;
 import com.slimer.Util.PlayerData;
 import com.slimer.Util.UpdateChecker;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Objects;
@@ -29,6 +30,7 @@ import java.util.Objects;
 public final class Main extends JavaPlugin {
     private static String pluginVersion;
     private GameManager gameManager;
+    private double snakeSpeed;
 
     /**
      * Called when the plugin is enabled. This method initializes various plugin components
@@ -38,6 +40,8 @@ public final class Main extends JavaPlugin {
     public void onEnable() {
         // Saves the default configuration
         this.saveDefaultConfig();
+        FileConfiguration config = this.getConfig();
+        snakeSpeed = config.getDouble("snake-speed", 5.0);
 
         // Retrieves and stores the plugin version
         pluginVersion = this.getDescription().getVersion();
@@ -46,7 +50,7 @@ public final class Main extends JavaPlugin {
         SnakeLifecycleManager snakeLifecycleManager = new SnakeLifecycleManager();
 
         // Initializes the snake movement controller
-        SnakeMovementController snakeMovementController = new SnakeMovementController(snakeLifecycleManager);
+        SnakeMovementController snakeMovementController = new SnakeMovementController(snakeLifecycleManager, this);
 
         // Initializes the ProtocolLib listener
         PlayerInputListener playerInputListener = new PlayerInputListener(this, snakeMovementController);
@@ -94,5 +98,14 @@ public final class Main extends JavaPlugin {
      */
     public static String getPluginVersion() {
         return pluginVersion;
+    }
+
+    /**
+     * Gets the speed of the snake in blocks per second.
+     *
+     * @return The speed of the snake in blocks per second.
+     */
+    public double getSnakeSpeed() {
+        return snakeSpeed;
     }
 }
