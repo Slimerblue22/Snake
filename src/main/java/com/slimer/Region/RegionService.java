@@ -1,6 +1,5 @@
 package com.slimer.Region;
 
-import com.slimer.Main;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -34,6 +33,7 @@ public class RegionService {
 
     private RegionService(JavaPlugin plugin) {
         initializeDatabase(plugin);
+        migrateRegionsFromYmlToSql(plugin);
     }
 
     /**
@@ -82,10 +82,10 @@ public class RegionService {
      * On successful verification, it triggers the migration of individual sections and linked regions,
      * and concludes by renaming the original YML file to indicate completion.
      *
-     * @param main The main plugin instance, used to access the plugin's data folder.
+     * @param plugin The plugin instance, used to access the plugin's data folder.
      */
-    public void migrateRegionsFromYmlToSql(Main main) {
-        File dataFolder = main.getDataFolder();
+    public void migrateRegionsFromYmlToSql(JavaPlugin plugin) {
+        File dataFolder = plugin.getDataFolder();
         File ymlFile = new File(dataFolder, "Regions.yml");
 
         if (!initializeMigration(ymlFile)) {

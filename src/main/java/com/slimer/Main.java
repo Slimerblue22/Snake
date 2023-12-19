@@ -45,14 +45,8 @@ public final class Main extends JavaPlugin {
         // Initializes the RegionService singleton instance
         RegionService.initializeInstance(this);
 
-        // Migrates regions from YML to SQL
-        RegionService.getInstance().migrateRegionsFromYmlToSql(this);
-
         // Initializes the PlayerData singleton instance
         PlayerData.initializeInstance(this);
-
-        // Migrates player data from YML to SQL
-        PlayerData.getInstance().migrateFromYmlToSql(this);
 
         // Sets up plugin metrics (Disabled during testing)
         // new Metrics(this, 19729);

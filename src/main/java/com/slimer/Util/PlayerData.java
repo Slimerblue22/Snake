@@ -1,6 +1,5 @@
 package com.slimer.Util;
 
-import com.slimer.Main;
 import org.bukkit.DyeColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -37,6 +36,7 @@ public class PlayerData {
      */
     private PlayerData(JavaPlugin plugin) {
         initializeDatabase(plugin);
+        migrateFromYmlToSql(plugin);
     }
 
     /**
@@ -71,10 +71,10 @@ public class PlayerData {
      * reads the existing player data, and inserts it into an SQLite database. After successful migration,
      * the YML file is renamed to "MIGRATED_PlayerData.yml.bak".
      *
-     * @param main The main plugin instance, used to access the plugin's data folder.
+     * @param plugin The plugin instance, used to access the plugin's data folder.
      */
-    public void migrateFromYmlToSql(Main main) {
-        File dataFolder = main.getDataFolder();
+    private void migrateFromYmlToSql(JavaPlugin plugin) {
+        File dataFolder = plugin.getDataFolder();
         File ymlFile = new File(dataFolder, "PlayerData.yml");
         String absolutePath = ymlFile.getAbsolutePath();
 
