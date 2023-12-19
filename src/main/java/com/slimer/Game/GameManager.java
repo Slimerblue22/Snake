@@ -24,14 +24,14 @@ import java.util.UUID;
  */
 public class GameManager {
     private final HashMap<UUID, Map<String, Location>> activeGames;
-    private final SnakeManager snakeManager;
+    private final SnakeLifecycleManager snakeLifecycleManager;
     private final PlayerInputListener playerInputListener;
 
     /**
      * Constructor for GameManager.
      */
-    public GameManager(SnakeManager snakeManager, PlayerInputListener playerInputListener) {
-        this.snakeManager = snakeManager;
+    public GameManager(SnakeLifecycleManager snakeLifecycleManager, PlayerInputListener playerInputListener) {
+        this.snakeLifecycleManager = snakeLifecycleManager;
         this.playerInputListener = playerInputListener;
         activeGames = new HashMap<>();
     }
@@ -71,7 +71,7 @@ public class GameManager {
         player.teleport(locations.get("game"));
 
         // Spawn snake for player
-        snakeManager.spawnSnakeForPlayer(player, locations.get("game"));
+        snakeLifecycleManager.spawnSnakeForPlayer(player, locations.get("game"));
 
         // Start monitoring player inputs
         playerInputListener.addPlayer(player);
@@ -154,7 +154,7 @@ public class GameManager {
         }
 
         // Removing player snake
-        snakeManager.removeSnakeForPlayer(player);
+        snakeLifecycleManager.removeSnakeForPlayer(player);
 
         // Stop monitoring player inputs
         playerInputListener.removePlayer(player);

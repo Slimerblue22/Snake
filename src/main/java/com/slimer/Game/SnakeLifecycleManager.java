@@ -10,10 +10,10 @@ import org.bukkit.entity.Sheep;
 import java.util.HashMap;
 import java.util.UUID;
 
-public class SnakeManager {
+public class SnakeLifecycleManager {
     private final HashMap<UUID, Sheep> playerSnakes;
 
-    public SnakeManager() {
+    public SnakeLifecycleManager() {
         this.playerSnakes = new HashMap<>();
     }
 
@@ -44,5 +44,9 @@ public class SnakeManager {
             sheep.remove();
             DebugManager.log(DebugManager.Category.DEBUG, "Snake destroyed for player: " + player.getName() + " with UUID of " + player.getUniqueId());
         }
+    }
+
+    public Sheep getSnakeForPlayer(Player player) {
+        return playerSnakes.get(player.getUniqueId());
     }
 }

@@ -5,6 +5,7 @@ import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
+import com.slimer.Game.SnakeMovementController;
 import com.slimer.Util.DebugManager;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -16,9 +17,11 @@ import java.util.UUID;
 public class PlayerInputListener {
     private final JavaPlugin plugin;
     private final Set<UUID> monitoredPlayers;
+    private final SnakeMovementController snakeMovementController;
 
-    public PlayerInputListener(JavaPlugin plugin) {
+    public PlayerInputListener(JavaPlugin plugin, SnakeMovementController snakeMovementController) {
         this.plugin = plugin;
+        this.snakeMovementController = snakeMovementController;
         this.monitoredPlayers = new HashSet<>();
         setupPacketListener();
     }
@@ -55,7 +58,12 @@ public class PlayerInputListener {
     private boolean isPlayerHoldingForward(PacketEvent event) {
         // Extract forward value from packet and return whether it's positive (indicating forward movement)
         float forward = event.getPacket().getFloat().read(1);
-        return forward > 0;
+        if (forward > 0) {
+            Player player = event.getPlayer();
+            snakeMovementController.moveSnake(player);
+            return true;
+        }
+        return false;
     }
 
     private String getYawAsCardinalDirection(float yaw) {
