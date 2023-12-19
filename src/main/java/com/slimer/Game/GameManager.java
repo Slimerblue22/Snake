@@ -1,6 +1,7 @@
 package com.slimer.Game;
 
 import com.slimer.Game.Listeners.PlayerInputListener;
+import com.slimer.Game.SnakeManagement.SnakeLifecycle;
 import com.slimer.Region.RegionService;
 import com.slimer.Region.WGHelpers;
 import com.slimer.Util.DebugManager;
@@ -24,14 +25,14 @@ import java.util.UUID;
  */
 public class GameManager {
     private final HashMap<UUID, Map<String, Location>> activeGames;
-    private final SnakeLifecycleManager snakeLifecycleManager;
+    private final SnakeLifecycle snakeLifecycle;
     private final PlayerInputListener playerInputListener;
 
     /**
      * Constructor for GameManager.
      */
-    public GameManager(SnakeLifecycleManager snakeLifecycleManager, PlayerInputListener playerInputListener) {
-        this.snakeLifecycleManager = snakeLifecycleManager;
+    public GameManager(SnakeLifecycle snakeLifecycle, PlayerInputListener playerInputListener) {
+        this.snakeLifecycle = snakeLifecycle;
         this.playerInputListener = playerInputListener;
         activeGames = new HashMap<>();
     }
@@ -71,7 +72,7 @@ public class GameManager {
         player.teleport(locations.get("game"));
 
         // Spawn snake for player
-        snakeLifecycleManager.spawnSnakeForPlayer(player, locations.get("game"));
+        snakeLifecycle.spawnSnakeForPlayer(player, locations.get("game"));
 
         // Start monitoring player inputs
         playerInputListener.addPlayer(player);
@@ -154,7 +155,7 @@ public class GameManager {
         }
 
         // Removing player snake
-        snakeLifecycleManager.removeSnakeForPlayer(player);
+        snakeLifecycle.removeSnakeForPlayer(player);
 
         // Stop monitoring player inputs
         playerInputListener.removePlayer(player);

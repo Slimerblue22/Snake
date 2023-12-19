@@ -5,7 +5,7 @@ import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
-import com.slimer.Game.SnakeMovementController;
+import com.slimer.Game.SnakeManagement.SnakeMovement;
 import com.slimer.Util.DebugManager;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -17,11 +17,11 @@ import java.util.UUID;
 public class PlayerInputListener {
     private final JavaPlugin plugin;
     private final Set<UUID> monitoredPlayers;
-    private final SnakeMovementController snakeMovementController;
+    private final SnakeMovement snakeMovement;
 
-    public PlayerInputListener(JavaPlugin plugin, SnakeMovementController snakeMovementController) {
+    public PlayerInputListener(JavaPlugin plugin, SnakeMovement snakeMovement) {
         this.plugin = plugin;
-        this.snakeMovementController = snakeMovementController;
+        this.snakeMovement = snakeMovement;
         this.monitoredPlayers = new HashSet<>();
         setupPacketListener();
     }
@@ -60,7 +60,7 @@ public class PlayerInputListener {
         float forward = event.getPacket().getFloat().read(1);
         if (forward > 0) {
             Player player = event.getPlayer();
-            snakeMovementController.moveSnake(player);
+            snakeMovement.moveSnake(player);
             return true;
         }
         return false;

@@ -6,8 +6,8 @@ import com.slimer.Game.GameManager;
 import com.slimer.Game.Listeners.PlayerConnectionListener;
 import com.slimer.Game.Listeners.PlayerDisconnectListener;
 import com.slimer.Game.Listeners.PlayerInputListener;
-import com.slimer.Game.SnakeLifecycleManager;
-import com.slimer.Game.SnakeMovementController;
+import com.slimer.Game.SnakeManagement.SnakeLifecycle;
+import com.slimer.Game.SnakeManagement.SnakeMovement;
 import com.slimer.Region.RegionCommandHandler;
 import com.slimer.Region.RegionService;
 import com.slimer.Util.DebugManager;
@@ -47,16 +47,16 @@ public final class Main extends JavaPlugin {
         pluginVersion = this.getDescription().getVersion();
 
         // Initializes the snake lifecycle manager
-        SnakeLifecycleManager snakeLifecycleManager = new SnakeLifecycleManager();
+        SnakeLifecycle snakeLifecycle = new SnakeLifecycle();
 
         // Initializes the snake movement controller
-        SnakeMovementController snakeMovementController = new SnakeMovementController(snakeLifecycleManager, this);
+        SnakeMovement snakeMovement = new SnakeMovement(snakeLifecycle, this);
 
         // Initializes the ProtocolLib listener
-        PlayerInputListener playerInputListener = new PlayerInputListener(this, snakeMovementController);
+        PlayerInputListener playerInputListener = new PlayerInputListener(this, snakeMovement);
 
         // Initializes the game manager
-        gameManager = new GameManager(snakeLifecycleManager, playerInputListener);
+        gameManager = new GameManager(snakeLifecycle, playerInputListener);
 
         // Initializes the RegionService singleton instance
         RegionService.initializeInstance(this);

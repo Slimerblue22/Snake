@@ -1,4 +1,4 @@
-package com.slimer.Game;
+package com.slimer.Game.SnakeManagement;
 
 import com.slimer.Util.DebugManager;
 import com.slimer.Util.PlayerData;
@@ -10,10 +10,10 @@ import org.bukkit.entity.Sheep;
 import java.util.HashMap;
 import java.util.UUID;
 
-public class SnakeLifecycleManager {
+public class SnakeLifecycle {
     private final HashMap<UUID, Sheep> playerSnakes;
 
-    public SnakeLifecycleManager() {
+    public SnakeLifecycle() {
         this.playerSnakes = new HashMap<>();
     }
 
