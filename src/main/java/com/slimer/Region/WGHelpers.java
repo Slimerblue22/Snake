@@ -18,22 +18,6 @@ import org.bukkit.entity.Player;
  * @author Slimerblue22
  */
 public class WGHelpers {
-    private static WGHelpers instance;
-
-    private WGHelpers() {
-    }
-
-    /**
-     * Singleton instance retrieval method.
-     *
-     * @return The singleton instance of the WGHelpers class.
-     */
-    public static synchronized WGHelpers getInstance() {
-        if (instance == null) {
-            instance = new WGHelpers();
-        }
-        return instance;
-    }
 
     /**
      * Retrieves the WorldGuard RegionManager for a given world.
@@ -41,7 +25,7 @@ public class WGHelpers {
      * @param worldName The name of the Bukkit world for which the RegionManager is needed.
      * @return The RegionManager for the specified world, or null if the world does not exist or the RegionManager could not be retrieved.
      */
-    private RegionManager getRegionManager(String worldName) {
+    private static RegionManager getRegionManager(String worldName) {
         World bukkitWorld = Bukkit.getWorld(worldName);
         if (bukkitWorld == null) {
             return null;
@@ -57,7 +41,7 @@ public class WGHelpers {
      * @param regionName The name of the region to check for.
      * @return True if the region exists, false otherwise.
      */
-    public boolean doesWGRegionExist(String worldName, String regionName) {
+    public static boolean doesWGRegionExist(String worldName, String regionName) {
         RegionManager regionManager = getRegionManager(worldName);
         if (regionManager == null) {
             return false;
@@ -75,7 +59,7 @@ public class WGHelpers {
      * @param z          The z-coordinate to check.
      * @return True if the coordinates are in the region, false otherwise.
      */
-    public boolean areCoordinatesInWGRegion(String worldName, String regionName, int x, int y, int z) {
+    public static boolean areCoordinatesInWGRegion(String worldName, String regionName, int x, int y, int z) {
         RegionManager regionManager = getRegionManager(worldName);
         if (regionManager == null) {
             return false;
@@ -91,7 +75,7 @@ public class WGHelpers {
      * @param regionName The name of the WorldGuard region.
      * @return A string describing the minimum and maximum points of the region, or null if the region does not exist.
      */
-    public String getBoundariesOfRegion(String worldName, String regionName) {
+    public static String getBoundariesOfRegion(String worldName, String regionName) {
         RegionManager regionManager = getRegionManager(worldName);
         if (regionManager == null) {
             return null;
@@ -113,7 +97,7 @@ public class WGHelpers {
      * @param player The player whose location will be checked.
      * @return The name of the WorldGuard region the player is in, or null if the player is not in any region.
      */
-    public String getPlayerCurrentRegion(Player player) {
+    public static String getPlayerCurrentRegion(Player player) {
         Location loc = player.getLocation();
         World bukkitWorld = loc.getWorld();
         if (bukkitWorld == null) {

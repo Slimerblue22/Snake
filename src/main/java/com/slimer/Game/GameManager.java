@@ -90,10 +90,9 @@ public class GameManager {
         }
 
         // Check if player is inside a lobby region
-        WGHelpers wgHelpers = WGHelpers.getInstance();
         RegionHelpers regionHelpers = RegionHelpers.getInstance();
 
-        String currentLobbyRegion = wgHelpers.getPlayerCurrentRegion(player);
+        String currentLobbyRegion = WGHelpers.getPlayerCurrentRegion(player);
         boolean isRegistered = (currentLobbyRegion != null) && regionHelpers.isRegionRegistered(currentLobbyRegion);
         String regionType = isRegistered ? regionHelpers.getRegionType(currentLobbyRegion) : null;
 

@@ -40,11 +40,10 @@ public class PlayerConnectionListener implements Listener {
      */
     private void handlePlayerJoin(Player player) {
         // Get the region helpers
-        WGHelpers wgHelpers = WGHelpers.getInstance();
         RegionHelpers regionHelpers = RegionHelpers.getInstance();
 
         // Check the current region of the player
-        String currentRegion = wgHelpers.getPlayerCurrentRegion(player);
+        String currentRegion = WGHelpers.getPlayerCurrentRegion(player);
         if (currentRegion == null || !regionHelpers.isRegionRegistered(currentRegion)) {
             return; // Early exit if the current region is null or not registered
         }

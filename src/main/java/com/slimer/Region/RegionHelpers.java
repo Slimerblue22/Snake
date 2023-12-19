@@ -25,7 +25,6 @@ public class RegionHelpers {
     private static RegionHelpers instance;
     private final Connection connection;
     private final Logger logger;
-    private final WGHelpers wgHelpers = WGHelpers.getInstance();
 
     private RegionHelpers(Connection connection, Logger logger) {
         this.connection = connection;
@@ -407,7 +406,7 @@ public class RegionHelpers {
      * @return A string representing the boundaries of the region, or "Not available" if boundaries could not be fetched.
      */
     private String fetchBoundariesFromWG(String worldName, String regionName) {
-        String boundaries = wgHelpers.getBoundariesOfRegion(worldName, regionName);
+        String boundaries = WGHelpers.getBoundariesOfRegion(worldName, regionName);
         return boundaries != null ? "Boundaries: " + boundaries : "Boundaries: Not available";
     }
 

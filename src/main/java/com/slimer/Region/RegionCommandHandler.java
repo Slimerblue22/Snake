@@ -23,7 +23,6 @@ import java.util.List;
  * @author Slimerblue22
  */
 public class RegionCommandHandler implements CommandExecutor, TabCompleter {
-    private final WGHelpers wgHelpers = WGHelpers.getInstance();
     private final RegionService service = RegionService.getInstance();
     private final RegionHelpers regionHelpers = RegionHelpers.getInstance();
 
@@ -125,7 +124,7 @@ public class RegionCommandHandler implements CommandExecutor, TabCompleter {
             return false;
         }
 
-        if (!wgHelpers.doesWGRegionExist(worldName, regionName)) {
+        if (!WGHelpers.doesWGRegionExist(worldName, regionName)) {
             player.sendMessage(Component.text(String.format("Region %s is not registered in WorldGuard for world %s.", regionName, worldName), NamedTextColor.RED));
             return false;
         }
@@ -306,7 +305,7 @@ public class RegionCommandHandler implements CommandExecutor, TabCompleter {
             z = loc.getBlockZ();
         }
 
-        if (!wgHelpers.areCoordinatesInWGRegion(player.getWorld().getName(), regionName, x, y, z)) {
+        if (!WGHelpers.areCoordinatesInWGRegion(player.getWorld().getName(), regionName, x, y, z)) {
             player.sendMessage(Component.text("The coordinates are not within the specified WorldGuard region.", NamedTextColor.RED));
             return false;
         }
