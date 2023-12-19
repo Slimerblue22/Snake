@@ -23,11 +23,13 @@ import java.util.UUID;
  */
 public class GameManager {
     private final HashMap<UUID, Map<String, Location>> activeGames;
+    private final SnakeManager snakeManager;
 
     /**
      * Constructor for GameManager.
      */
-    public GameManager() {
+    public GameManager(SnakeManager snakeManager) {
+        this.snakeManager = snakeManager;
         activeGames = new HashMap<>();
     }
 
@@ -64,6 +66,9 @@ public class GameManager {
 
         // Teleporting the player to the game
         player.teleport(locations.get("game"));
+
+        // Spawn snake for player
+        snakeManager.spawnSnakeForPlayer(player, locations.get("game"));
 
         // Informing the player that the game has started
         player.sendMessage(Component.text("Your game has started!", NamedTextColor.GREEN));
@@ -141,6 +146,9 @@ public class GameManager {
             DebugManager.log(DebugManager.Category.DEBUG, "Attempted to stop a game for " + player.getName() + " with UUID of " + player.getUniqueId() + " but no game was active.");
             return;
         }
+
+        // Removing player snake
+        snakeManager.removeSnakeForPlayer(player);
 
         // Retrieving lobby location and teleporting player
         Map<String, Location> locations = activeGames.get(player.getUniqueId());

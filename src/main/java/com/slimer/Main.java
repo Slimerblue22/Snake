@@ -5,6 +5,7 @@ import com.slimer.Game.GameCommandHandler;
 import com.slimer.Game.GameManager;
 import com.slimer.Game.Listeners.PlayerConnectionListener;
 import com.slimer.Game.Listeners.PlayerDisconnectListener;
+import com.slimer.Game.SnakeManager;
 import com.slimer.Region.RegionCommandHandler;
 import com.slimer.Region.RegionService;
 import com.slimer.Util.DebugManager;
@@ -39,8 +40,11 @@ public final class Main extends JavaPlugin {
         // Retrieves and stores the plugin version
         pluginVersion = this.getDescription().getVersion();
 
+        // Initializes the snake manager
+        SnakeManager snakeManager = new SnakeManager();
+
         // Initializes the game manager
-        gameManager = new GameManager();
+        gameManager = new GameManager(snakeManager);
 
         // Initializes the RegionService singleton instance
         RegionService.initializeInstance(this);
