@@ -3,9 +3,11 @@ package com.slimer;
 import com.slimer.GUI.InventoryClickListener;
 import com.slimer.Game.GameCommandHandler;
 import com.slimer.Game.GameManager;
+import com.slimer.Game.IncrementScoreCommand;
 import com.slimer.Game.Listeners.PlayerConnectionListener;
 import com.slimer.Game.Listeners.PlayerDisconnectListener;
 import com.slimer.Game.Listeners.PlayerInputListener;
+import com.slimer.Game.ScoreManager;
 import com.slimer.Game.SnakeManagement.SnakeLifecycle;
 import com.slimer.Game.SnakeManagement.SnakeMovement;
 import com.slimer.Region.RegionCommandHandler;
@@ -46,6 +48,9 @@ public final class Main extends JavaPlugin {
         // Retrieves and stores the plugin version
         pluginVersion = this.getDescription().getVersion();
 
+        // Initializes the scoring manager
+        ScoreManager scoreManager = new ScoreManager();
+
         // Initializes the snake lifecycle manager
         SnakeLifecycle snakeLifecycle = new SnakeLifecycle();
 
@@ -56,7 +61,7 @@ public final class Main extends JavaPlugin {
         PlayerInputListener playerInputListener = new PlayerInputListener(this, snakeMovement);
 
         // Initializes the game manager
-        gameManager = new GameManager(snakeLifecycle, playerInputListener);
+        gameManager = new GameManager(snakeLifecycle, playerInputListener, scoreManager);
 
         // Initializes the RegionService singleton instance
         RegionService.initializeInstance(this);
@@ -71,6 +76,8 @@ public final class Main extends JavaPlugin {
         Objects.requireNonNull(getCommand("snakedebug")).setExecutor(new DebugManager.ToggleDebugCommand());
         Objects.requireNonNull(getCommand("snakegame")).setExecutor(new GameCommandHandler(gameManager));
         Objects.requireNonNull(getCommand("snakeregion")).setExecutor(new RegionCommandHandler());
+        // TODO: This is for debugging, remove it later!
+        Objects.requireNonNull(getCommand("incscore")).setExecutor(new IncrementScoreCommand(scoreManager));
 
         // Checks for plugin updates
         new UpdateChecker().checkForUpdates(this);

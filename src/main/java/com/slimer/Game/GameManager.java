@@ -27,13 +27,15 @@ public class GameManager {
     private final HashMap<UUID, Map<String, Location>> activeGames;
     private final SnakeLifecycle snakeLifecycle;
     private final PlayerInputListener playerInputListener;
+    private final ScoreManager scoreManager;
 
     /**
      * Constructor for GameManager.
      */
-    public GameManager(SnakeLifecycle snakeLifecycle, PlayerInputListener playerInputListener) {
+    public GameManager(SnakeLifecycle snakeLifecycle, PlayerInputListener playerInputListener, ScoreManager scoreManager) {
         this.snakeLifecycle = snakeLifecycle;
         this.playerInputListener = playerInputListener;
+        this.scoreManager = scoreManager;
         activeGames = new HashMap<>();
     }
 
@@ -76,6 +78,9 @@ public class GameManager {
 
         // Start monitoring player inputs
         playerInputListener.addPlayer(player);
+
+        // Start scoring for player
+        scoreManager.startScore(player);
 
         // Informing the player that the game has started
         player.sendMessage(Component.text("Your game has started!", NamedTextColor.GREEN));
@@ -159,6 +164,9 @@ public class GameManager {
 
         // Stop monitoring player inputs
         playerInputListener.removePlayer(player);
+
+        // Stop scoring for player
+        scoreManager.stopScore(player);
 
         // Retrieving lobby location and teleporting player
         Map<String, Location> locations = activeGames.get(player.getUniqueId());

@@ -16,6 +16,9 @@ commands:
   snakedebug:
     description: Command for controlling the debug system
     aliases: [sd]
+  incscore:
+    description: This is for debugging, remove it later!
+    usage: /incscore <playerName>
 permissions:
   snake.admin:
     description: Permission for the region and debug commands
