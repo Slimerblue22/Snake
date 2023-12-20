@@ -88,7 +88,12 @@ public class InventoryClickListener implements Listener {
 
         // Check if the clicked item is a wool block
         if (clickedMaterial.name().endsWith("_WOOL")) {
-            String colorName = clickedMaterial.name().replace("_WOOL", "").toLowerCase().replace("_", " ");
+            String colorName = clickedMaterial.name().replace("_WOOL", "").toLowerCase();
+
+            // Replace spaces with underscores for specific color names
+            if (colorName.equals("light gray") || colorName.equals("light blue")) {
+                colorName = colorName.replace(" ", "_");
+            }
             player.performCommand("snakegame color " + colorName);
         }
         player.closeInventory();
