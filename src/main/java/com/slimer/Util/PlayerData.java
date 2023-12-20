@@ -185,11 +185,19 @@ public class PlayerData {
         try {
             int currentHighScore = getHighScore(player);
             if (score > currentHighScore) {
-                PreparedStatement statement = connection.prepareStatement("REPLACE INTO player_data (uuid, name, score) VALUES (?, ?, ?)");
-                statement.setString(1, player.getUniqueId().toString());
-                statement.setString(2, player.getName());
-                statement.setInt(3, score);
-                statement.executeUpdate();
+                PreparedStatement updateStatement = connection.prepareStatement("UPDATE player_data SET score = ?, name = ? WHERE uuid = ?");
+                updateStatement.setInt(1, score);
+                updateStatement.setString(2, player.getName());
+                updateStatement.setString(3, player.getUniqueId().toString());
+                int rowsAffected = updateStatement.executeUpdate();
+
+                if (rowsAffected == 0) {
+                    PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO player_data (uuid, name, score) VALUES (?, ?, ?)");
+                    insertStatement.setString(1, player.getUniqueId().toString());
+                    insertStatement.setString(2, player.getName());
+                    insertStatement.setInt(3, score);
+                    insertStatement.executeUpdate();
+                }
             }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "[PlayerData] An error occurred while setting the high score", e);
@@ -266,10 +274,18 @@ public class PlayerData {
      */
     public void setSheepColor(Player player, DyeColor color) {
         try {
-            PreparedStatement statement = connection.prepareStatement("UPDATE player_data SET sheepColor = ? WHERE uuid = ?");
-            statement.setString(1, color.name());
-            statement.setString(2, player.getUniqueId().toString());
-            statement.executeUpdate();
+            PreparedStatement updateStatement = connection.prepareStatement("UPDATE player_data SET sheepColor = ? WHERE uuid = ?");
+            updateStatement.setString(1, color.name());
+            updateStatement.setString(2, player.getUniqueId().toString());
+            int rowsAffected = updateStatement.executeUpdate();
+
+            if (rowsAffected == 0) {
+                PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO player_data (uuid, name, sheepColor) VALUES (?, ?, ?)");
+                insertStatement.setString(1, player.getUniqueId().toString());
+                insertStatement.setString(2, player.getName());
+                insertStatement.setString(3, color.name());
+                insertStatement.executeUpdate();
+            }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "[PlayerData] An error occurred while setting the sheep color", e);
         }
@@ -304,10 +320,18 @@ public class PlayerData {
      */
     public void setMusicToggleState(Player player, boolean state) {
         try {
-            PreparedStatement statement = connection.prepareStatement("UPDATE player_data SET musicToggle = ? WHERE uuid = ?");
-            statement.setBoolean(1, state);
-            statement.setString(2, player.getUniqueId().toString());
-            statement.executeUpdate();
+            PreparedStatement updateStatement = connection.prepareStatement("UPDATE player_data SET musicToggle = ? WHERE uuid = ?");
+            updateStatement.setBoolean(1, state);
+            updateStatement.setString(2, player.getUniqueId().toString());
+            int rowsAffected = updateStatement.executeUpdate();
+
+            if (rowsAffected == 0) {
+                PreparedStatement insertStatement = connection.prepareStatement("INSERT INTO player_data (uuid, name, musicToggle) VALUES (?, ?, ?)");
+                insertStatement.setString(1, player.getUniqueId().toString());
+                insertStatement.setString(2, player.getName());
+                insertStatement.setBoolean(3, state);
+                insertStatement.executeUpdate();
+            }
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "[PlayerData] An error occurred while setting the music toggle state", e);
         }
