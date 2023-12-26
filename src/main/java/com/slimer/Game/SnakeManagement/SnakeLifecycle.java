@@ -12,6 +12,8 @@ import java.util.UUID;
 
 public class SnakeLifecycle {
     private final HashMap<UUID, Sheep> playerSnakes;
+    private static final String SNAKE_CREATED_LOG = "Snake created for player: %s";
+    private static final String SNAKE_DESTROYED_LOG = "Snake destroyed for player: %s";
 
     public SnakeLifecycle() {
         this.playerSnakes = new HashMap<>();
@@ -35,14 +37,14 @@ public class SnakeLifecycle {
 
         // Store the association between the player and the sheep
         playerSnakes.put(player.getUniqueId(), sheep);
-        DebugManager.log(DebugManager.Category.DEBUG, "Snake created for player: " + player.getName());
+        DebugManager.log(DebugManager.Category.DEBUG, String.format(SNAKE_CREATED_LOG, player.getName()));
     }
 
     public void removeSnakeForPlayer(Player player) {
         Sheep sheep = playerSnakes.remove(player.getUniqueId());
         if (sheep != null) {
             sheep.remove();
-            DebugManager.log(DebugManager.Category.DEBUG, "Snake destroyed for player: " + player.getName());
+            DebugManager.log(DebugManager.Category.DEBUG, String.format(SNAKE_DESTROYED_LOG, player.getName()));
         }
     }
 

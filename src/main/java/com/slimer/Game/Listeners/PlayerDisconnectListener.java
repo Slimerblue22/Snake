@@ -18,6 +18,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
  */
 public class PlayerDisconnectListener implements Listener {
     private final GameManager gameManager;
+    private static final String GAME_STOPPED_FOR_DISCONNECTED_PLAYER_LOG = "Game stopped for disconnected player: %s";
 
     public PlayerDisconnectListener(GameManager gameManager) {
         this.gameManager = gameManager;
@@ -43,7 +44,7 @@ public class PlayerDisconnectListener implements Listener {
     private void handlePlayerQuit(Player player) {
         if (gameManager.hasActiveGame(player)) {
             // If the player is in a game, handle their removal
-            DebugManager.log(DebugManager.Category.DEBUG, "Game stopped for disconnected player: " + player.getName());
+            DebugManager.log(DebugManager.Category.DEBUG, String.format(GAME_STOPPED_FOR_DISCONNECTED_PLAYER_LOG, player.getName()));
             gameManager.stopGame(player);
         }
     }

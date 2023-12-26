@@ -21,6 +21,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
  * @author Slimerblue22
  */
 public class PlayerConnectionListener implements Listener {
+    private static final String PLAYER_TELEPORTED_LOG = "Player: %s logged in inside of a game zone. Teleporting them into the linked lobby.";
 
     /**
      * Handles the player join event.
@@ -65,7 +66,7 @@ public class PlayerConnectionListener implements Listener {
         // Teleport the player if the location is valid
         if (lobbyTeleportLocation != null) {
             player.teleport(lobbyTeleportLocation);
-            DebugManager.log(DebugManager.Category.DEBUG, "Player: " + player.getName() + " logged in inside of a game zone. Teleporting them into the linked lobby.");
+            DebugManager.log(DebugManager.Category.DEBUG, String.format(PLAYER_TELEPORTED_LOG, player.getName()));
         }
     }
 }

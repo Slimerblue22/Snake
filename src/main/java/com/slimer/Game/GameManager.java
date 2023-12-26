@@ -34,6 +34,17 @@ public class GameManager {
     private final SnakeMovement snakeMovement;
     private final Main main;
     private final Map<Player, BukkitRunnable> movementTasks = new HashMap<>();
+    private static final String ACTIVE_GAME_EXISTS_MSG = "You already have an active game!";
+    private static final String NO_ACTIVE_GAME_MSG = "You don't have an active game to stop!";
+    private static final String GAME_START_MSG = "Your game has started!";
+    private static final String GAME_STOP_MSG = "Your game has been stopped!";
+    private static final String NOT_IN_LOBBY_MSG = "You must be within a lobby region to start the game.";
+    private static final String LOBBY_NOT_LINKED_MSG = "The lobby you are in is not properly linked to a game region. You cannot start the game.";
+    private static final String TELEPORT_LOCATION_MISSING_MSG = "Could not find the teleport location for the game or lobby region.";
+    private static final String GAME_STOP_ATTEMPT_LOG = "Attempted to stop a game for %s but no game was active.";
+    private static final String GAME_STARTED_LOG = "Game started for player: %s";
+    private static final String GAME_STOPPED_LOG = "Game stopped for player: %s";
+    private static final String GAME_STOP_ON_SHUTDOWN_LOG = "Detected active game for player: %s during shutdown. Stopping game!";
 
     /**
      * Constructor for GameManager.
@@ -101,8 +112,8 @@ public class GameManager {
         scoreManager.startScore(player);
 
         // Informing the player that the game has started
-        player.sendMessage(Component.text("Your game has started!", NamedTextColor.GREEN));
-        DebugManager.log(DebugManager.Category.DEBUG, "Game started for player: " + player.getName());
+        player.sendMessage(Component.text(GAME_START_MSG, NamedTextColor.GREEN));
+        DebugManager.log(DebugManager.Category.DEBUG, String.format(GAME_STARTED_LOG, player.getName()));
     }
 
     /**
@@ -120,7 +131,7 @@ public class GameManager {
     private HashMap<String, Location> performPregameChecks(Player player) {
         // Checking if player already has an active game
         if (activeGames.containsKey(player.getUniqueId())) {
-            player.sendMessage(Component.text("You already have an active game!", NamedTextColor.RED));
+            player.sendMessage(Component.text(ACTIVE_GAME_EXISTS_MSG, NamedTextColor.RED));
             return null;
         }
 
@@ -132,7 +143,7 @@ public class GameManager {
         String regionType = isRegistered ? regionService.getRegionType(currentLobbyRegion) : null;
 
         if (!"lobby".equals(regionType)) {
-            player.sendMessage(Component.text("You must be within a lobby region to start the game.", NamedTextColor.RED));
+            player.sendMessage(Component.text(NOT_IN_LOBBY_MSG, NamedTextColor.RED));
             return null;
         }
 
@@ -141,7 +152,7 @@ public class GameManager {
         String currentGameRegion = regionService.getLinkedRegion(currentLobbyRegion);
 
         if (!isLinked || currentGameRegion == null) {
-            player.sendMessage(Component.text("The lobby you are in is not properly linked to a game region. You cannot start the game.", NamedTextColor.RED));
+            player.sendMessage(Component.text(LOBBY_NOT_LINKED_MSG, NamedTextColor.RED));
             return null;
         }
 
@@ -153,7 +164,7 @@ public class GameManager {
         Location lobbyTeleportLocation = regionService.getRegionTeleportLocation(currentLobbyRegion, lobbyWorld);
 
         if (gameTeleportLocation == null || lobbyTeleportLocation == null) {
-            player.sendMessage(Component.text("Could not find the teleport location for the game or lobby region.", NamedTextColor.RED));
+            player.sendMessage(Component.text(TELEPORT_LOCATION_MISSING_MSG, NamedTextColor.RED));
             return null;
         }
 
@@ -172,8 +183,8 @@ public class GameManager {
     public void stopGame(Player player) {
         // Checking if player has a game to stop
         if (!activeGames.containsKey(player.getUniqueId())) {
-            player.sendMessage(Component.text("You don't have an active game to stop!", NamedTextColor.RED));
-            DebugManager.log(DebugManager.Category.DEBUG, "Attempted to stop a game for " + player.getName() + " but no game was active.");
+            player.sendMessage(Component.text(NO_ACTIVE_GAME_MSG, NamedTextColor.RED));
+            DebugManager.log(DebugManager.Category.DEBUG, String.format(GAME_STOP_ATTEMPT_LOG, player.getName()));
             return;
         }
 
@@ -203,8 +214,8 @@ public class GameManager {
         activeGames.remove(player.getUniqueId());
 
         // Informing the player that their game has been stopped
-        player.sendMessage(Component.text("Your game has been stopped!", NamedTextColor.GREEN));
-        DebugManager.log(DebugManager.Category.DEBUG, "Game stopped for player: " + player.getName());
+        player.sendMessage(Component.text(GAME_STOP_MSG, NamedTextColor.GREEN));
+        DebugManager.log(DebugManager.Category.DEBUG, String.format(GAME_STOPPED_LOG, player.getName()));
     }
 
     /**
@@ -221,7 +232,7 @@ public class GameManager {
         for (UUID playerId : activeGames.keySet()) {
             Player player = Bukkit.getPlayer(playerId);
             if (player != null) {
-                DebugManager.log(DebugManager.Category.DEBUG, "Detected active game for player: " + player.getName() + " during shutdown. Stopping game!");
+                DebugManager.log(DebugManager.Category.DEBUG, String.format(GAME_STOP_ON_SHUTDOWN_LOG, player.getName()));
                 stopGame(player);
             }
         }

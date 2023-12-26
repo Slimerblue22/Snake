@@ -17,6 +17,9 @@ public class PlayerInputListener {
     private final Set<UUID> monitoredPlayers;
     private final Map<UUID, Vector> playerDirections;
     private final Random random = new Random();
+    private static final String PLAYER_MONITORED_LOG = "Player: %s is now being monitored for inputs with default direction: %s";
+    private static final String PLAYER_NO_LONGER_MONITORED_LOG = "Player: %s is no longer being monitored for inputs and their direction has been removed";
+    private static final String PLAYER_FACING_VECTOR_LOG = "Player: %s is facing vector: %s";
 
     public PlayerInputListener(JavaPlugin plugin) {
         this.plugin = plugin;
@@ -38,13 +41,13 @@ public class PlayerInputListener {
 
         Vector randomDirection = possibleDirections[random.nextInt(possibleDirections.length)];
         playerDirections.put(player.getUniqueId(), randomDirection);
-        DebugManager.log(DebugManager.Category.DEBUG, "Player: " + player.getName() + " is now being monitored for inputs with default direction: " + randomDirection);
+        DebugManager.log(DebugManager.Category.DEBUG, String.format(PLAYER_MONITORED_LOG, player.getName(), randomDirection));
     }
 
     public void removePlayer(Player player) {
         monitoredPlayers.remove(player.getUniqueId());
         playerDirections.remove(player.getUniqueId());
-        DebugManager.log(DebugManager.Category.DEBUG, "Player: " + player.getName() + " is no longer being monitored for inputs and their direction has been removed");
+        DebugManager.log(DebugManager.Category.DEBUG, String.format(PLAYER_NO_LONGER_MONITORED_LOG, player.getName()));
     }
 
     public Map<UUID, Vector> getPlayerDirections() {
@@ -62,7 +65,7 @@ public class PlayerInputListener {
                         if (isPlayerHoldingForward(event)) {
                             Vector cardinalDirection = getYawAsCardinalDirectionVector(player.getLocation().getYaw());
                             playerDirections.put(player.getUniqueId(), cardinalDirection);
-                            DebugManager.log(DebugManager.Category.DEBUG, "Player: " + player.getName() + " is facing vector: " + cardinalDirection);
+                            DebugManager.log(DebugManager.Category.DEBUG, String.format(PLAYER_FACING_VECTOR_LOG, player.getName(), cardinalDirection));
                         }
                     }
                 }
