@@ -54,14 +54,14 @@ public final class Main extends JavaPlugin {
         // Initializes the snake lifecycle manager
         SnakeLifecycle snakeLifecycle = new SnakeLifecycle();
 
-        // Initializes the snake movement controller
-        SnakeMovement snakeMovement = new SnakeMovement(snakeLifecycle, this);
-
         // Initializes the ProtocolLib listener
-        PlayerInputListener playerInputListener = new PlayerInputListener(this, snakeMovement);
+        PlayerInputListener playerInputListener = new PlayerInputListener(this);
+
+        // Initializes the snake movement controller
+        SnakeMovement snakeMovement = new SnakeMovement(snakeLifecycle, this, playerInputListener);
 
         // Initializes the game manager
-        gameManager = new GameManager(snakeLifecycle, playerInputListener, scoreManager);
+        gameManager = new GameManager(snakeLifecycle, playerInputListener, scoreManager, snakeMovement, this);
 
         // Initializes the RegionService singleton instance
         RegionService.initializeInstance(this);

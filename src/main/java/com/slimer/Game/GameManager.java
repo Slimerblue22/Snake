@@ -2,6 +2,8 @@ package com.slimer.Game;
 
 import com.slimer.Game.Listeners.PlayerInputListener;
 import com.slimer.Game.SnakeManagement.SnakeLifecycle;
+import com.slimer.Game.SnakeManagement.SnakeMovement;
+import com.slimer.Main;
 import com.slimer.Region.RegionService;
 import com.slimer.Region.WGHelpers;
 import com.slimer.Util.DebugManager;
@@ -11,6 +13,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,14 +31,19 @@ public class GameManager {
     private final SnakeLifecycle snakeLifecycle;
     private final PlayerInputListener playerInputListener;
     private final ScoreManager scoreManager;
+    private final SnakeMovement snakeMovement;
+    private final Main main;
+    private final Map<Player, BukkitRunnable> movementTasks = new HashMap<>();
 
     /**
      * Constructor for GameManager.
      */
-    public GameManager(SnakeLifecycle snakeLifecycle, PlayerInputListener playerInputListener, ScoreManager scoreManager) {
+    public GameManager(SnakeLifecycle snakeLifecycle, PlayerInputListener playerInputListener, ScoreManager scoreManager, SnakeMovement snakeMovement, Main main) {
         this.snakeLifecycle = snakeLifecycle;
         this.playerInputListener = playerInputListener;
         this.scoreManager = scoreManager;
+        this.snakeMovement = snakeMovement;
+        this.main = main;
         activeGames = new HashMap<>();
     }
 
@@ -78,6 +86,16 @@ public class GameManager {
 
         // Start monitoring player inputs
         playerInputListener.addPlayer(player);
+
+        // Start movement task here using bukkit repeating tasks
+        BukkitRunnable movementTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                snakeMovement.moveSnake(player);
+            }
+        };
+        movementTask.runTaskTimer(main, 0L, 0L);
+        movementTasks.put(player, movementTask);
 
         // Start scoring for player
         scoreManager.startScore(player);
@@ -158,6 +176,13 @@ public class GameManager {
             DebugManager.log(DebugManager.Category.DEBUG, "Attempted to stop a game for " + player.getName() + " with UUID of " + player.getUniqueId() + " but no game was active.");
             return;
         }
+
+        // Cancel the movement task for this player
+        BukkitRunnable movementTask = movementTasks.get(player);
+        if (movementTask != null) {
+            movementTask.cancel();
+        }
+        movementTasks.remove(player);
 
         // Removing player snake
         snakeLifecycle.removeSnakeForPlayer(player);
