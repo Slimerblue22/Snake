@@ -65,7 +65,7 @@ public class PlayerConnectionListener implements Listener {
         // Teleport the player if the location is valid
         if (lobbyTeleportLocation != null) {
             player.teleport(lobbyTeleportLocation);
-            DebugManager.log(DebugManager.Category.DEBUG, "Player: " + player.getName() + " with UUID of " + player.getUniqueId() + " logged in inside of a game zone. Teleporting them into the linked lobby.");
+            DebugManager.log(DebugManager.Category.DEBUG, "Player: " + player.getName() + " logged in inside of a game zone. Teleporting them into the linked lobby.");
         }
     }
 }

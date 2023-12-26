@@ -102,7 +102,7 @@ public class GameManager {
 
         // Informing the player that the game has started
         player.sendMessage(Component.text("Your game has started!", NamedTextColor.GREEN));
-        DebugManager.log(DebugManager.Category.DEBUG, "Game started for player: " + player.getName() + " with UUID of " + player.getUniqueId());
+        DebugManager.log(DebugManager.Category.DEBUG, "Game started for player: " + player.getName());
     }
 
     /**
@@ -173,7 +173,7 @@ public class GameManager {
         // Checking if player has a game to stop
         if (!activeGames.containsKey(player.getUniqueId())) {
             player.sendMessage(Component.text("You don't have an active game to stop!", NamedTextColor.RED));
-            DebugManager.log(DebugManager.Category.DEBUG, "Attempted to stop a game for " + player.getName() + " with UUID of " + player.getUniqueId() + " but no game was active.");
+            DebugManager.log(DebugManager.Category.DEBUG, "Attempted to stop a game for " + player.getName() + " but no game was active.");
             return;
         }
 
@@ -204,7 +204,7 @@ public class GameManager {
 
         // Informing the player that their game has been stopped
         player.sendMessage(Component.text("Your game has been stopped!", NamedTextColor.GREEN));
-        DebugManager.log(DebugManager.Category.DEBUG, "Game stopped for player: " + player.getName() + " with UUID of " + player.getUniqueId());
+        DebugManager.log(DebugManager.Category.DEBUG, "Game stopped for player: " + player.getName());
     }
 
     /**
@@ -221,7 +221,7 @@ public class GameManager {
         for (UUID playerId : activeGames.keySet()) {
             Player player = Bukkit.getPlayer(playerId);
             if (player != null) {
-                DebugManager.log(DebugManager.Category.DEBUG, "Detected active game for player: " + player.getName() + " with UUID of " + player.getUniqueId() + " during shutdown. Stopping game!");
+                DebugManager.log(DebugManager.Category.DEBUG, "Detected active game for player: " + player.getName() + " during shutdown. Stopping game!");
                 stopGame(player);
             }
         }

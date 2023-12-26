@@ -35,14 +35,14 @@ public class SnakeLifecycle {
 
         // Store the association between the player and the sheep
         playerSnakes.put(player.getUniqueId(), sheep);
-        DebugManager.log(DebugManager.Category.DEBUG, "Snake created for player: " + player.getName() + " with UUID of " + player.getUniqueId());
+        DebugManager.log(DebugManager.Category.DEBUG, "Snake created for player: " + player.getName());
     }
 
     public void removeSnakeForPlayer(Player player) {
         Sheep sheep = playerSnakes.remove(player.getUniqueId());
         if (sheep != null) {
             sheep.remove();
-            DebugManager.log(DebugManager.Category.DEBUG, "Snake destroyed for player: " + player.getName() + " with UUID of " + player.getUniqueId());
+            DebugManager.log(DebugManager.Category.DEBUG, "Snake destroyed for player: " + player.getName());
         }
     }
 

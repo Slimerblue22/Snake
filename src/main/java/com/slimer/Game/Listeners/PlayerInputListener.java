@@ -38,13 +38,13 @@ public class PlayerInputListener {
 
         Vector randomDirection = possibleDirections[random.nextInt(possibleDirections.length)];
         playerDirections.put(player.getUniqueId(), randomDirection);
-        DebugManager.log(DebugManager.Category.DEBUG, "Player: " + player.getName() + " with UUID of " + player.getUniqueId() + " is now being monitored for inputs with default direction: " + randomDirection);
+        DebugManager.log(DebugManager.Category.DEBUG, "Player: " + player.getName() + " is now being monitored for inputs with default direction: " + randomDirection);
     }
 
     public void removePlayer(Player player) {
         monitoredPlayers.remove(player.getUniqueId());
         playerDirections.remove(player.getUniqueId());
-        DebugManager.log(DebugManager.Category.DEBUG, "Player: " + player.getName() + " with UUID of " + player.getUniqueId() + " is no longer being monitored for inputs and their direction has been removed");
+        DebugManager.log(DebugManager.Category.DEBUG, "Player: " + player.getName() + " is no longer being monitored for inputs and their direction has been removed");
     }
 
     public Map<UUID, Vector> getPlayerDirections() {
@@ -62,7 +62,7 @@ public class PlayerInputListener {
                         if (isPlayerHoldingForward(event)) {
                             Vector cardinalDirection = getYawAsCardinalDirectionVector(player.getLocation().getYaw());
                             playerDirections.put(player.getUniqueId(), cardinalDirection);
-                            DebugManager.log(DebugManager.Category.DEBUG, "Player: " + player.getName() + " with UUID of " + player.getUniqueId() + " is facing vector: " + cardinalDirection);
+                            DebugManager.log(DebugManager.Category.DEBUG, "Player: " + player.getName() + " is facing vector: " + cardinalDirection);
                         }
                     }
                 }
