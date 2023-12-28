@@ -27,7 +27,7 @@ import java.util.UUID;
  * @author Slimerblue22
  */
 public class GameManager {
-    private final HashMap<UUID, Map<String, Location>> activeGames;
+    private final HashMap<UUID, Map<String, Object>> activeGames;
     private final SnakeLifecycle snakeLifecycle;
     private final PlayerInputListener playerInputListener;
     private final ScoreManager scoreManager;
@@ -45,6 +45,7 @@ public class GameManager {
     private static final String GAME_STARTED_LOG = "Game started for player: %s";
     private static final String GAME_STOPPED_LOG = "Game stopped for player: %s";
     private static final String GAME_STOP_ON_SHUTDOWN_LOG = "Detected active game for player: %s during shutdown. Stopping game!";
+    private static final String GAME_DATA_LOG = "Game Data for Player %s: %s";
 
     /**
      * Constructor for GameManager.
@@ -81,19 +82,20 @@ public class GameManager {
      */
     public void startGame(Player player) {
         // Run pregame checks
-        HashMap<String, Location> locations = performPregameChecks(player);
-        if (locations == null) {
+        HashMap<String, Object> gameData = performPregameChecks(player);
+        if (gameData == null) {
             return; // Pregame checks failed, stop the method
         }
 
         // Adding player to the active games list
-        activeGames.put(player.getUniqueId(), locations);
+        activeGames.put(player.getUniqueId(), gameData);
+        Location gameLocation = (Location) gameData.get("gameLocation");
 
         // Teleporting the player to the game
-        player.teleport(locations.get("game"));
+        player.teleport(gameLocation);
 
         // Spawn snake for player
-        snakeLifecycle.spawnSnakeForPlayer(player, locations.get("game"));
+        snakeLifecycle.spawnSnakeForPlayer(player, gameLocation);
 
         // Start monitoring player inputs
         playerInputListener.addPlayer(player);
@@ -121,14 +123,19 @@ public class GameManager {
      * This method validates several conditions, including whether the player
      * already has an active game, if they are within a registered lobby region,
      * whether the lobby region is linked to a game region, and the existence of
-     * valid teleport locations. If any of these checks fail, the method returns
-     * null, indicating that the player cannot start the game.
+     * valid teleport locations. Additionally, it verifies the names of the game
+     * and lobby regions. If any of these checks fail, the method returns null,
+     * indicating that the player cannot start the game.
      *
      * @param player The player to perform pregame checks on.
-     * @return A HashMap containing the 'game' and 'lobby' teleport locations
-     * if all pregame checks pass, or null if any check fails.
+     * @return A HashMap containing the 'gameLocation', 'lobbyLocation',
+     * 'gameRegionName', and 'lobbyRegionName' if all pregame checks pass,
+     * or null if any check fails. The 'gameLocation' and 'lobbyLocation'
+     * are Location objects representing the teleport locations for the game
+     * and lobby, respectively, while 'gameRegionName' and 'lobbyRegionName'
+     * are Strings representing the names of the respective regions.
      */
-    private HashMap<String, Location> performPregameChecks(Player player) {
+    private HashMap<String, Object> performPregameChecks(Player player) {
         // Checking if player already has an active game
         if (activeGames.containsKey(player.getUniqueId())) {
             player.sendMessage(Component.text(ACTIVE_GAME_EXISTS_MSG, NamedTextColor.RED));
@@ -168,10 +175,16 @@ public class GameManager {
             return null;
         }
 
-        HashMap<String, Location> locations = new HashMap<>();
-        locations.put("game", gameTeleportLocation);
-        locations.put("lobby", lobbyTeleportLocation);
-        return locations;
+        HashMap<String, Object> gameData = new HashMap<>();
+        gameData.put("gameLocation", gameTeleportLocation);
+        gameData.put("lobbyLocation", lobbyTeleportLocation);
+        gameData.put("gameRegionName", currentGameRegion);
+        gameData.put("lobbyRegionName", currentLobbyRegion);
+
+        // Debug line
+        DebugManager.log(DebugManager.Category.DEBUG, String.format(GAME_DATA_LOG, player.getName(), gameData));
+
+        return gameData;
     }
 
     /**
@@ -205,10 +218,9 @@ public class GameManager {
         scoreManager.stopScore(player);
 
         // Retrieving lobby location and teleporting player
-        Map<String, Location> locations = activeGames.get(player.getUniqueId());
-        if (locations != null && locations.get("lobby") != null) {
-            player.teleport(locations.get("lobby"));
-        }
+        Map<String, Object> gameData = activeGames.get(player.getUniqueId());
+        Location lobbyLocation = (Location) gameData.get("lobbyLocation");
+        player.teleport(lobbyLocation);
 
         // Removing player from the active games list
         activeGames.remove(player.getUniqueId());
