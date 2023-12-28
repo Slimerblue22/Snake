@@ -35,8 +35,8 @@ public class PlayerInputListener {
         Vector[] possibleDirections = {
                 new Vector(0, 0, -1),  // North
                 new Vector(0, 0, 1),   // South
-                new Vector(1, 0, 0),   // East
-                new Vector(-1, 0, 0)   // West
+                new Vector(1, 0, 0),   // West
+                new Vector(-1, 0, 0)   // East
         };
 
         Vector randomDirection = possibleDirections[random.nextInt(possibleDirections.length)];
