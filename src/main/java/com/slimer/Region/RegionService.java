@@ -1,5 +1,6 @@
 package com.slimer.Region;
 
+import com.sk89q.worldedit.math.BlockVector3;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -700,9 +701,17 @@ public class RegionService {
      * @return A string representing the boundaries of the region, or "Not available" if boundaries could not be fetched.
      */
     private String fetchBoundariesFromWG(String worldName, String regionName) {
-        String boundaries = WGHelpers.getBoundariesOfRegion(worldName, regionName);
-        return boundaries != null ? "Boundaries: " + boundaries : "Boundaries: Not available";
+        BlockVector3[] boundaries = WGHelpers.getBoundariesOfRegion(worldName, regionName);
+        if (boundaries == null) {
+            return "Boundaries: Not available";
+        }
+        BlockVector3 minPoint = boundaries[0];
+        BlockVector3 maxPoint = boundaries[1];
+        return String.format("Boundaries: Min(%d, %d, %d) - Max(%d, %d, %d)",
+                minPoint.getX(), minPoint.getY(), minPoint.getZ(),
+                maxPoint.getX(), maxPoint.getY(), maxPoint.getZ());
     }
+
 
     /**
      * Fetches and formats data for linked regions.

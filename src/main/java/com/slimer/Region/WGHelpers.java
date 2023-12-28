@@ -1,6 +1,7 @@
 package com.slimer.Region;
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.managers.RegionManager;
@@ -69,13 +70,17 @@ public class WGHelpers {
     }
 
     /**
-     * Retrieves the boundary points of a specific WorldGuard region.
+     * Retrieves the minimum and maximum boundary points of a specific WorldGuard region.
+     * This method returns the boundary points as an array of {@link com.sk89q.worldedit.math.BlockVector3} objects.
      *
      * @param worldName  The name of the world where the region resides.
      * @param regionName The name of the WorldGuard region.
-     * @return A string describing the minimum and maximum points of the region, or null if the region does not exist.
+     * @return An array containing two {@link com.sk89q.worldedit.math.BlockVector3} objects representing
+     *         the minimum and maximum points of the region. The first element is the minimum point, and the
+     *         second element is the maximum point. Returns null if the region does not exist or if the
+     *         region manager for the specified world is not available.
      */
-    public static String getBoundariesOfRegion(String worldName, String regionName) {
+    public static BlockVector3[] getBoundariesOfRegion(String worldName, String regionName) {
         RegionManager regionManager = getRegionManager(worldName);
         if (regionManager == null) {
             return null;
@@ -84,11 +89,9 @@ public class WGHelpers {
         if (region == null) {
             return null;
         }
-        com.sk89q.worldedit.math.BlockVector3 minPoint = region.getMinimumPoint();
-        com.sk89q.worldedit.math.BlockVector3 maxPoint = region.getMaximumPoint();
-        return String.format("Min(%d, %d, %d) - Max(%d, %d, %d)",
-                minPoint.getX(), minPoint.getY(), minPoint.getZ(),
-                maxPoint.getX(), maxPoint.getY(), maxPoint.getZ());
+        BlockVector3 minPoint = region.getMinimumPoint();
+        BlockVector3 maxPoint = region.getMaximumPoint();
+        return new BlockVector3[]{minPoint, maxPoint};
     }
 
     /**
