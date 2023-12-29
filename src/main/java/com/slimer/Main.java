@@ -1,6 +1,9 @@
 package com.slimer;
 
 import com.slimer.GUI.InventoryClickListener;
+import com.slimer.Game.AppleManagement.AppleCollection;
+import com.slimer.Game.AppleManagement.AppleLifecycle;
+import com.slimer.Game.AppleManagement.AppleLocationFinder;
 import com.slimer.Game.GameCommandHandler;
 import com.slimer.Game.GameManager;
 import com.slimer.Game.IncrementScoreCommand;
@@ -54,6 +57,15 @@ public final class Main extends JavaPlugin {
         // Initializes the snake lifecycle manager
         SnakeLifecycle snakeLifecycle = new SnakeLifecycle();
 
+        // Initializes the apple location finder
+        AppleLocationFinder appleLocationFinder = new AppleLocationFinder();
+
+        // Initializes the apple lifecycle manager
+        AppleLifecycle appleLifecycle = new AppleLifecycle(appleLocationFinder);
+
+        //Initializes the apple collection service
+        AppleCollection appleCollection = new AppleCollection(appleLifecycle, snakeLifecycle, scoreManager);
+
         // Initializes the ProtocolLib listener
         PlayerInputListener playerInputListener = new PlayerInputListener(this);
 
@@ -61,7 +73,7 @@ public final class Main extends JavaPlugin {
         SnakeMovement snakeMovement = new SnakeMovement(snakeLifecycle, this, playerInputListener);
 
         // Initializes the game manager
-        gameManager = new GameManager(snakeLifecycle, playerInputListener, scoreManager, snakeMovement, this);
+        gameManager = new GameManager(snakeLifecycle, playerInputListener, scoreManager, snakeMovement, this, appleLifecycle, appleCollection);
 
         // Initializes the RegionService singleton instance
         RegionService.initializeInstance(this);

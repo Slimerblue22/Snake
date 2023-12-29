@@ -1,5 +1,7 @@
 package com.slimer.Game;
 
+import com.slimer.Game.AppleManagement.AppleCollection;
+import com.slimer.Game.AppleManagement.AppleLifecycle;
 import com.slimer.Game.Listeners.PlayerInputListener;
 import com.slimer.Game.SnakeManagement.SnakeLifecycle;
 import com.slimer.Game.SnakeManagement.SnakeMovement;
@@ -33,7 +35,10 @@ public class GameManager {
     private final ScoreManager scoreManager;
     private final SnakeMovement snakeMovement;
     private final Main main;
+    private final AppleLifecycle appleLifecycle;
+    private final AppleCollection appleCollection;
     private final Map<Player, BukkitRunnable> movementTasks = new HashMap<>();
+    private final Map<Player, BukkitRunnable> appleCollectionTasks = new HashMap<>();
     private static final String ACTIVE_GAME_EXISTS_MSG = "You already have an active game!";
     private static final String NO_ACTIVE_GAME_MSG = "You don't have an active game to stop!";
     private static final String GAME_START_MSG = "Your game has started!";
@@ -50,12 +55,14 @@ public class GameManager {
     /**
      * Constructor for GameManager.
      */
-    public GameManager(SnakeLifecycle snakeLifecycle, PlayerInputListener playerInputListener, ScoreManager scoreManager, SnakeMovement snakeMovement, Main main) {
+    public GameManager(SnakeLifecycle snakeLifecycle, PlayerInputListener playerInputListener, ScoreManager scoreManager, SnakeMovement snakeMovement, Main main, AppleLifecycle appleLifecycle, AppleCollection appleCollection) {
         this.snakeLifecycle = snakeLifecycle;
         this.playerInputListener = playerInputListener;
         this.scoreManager = scoreManager;
         this.snakeMovement = snakeMovement;
         this.main = main;
+        this.appleLifecycle = appleLifecycle;
+        this.appleCollection = appleCollection;
         activeGames = new HashMap<>();
     }
 
@@ -90,6 +97,8 @@ public class GameManager {
         // Adding player to the active games list
         activeGames.put(player.getUniqueId(), gameData);
         Location gameLocation = (Location) gameData.get("gameLocation");
+        String gameRegionName = (String) gameData.get("gameRegionName");
+        String worldName = player.getWorld().getName();
 
         // Teleporting the player to the game
         player.teleport(gameLocation);
@@ -112,6 +121,19 @@ public class GameManager {
 
         // Start scoring for player
         scoreManager.startScore(player);
+
+        // Place an apple
+        appleLifecycle.createAppleForPlayer(player, worldName, gameRegionName);
+
+        // Start apple collection service
+        BukkitRunnable appleCollectionTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                appleCollection.collectApple(player, worldName, gameRegionName);
+            }
+        };
+        appleCollectionTask.runTaskTimer(main, 0L, 0L);
+        appleCollectionTasks.put(player, appleCollectionTask);
 
         // Informing the player that the game has started
         player.sendMessage(Component.text(GAME_START_MSG, NamedTextColor.GREEN));
@@ -208,6 +230,13 @@ public class GameManager {
         }
         movementTasks.remove(player);
 
+        // Cancel the apple collection task for this player
+        BukkitRunnable appleCollectionTask = appleCollectionTasks.get(player);
+        if (appleCollectionTask != null) {
+            appleCollectionTask.cancel();
+        }
+        appleCollectionTasks.remove(player);
+
         // Removing player snake
         snakeLifecycle.removeSnakeForPlayer(player);
 
@@ -221,6 +250,9 @@ public class GameManager {
         Map<String, Object> gameData = activeGames.get(player.getUniqueId());
         Location lobbyLocation = (Location) gameData.get("lobbyLocation");
         player.teleport(lobbyLocation);
+
+        // Remove the apple
+        appleLifecycle.removeAppleForPlayer(player);
 
         // Removing player from the active games list
         activeGames.remove(player.getUniqueId());
