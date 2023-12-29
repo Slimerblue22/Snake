@@ -79,15 +79,6 @@ public class GameManager {
         return player != null && activeGames.containsKey(player.getUniqueId());
     }
 
-    /**
-     * Initiates a game session for the specified player.
-     * This method first performs a series of pregame checks to ensure the player
-     * meets all the criteria to start a game. If the checks pass, the player is
-     * added to the active games list, teleported to the game location, and informed
-     * that their game has started.
-     *
-     * @param player The player for whom the game session is to be initiated.
-     */
     public void startGame(Player player) {
         // Run pregame checks
         HashMap<String, Object> gameData = performPregameChecks(player);
@@ -144,23 +135,6 @@ public class GameManager {
         DebugManager.log(DebugManager.Category.DEBUG, String.format(GAME_STARTED_LOG, player.getName()));
     }
 
-    /**
-     * Performs pregame checks for a player attempting to start a game.
-     * This method validates several conditions, including whether the player
-     * already has an active game, if they are within a registered lobby region,
-     * whether the lobby region is linked to a game region, and the existence of
-     * valid teleport locations. Additionally, it verifies the names of the game
-     * and lobby regions. If any of these checks fail, the method returns null,
-     * indicating that the player cannot start the game.
-     *
-     * @param player The player to perform pregame checks on.
-     * @return A HashMap containing the 'gameLocation', 'lobbyLocation',
-     * 'gameRegionName', and 'lobbyRegionName' if all pregame checks pass,
-     * or null if any check fails. The 'gameLocation' and 'lobbyLocation'
-     * are Location objects representing the teleport locations for the game
-     * and lobby, respectively, while 'gameRegionName' and 'lobbyRegionName'
-     * are Strings representing the names of the respective regions.
-     */
     private HashMap<String, Object> performPregameChecks(Player player) {
         // Checking if player already has an active game
         if (activeGames.containsKey(player.getUniqueId())) {
@@ -213,12 +187,6 @@ public class GameManager {
         return gameData;
     }
 
-    /**
-     * Stops the active game session for the specified player.
-     * Teleports the player back to the lobby and clears their session data.
-     *
-     * @param player The player whose game session is to be stopped.
-     */
     public void stopGame(Player player) {
         // Checking if player has a game to stop
         if (!activeGames.containsKey(player.getUniqueId())) {
@@ -269,16 +237,6 @@ public class GameManager {
         DebugManager.log(DebugManager.Category.DEBUG, String.format(GAME_STOPPED_LOG, player.getName()));
     }
 
-    /**
-     * Stops all currently active game sessions.
-     * Iterates through all active game sessions and stops each session.
-     * This is typically used during server shutdown to ensure
-     * all games are stopped gracefully.
-     * <p>
-     * This method retrieves each player's UUID from the active games, checks if the
-     * player is currently online, and if so, stops their game session. Additionally,
-     * it logs the action for each stopped game if the `GAME_MANAGER` debug category is enabled.
-     */
     public void stopAllGames() {
         for (UUID playerId : activeGames.keySet()) {
             Player player = Bukkit.getPlayer(playerId);
