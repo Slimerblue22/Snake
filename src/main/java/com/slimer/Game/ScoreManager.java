@@ -3,6 +3,7 @@ package com.slimer.Game;
 import com.slimer.Util.PlayerData;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import java.util.HashMap;
 import java.util.UUID;
@@ -48,6 +49,9 @@ public class ScoreManager {
 
             // Update the current score
             currentScores.put(playerId, currentScore);
+
+            // Level up sound when a point is gained
+            player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0F, 1.0F);
         }
     }
 

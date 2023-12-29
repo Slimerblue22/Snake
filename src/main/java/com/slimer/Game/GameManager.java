@@ -13,6 +13,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -135,6 +136,9 @@ public class GameManager {
         appleCollectionTask.runTaskTimer(main, 0L, 0L);
         appleCollectionTasks.put(player, appleCollectionTask);
 
+        // Play game start sound
+        player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 1.0f);
+
         // Informing the player that the game has started
         player.sendMessage(Component.text(GAME_START_MSG, NamedTextColor.GREEN));
         DebugManager.log(DebugManager.Category.DEBUG, String.format(GAME_STARTED_LOG, player.getName()));
@@ -256,6 +260,9 @@ public class GameManager {
 
         // Removing player from the active games list
         activeGames.remove(player.getUniqueId());
+
+        // Play the game end sound
+        player.playSound(player.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
 
         // Informing the player that their game has been stopped
         player.sendMessage(Component.text(GAME_STOP_MSG, NamedTextColor.GREEN));
