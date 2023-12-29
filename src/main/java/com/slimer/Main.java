@@ -6,7 +6,6 @@ import com.slimer.Game.AppleManagement.AppleLifecycle;
 import com.slimer.Game.AppleManagement.AppleLocationFinder;
 import com.slimer.Game.GameCommandHandler;
 import com.slimer.Game.GameManager;
-import com.slimer.Game.IncrementScoreCommand;
 import com.slimer.Game.Listeners.PlayerConnectionListener;
 import com.slimer.Game.Listeners.PlayerDisconnectListener;
 import com.slimer.Game.Listeners.PlayerInputListener;
@@ -88,8 +87,6 @@ public final class Main extends JavaPlugin {
         Objects.requireNonNull(getCommand("snakedebug")).setExecutor(new DebugManager.ToggleDebugCommand());
         Objects.requireNonNull(getCommand("snakegame")).setExecutor(new GameCommandHandler(gameManager));
         Objects.requireNonNull(getCommand("snakeregion")).setExecutor(new RegionCommandHandler());
-        // TODO: This is for debugging, remove it later!
-        Objects.requireNonNull(getCommand("incscore")).setExecutor(new IncrementScoreCommand(scoreManager));
 
         // Checks for plugin updates
         new UpdateChecker().checkForUpdates(this);
