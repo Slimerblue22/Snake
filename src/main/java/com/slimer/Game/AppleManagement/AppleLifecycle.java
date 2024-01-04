@@ -42,7 +42,7 @@ public class AppleLifecycle {
         // Find a random location to place the apple on the same Y-level as the player
         Location appleLocation = appleLocationFinder.findRandomLocationInRegion(world, gameRegion, playerY);
         if (appleLocation == null) {
-            DebugManager.log(DebugManager.Category.DEBUG, String.format(NO_VALID_LOCATION_LOG, player.getName()));
+            DebugManager.log(DebugManager.Category.APPLE_LIFECYCLE, String.format(NO_VALID_LOCATION_LOG, player.getName()));
             return; // No valid location found
         }
 
@@ -75,7 +75,7 @@ public class AppleLifecycle {
 
         // Store the armor stand in memory
         playerApples.put(player.getUniqueId(), apple);
-        DebugManager.log(DebugManager.Category.DEBUG, String.format(APPLE_SUCCESSFULLY_CREATED_LOG, player.getName()));
+        DebugManager.log(DebugManager.Category.APPLE_LIFECYCLE, String.format(APPLE_SUCCESSFULLY_CREATED_LOG, player.getName()));
     }
 
     public void removeAppleForPlayer(Player player) {
@@ -86,7 +86,7 @@ public class AppleLifecycle {
 
             // Remove the apple from memory
             playerApples.remove(player.getUniqueId());
-            DebugManager.log(DebugManager.Category.DEBUG, String.format(APPLE_SUCCESSFULLY_REMOVED_LOG, player.getName()));
+            DebugManager.log(DebugManager.Category.APPLE_LIFECYCLE, String.format(APPLE_SUCCESSFULLY_REMOVED_LOG, player.getName()));
         }
     }
 

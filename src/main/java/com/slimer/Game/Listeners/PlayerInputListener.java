@@ -41,13 +41,13 @@ public class PlayerInputListener {
 
         Vector randomDirection = possibleDirections[random.nextInt(possibleDirections.length)];
         playerDirections.put(player.getUniqueId(), randomDirection);
-        DebugManager.log(DebugManager.Category.DEBUG, String.format(PLAYER_MONITORED_LOG, player.getName(), randomDirection));
+        DebugManager.log(DebugManager.Category.PLAYER_INPUT_LISTENER, String.format(PLAYER_MONITORED_LOG, player.getName(), randomDirection));
     }
 
     public void removePlayer(Player player) {
         monitoredPlayers.remove(player.getUniqueId());
         playerDirections.remove(player.getUniqueId());
-        DebugManager.log(DebugManager.Category.DEBUG, String.format(PLAYER_NO_LONGER_MONITORED_LOG, player.getName()));
+        DebugManager.log(DebugManager.Category.PLAYER_INPUT_LISTENER, String.format(PLAYER_NO_LONGER_MONITORED_LOG, player.getName()));
     }
 
     public Map<UUID, Vector> getPlayerDirections() {
@@ -65,7 +65,7 @@ public class PlayerInputListener {
                         if (isPlayerHoldingForward(event)) {
                             Vector cardinalDirection = getYawAsCardinalDirectionVector(player.getLocation().getYaw());
                             playerDirections.put(player.getUniqueId(), cardinalDirection);
-                            DebugManager.log(DebugManager.Category.DEBUG, String.format(PLAYER_FACING_VECTOR_LOG, player.getName(), cardinalDirection));
+                            DebugManager.log(DebugManager.Category.PLAYER_INPUT_LISTENER, String.format(PLAYER_FACING_VECTOR_LOG, player.getName(), cardinalDirection));
                         }
                     }
                 }

@@ -46,7 +46,7 @@ public class AppleLocationFinder {
             randomLocation = new Location(world, x, fixedY, z);
 
             if (isSolidBase(randomLocation) && isAirSurrounding(randomLocation) && isAirAbove(randomLocation)) {
-                DebugManager.log(DebugManager.Category.DEBUG, String.format(LOCATION_FOUND_LOG, attemptCount, randomLocation));
+                DebugManager.log(DebugManager.Category.APPLE_LOCATION_FINDER, String.format(LOCATION_FOUND_LOG, attemptCount, randomLocation));
                 return randomLocation; // Found a suitable location
             }
         }
@@ -58,8 +58,7 @@ public class AppleLocationFinder {
             for (int dz = -1; dz <= 1; dz++) {
                 Block block = location.clone().add(dx, -1, dz).getBlock();
                 if (!block.getType().isSolid()) {
-                    DebugManager.log(DebugManager.Category.DEBUG,
-                            String.format(FAILED_SOLID_BASE_CHECK_LOG, block.getLocation(), block.getType()));
+                    DebugManager.log(DebugManager.Category.APPLE_LOCATION_FINDER, String.format(FAILED_SOLID_BASE_CHECK_LOG, block.getLocation(), block.getType()));
                     return false;
                 }
             }
@@ -72,8 +71,7 @@ public class AppleLocationFinder {
             for (int dz = -1; dz <= 1; dz++) {
                 Block block = location.clone().add(dx, 0, dz).getBlock();
                 if (block.getType() != Material.AIR) {
-                    DebugManager.log(DebugManager.Category.DEBUG,
-                            String.format(FAILED_AIR_SURROUNDING_CHECK_LOG, block.getLocation(), block.getType()));
+                    DebugManager.log(DebugManager.Category.APPLE_LOCATION_FINDER, String.format(FAILED_AIR_SURROUNDING_CHECK_LOG, block.getLocation(), block.getType()));
                     return false;
                 }
             }
@@ -86,8 +84,7 @@ public class AppleLocationFinder {
             for (int dz = -1; dz <= 1; dz++) {
                 Block block = location.clone().add(dx, 1, dz).getBlock();
                 if (block.getType() != Material.AIR) {
-                    DebugManager.log(DebugManager.Category.DEBUG,
-                            String.format(FAILED_AIR_ABOVE_CHECK_LOG, block.getLocation(), block.getType()));
+                    DebugManager.log(DebugManager.Category.APPLE_LOCATION_FINDER, String.format(FAILED_AIR_ABOVE_CHECK_LOG, block.getLocation(), block.getType()));
                     return false;
                 }
             }

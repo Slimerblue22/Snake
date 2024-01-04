@@ -42,7 +42,7 @@ public class AppleCollection {
             if (snakeLocation.getBlockX() == appleLocation.getBlockX() && snakeLocation.getBlockZ() == appleLocation.getBlockZ()) {
 
                 // Remove the existing apple and add a point
-                DebugManager.log(DebugManager.Category.DEBUG, String.format(APPLE_COLLECTED_LOG, player.getName(), appleLocation, snakeLocation));
+                DebugManager.log(DebugManager.Category.APPLE_COLLECTION, String.format(APPLE_COLLECTED_LOG, player.getName(), appleLocation, snakeLocation));
                 appleLifecycle.removeAppleForPlayer(player);
                 scoreManager.updateScore(player);
 

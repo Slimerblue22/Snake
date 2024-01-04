@@ -44,7 +44,7 @@ public class PlayerDisconnectListener implements Listener {
     private void handlePlayerQuit(Player player) {
         if (gameManager.hasActiveGame(player)) {
             // If the player is in a game, handle their removal
-            DebugManager.log(DebugManager.Category.DEBUG, String.format(GAME_STOPPED_FOR_DISCONNECTED_PLAYER_LOG, player.getName()));
+            DebugManager.log(DebugManager.Category.PLAYER_DISCONNECTION_LISTENER, String.format(GAME_STOPPED_FOR_DISCONNECTED_PLAYER_LOG, player.getName()));
             gameManager.stopGame(player);
         }
     }

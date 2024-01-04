@@ -132,7 +132,7 @@ public class GameManager {
 
         // Informing the player that the game has started
         player.sendMessage(Component.text(GAME_START_MSG, NamedTextColor.GREEN));
-        DebugManager.log(DebugManager.Category.DEBUG, String.format(GAME_STARTED_LOG, player.getName()));
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, String.format(GAME_STARTED_LOG, player.getName()));
     }
 
     private HashMap<String, Object> performPregameChecks(Player player) {
@@ -182,7 +182,7 @@ public class GameManager {
         gameData.put("lobbyRegionName", currentLobbyRegion);
 
         // Debug line
-        DebugManager.log(DebugManager.Category.DEBUG, String.format(GAME_DATA_LOG, player.getName(), gameData));
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, String.format(GAME_DATA_LOG, player.getName(), gameData));
 
         return gameData;
     }
@@ -191,7 +191,7 @@ public class GameManager {
         // Checking if player has a game to stop
         if (!activeGames.containsKey(player.getUniqueId())) {
             player.sendMessage(Component.text(NO_ACTIVE_GAME_MSG, NamedTextColor.RED));
-            DebugManager.log(DebugManager.Category.DEBUG, String.format(GAME_STOP_ATTEMPT_LOG, player.getName()));
+            DebugManager.log(DebugManager.Category.GAME_MANAGER, String.format(GAME_STOP_ATTEMPT_LOG, player.getName()));
             return;
         }
 
@@ -234,14 +234,14 @@ public class GameManager {
 
         // Informing the player that their game has been stopped
         player.sendMessage(Component.text(GAME_STOP_MSG, NamedTextColor.GREEN));
-        DebugManager.log(DebugManager.Category.DEBUG, String.format(GAME_STOPPED_LOG, player.getName()));
+        DebugManager.log(DebugManager.Category.GAME_MANAGER, String.format(GAME_STOPPED_LOG, player.getName()));
     }
 
     public void stopAllGames() {
         for (UUID playerId : activeGames.keySet()) {
             Player player = Bukkit.getPlayer(playerId);
             if (player != null) {
-                DebugManager.log(DebugManager.Category.DEBUG, String.format(GAME_STOP_ON_SHUTDOWN_LOG, player.getName()));
+                DebugManager.log(DebugManager.Category.GAME_MANAGER, String.format(GAME_STOP_ON_SHUTDOWN_LOG, player.getName()));
                 stopGame(player);
             }
         }

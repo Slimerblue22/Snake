@@ -66,7 +66,7 @@ public class PlayerConnectionListener implements Listener {
         // Teleport the player if the location is valid
         if (lobbyTeleportLocation != null) {
             player.teleport(lobbyTeleportLocation);
-            DebugManager.log(DebugManager.Category.DEBUG, String.format(PLAYER_TELEPORTED_LOG, player.getName()));
+            DebugManager.log(DebugManager.Category.PLAYER_CONNECTION_LISTENER, String.format(PLAYER_TELEPORTED_LOG, player.getName()));
         }
     }
 }

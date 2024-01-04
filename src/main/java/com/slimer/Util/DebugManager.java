@@ -104,7 +104,14 @@ public class DebugManager {
      * These categories help classify and organize debug messages related to different aspects of the plugin's functionality.
      */
     public enum Category {
-        DEBUG
+        GAME_MANAGER,
+        SNAKE_LIFECYCLE,
+        PLAYER_INPUT_LISTENER,
+        APPLE_LIFECYCLE,
+        APPLE_LOCATION_FINDER,
+        PLAYER_DISCONNECTION_LISTENER,
+        PLAYER_CONNECTION_LISTENER,
+        APPLE_COLLECTION,
     }
 
     /**
