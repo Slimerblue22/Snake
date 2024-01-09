@@ -1,3 +1,11 @@
+# End of development notice
+
+I wanted to give you all a quick update on Snake. It's been an amazing journey learning Java while developing this game. However, I've made the decision to end active development on Snake. This is due to a combination of the limitations within Minecraft's system and my current programming level.
+
+But there's no need to worry – Snake will remain accessible as an open-source project under the MIT License. You can find the latest (though incomplete) version here: [https://github.com/Slimerblue22/Snake/tree/Experimental]. If you're interested, you're more than welcome to continue its development!
+
+A big thank you to everyone who tried out my plugin. On a positive note, I'm excited to share that I will continue programming and creating Spigot plugins. I've already got a new idea in the works. For those curious about my upcoming projects, feel free to check out my GitHub profile.
+
 # Snake V2 - Minecraft Spigot Plugin
 
 ## Table of Contents
